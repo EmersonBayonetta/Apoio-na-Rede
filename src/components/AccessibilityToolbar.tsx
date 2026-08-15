@@ -1,0 +1,235 @@
+import React, { useState } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
+import {
+  Sliders,
+  Type,
+  SunMoon,
+  Volume2,
+  VolumeX,
+  Sparkles,
+  RotateCcw,
+  X,
+  BookOpen,
+} from 'lucide-react';
+
+export const AccessibilityToolbar: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const {
+    settings,
+    setFontSize,
+    setHighContrast,
+    toggleDyslexicFont,
+    toggleReducedSensory,
+    stopSpeaking,
+    isSpeaking,
+  } = useAccessibility();
+
+  const resetAll = () => {
+    setFontSize('md');
+    setHighContrast('default');
+    if (settings.dyslexicFont) toggleDyslexicFont();
+    if (settings.reducedSensory) toggleReducedSensory();
+    stopSpeaking();
+  };
+
+  return (
+    <>
+      {/* Botão Flutuante de Acessibilidade */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+        {isSpeaking && (
+          <div className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg text-sm font-semibold animate-pulse">
+            <Volume2 size={18} aria-hidden="true" />
+            <span>Lendo em voz alta...</span>
+            <button
+              type="button"
+              onClick={stopSpeaking}
+              className="ml-2 bg-blue-900 hover:bg-blue-950 text-white px-2 py-0.5 rounded-full text-xs"
+              aria-label="Parar leitura em voz alta"
+            >
+              Parar
+            </button>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
+          aria-controls="accessibility-menu"
+          aria-label="Abrir menu de recursos de acessibilidade e visualização"
+          className="flex items-center gap-2 px-4 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-full shadow-xl hover:shadow-2xl border-2 border-white transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+        >
+          <Sliders size={20} aria-hidden="true" />
+          <span className="text-sm font-extrabold tracking-wide">Acessibilidade</span>
+        </button>
+      </div>
+
+      {/* Menu Modal/Drawer de Ajustes */}
+      {isOpen && (
+        <div
+          id="accessibility-menu"
+          role="region"
+          aria-label="Painel de Ferramentas de Acessibilidade"
+          className="fixed bottom-24 right-6 z-50 w-88 bg-white border-2 border-slate-300 rounded-3xl shadow-2xl p-6 text-slate-800 animate-fadeIn"
+        >
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
+            <div className="flex items-center gap-2 text-blue-800 font-extrabold">
+              <Sliders size={20} aria-hidden="true" />
+              <h2 className="text-base font-bold text-slate-900">Ajustes de Acessibilidade</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+              aria-label="Fechar menu de acessibilidade"
+            >
+              <X size={20} aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="space-y-5 text-sm">
+            {/* 1. Tamanho do Texto */}
+            <div>
+              <label className="flex items-center gap-1.5 font-bold text-slate-700 mb-2">
+                <Type size={16} aria-hidden="true" />
+                <span>Tamanho da Fonte</span>
+              </label>
+              <div className="grid grid-cols-4 gap-1.5 bg-slate-100 p-1.5 rounded-xl">
+                {(['sm', 'md', 'lg', 'xl'] as const).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setFontSize(size)}
+                    aria-pressed={settings.fontSize === size}
+                    className={`py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                      settings.fontSize === size
+                        ? 'bg-blue-700 text-white shadow-xs'
+                        : 'text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {size === 'sm' && 'Pequeno'}
+                    {size === 'md' && 'Padrão'}
+                    {size === 'lg' && 'Grande'}
+                    {size === 'xl' && 'Extra'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Alto Contraste */}
+            <div>
+              <label className="flex items-center gap-1.5 font-bold text-slate-700 mb-2">
+                <SunMoon size={16} aria-hidden="true" />
+                <span>Contraste Visual</span>
+              </label>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setHighContrast('default')}
+                  aria-pressed={settings.highContrast === 'default'}
+                  className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all ${
+                    settings.highContrast === 'default'
+                      ? 'border-blue-600 bg-blue-50 text-blue-900 ring-2 ring-blue-500'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  Normal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHighContrast('dark')}
+                  aria-pressed={settings.highContrast === 'dark'}
+                  className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all bg-slate-950 text-white ${
+                    settings.highContrast === 'dark'
+                      ? 'border-white ring-2 ring-white'
+                      : 'border-slate-700 hover:bg-black'
+                  }`}
+                >
+                  Alto Contraste
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHighContrast('yellow-black')}
+                  aria-pressed={settings.highContrast === 'yellow-black'}
+                  className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all bg-black text-yellow-300 ${
+                    settings.highContrast === 'yellow-black'
+                      ? 'border-yellow-300 ring-2 ring-yellow-300'
+                      : 'border-yellow-500/50 hover:bg-slate-900'
+                  }`}
+                >
+                  Amarelo/Preto
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Fonte Amigável para Dislexia */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2">
+                <BookOpen size={18} className="text-blue-700" aria-hidden="true" />
+                <div>
+                  <div className="font-bold text-slate-800 text-xs">Fonte para Dislexia</div>
+                  <div className="text-xs text-slate-500">Tipografia Lexend de alta legibilidade</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={settings.dyslexicFont}
+                onClick={toggleDyslexicFont}
+                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                  settings.dyslexicFont ? 'bg-blue-700' : 'bg-slate-300'
+                }`}
+                aria-label="Ativar fonte amigável para dislexia"
+              >
+                <div
+                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                    settings.dyslexicFont ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 4. Baixo Estímulo Sensorial (TEA / Neurodivergência) */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-emerald-700" aria-hidden="true" />
+                <div>
+                  <div className="font-bold text-slate-800 text-xs">Baixo Estímulo Sensorial</div>
+                  <div className="text-xs text-slate-500">Desativa animações e efeitos para TEA</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={settings.reducedSensory}
+                onClick={toggleReducedSensory}
+                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                  settings.reducedSensory ? 'bg-emerald-600' : 'bg-slate-300'
+                }`}
+                aria-label="Ativar modo de baixo estímulo sensorial"
+              >
+                <div
+                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                    settings.reducedSensory ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Botão de Reset */}
+            <div className="pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={resetAll}
+                className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                <RotateCcw size={14} aria-hidden="true" />
+                <span>Restaurar configurações padrão</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};

@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-dyslexic: 'Lexend', 'Comic Sans MS', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-main);
+    color: #1e293b;
+    background-color: #f8fafc;
+    line-height: 1.6;
+  }
+
+  /* Focus visible WCAG 2.1 AA requirement: minimum 3px offset ring */
+  *:focus-visible {
+    outline: 3px solid #2563eb !important;
+    outline-offset: 3px !important;
+    border-radius: 4px;
+    z-index: 50;
+  }
+}
+
+/* ==========================================================================
+   THEMES & ACCESSIBILITY MODES
+   ========================================================================== */
+
+/* Fonte Especial para Dislexia / Leitura Facilitada */
+body.font-dyslexic {
+  font-family: var(--font-dyslexic) !important;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+}
+
+/* Escala de Fontes */
+html.font-size-sm {
+  font-size: 14px;
+}
+html.font-size-md {
+  font-size: 16px;
+}
+html.font-size-lg {
+  font-size: 18px;
+}
+html.font-size-xl {
+  font-size: 20px;
+}
+
+/* Modo Alto Contraste - Escuro */
+body.theme-high-contrast-dark {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+body.theme-high-contrast-dark * {
+  border-color: #ffffff !important;
+}
+body.theme-high-contrast-dark .bg-white,
+body.theme-high-contrast-dark .bg-slate-50,
+body.theme-high-contrast-dark .bg-slate-100,
+body.theme-high-contrast-dark .bg-slate-800 {
+  background-color: #121212 !important;
+  color: #ffffff !important;
+}
+body.theme-high-contrast-dark a,
+body.theme-high-contrast-dark button {
+  color: #60a5fa !important;
+}
+
+/* Modo Alto Contraste - Amarelo no Preto */
+body.theme-yellow-black {
+  background-color: #000000 !important;
+  color: #ffff00 !important;
+}
+body.theme-yellow-black * {
+  border-color: #ffff00 !important;
+  color: #ffff00 !important;
+}
+body.theme-yellow-black .bg-white,
+body.theme-yellow-black .bg-slate-50,
+body.theme-yellow-black .bg-slate-100,
+body.theme-yellow-black .bg-blue-600,
+body.theme-yellow-black .bg-slate-900 {
+  background-color: #0a0a0a !important;
+  color: #ffff00 !important;
+}
+body.theme-yellow-black *:focus-visible {
+  outline: 4px solid #ffff00 !important;
+}
+
+/* Modo Redução de Estímulos Sensoriais (Neurodivergência / Autismo) */
+body.reduced-sensory * {
+  animation: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+/* Skip link (Pular para o conteúdo) */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  background: #1e3a8a;
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  z-index: 9999;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  transition: top 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Custom Leaflet styling */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+  border-radius: 0.75rem;
+  z-index: 10;
+}
+
+.custom-map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 2.5px solid white;
+}
+.custom-map-pin:hover {
+  transform: scale(1.18);
+}
+
+/* Estilo para VLibras não sobrepor componentes chave */
+div[vw] {
+  z-index: 9990 !important;
+}
