@@ -663,13 +663,13 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         <div className="bg-blue-950 text-white rounded-2xl px-6 py-8 sm:px-10 sm:py-10 relative overflow-hidden">
           <div className="relative z-10 max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300 mb-3">
-              Informação confiável sobre acessibilidade
+              Acessibilidade em Cataguases
             </p>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
-              Encontre lugares preparados para receber você
+              Consulte antes de sair
             </h1>
             <p className="text-sm sm:text-base text-blue-100/90 leading-relaxed max-w-2xl">
-              Consulte informações verificadas sobre mobilidade, comunicação, atendimento e conforto sensorial antes de sair de casa.
+              Veja recursos informados por estabelecimentos e pela comunidade, pesquise endereços e planeje seu deslocamento.
             </p>
             <a
               href="#search-filter-section"
@@ -976,7 +976,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
               <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4 animate-fadeIn">
                 <div className="h-44 w-full rounded-2xl overflow-hidden bg-slate-100 relative">
                   <img
-                    src={selectedEstablishment.fotos[0] || 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800'}
+                    src={selectedEstablishment.fotos[0] || '/brand/apoio-na-rede-logo.png'}
                     alt={`Foto de ${selectedEstablishment.nome}`}
                     loading="lazy"
                     decoding="async"
@@ -1123,7 +1123,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
                 >
                   <div className="w-full md:w-56 h-44 rounded-2xl overflow-hidden bg-slate-100 shrink-0">
                     <img
-                      src={est.fotos[0] || 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800'}
+                      src={est.fotos[0] || '/brand/apoio-na-rede-logo.png'}
                       alt={`Foto de ${est.nome}`}
                       loading="lazy"
                       decoding="async"

@@ -17,9 +17,7 @@ import {
   CheckCircle2,
   Plus,
   Trash2,
-  Sparkles,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 interface MerchantRegisterWizardProps {
   onSuccess: () => void;
@@ -70,16 +68,15 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   const [telefone, setTelefone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [horario, setHorario] = useState('Seg a Sáb: 08:00 às 20:00');
-  const [website, setWebsite] = useState('');
 
   // Step 2: Endereço & Coordenadas
   const [endereco, setEndereco] = useState('');
   const [bairro, setBairro] = useState('');
-  const [cidade, setCidade] = useState('São Paulo');
-  const [estado, setEstado] = useState('SP');
+  const [cidade, setCidade] = useState('Cataguases');
+  const [estado, setEstado] = useState('MG');
   const [cep, setCep] = useState('');
-  const [latitude, setLatitude] = useState(-23.5614);
-  const [longitude, setLongitude] = useState(-46.6559);
+  const [latitude, setLatitude] = useState(-21.3924);
+  const [longitude, setLongitude] = useState(-42.6896);
 
   // Step 3: Checklist de Critérios
   const [criteriaState, setCriteriaState] = useState<
@@ -94,10 +91,9 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   );
 
   // Step 4: Fotos
-  const [fotos, setFotos] = useState<string[]>([
-    'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800',
-  ]);
+  const [fotos, setFotos] = useState<string[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const [formMessage, setFormMessage] = useState('');
 
   const toggleCriteriaPresent = (index: number) => {
     setCriteriaState((prev) =>
@@ -148,30 +144,19 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
           latitude,
           longitude,
           descricao,
-          fotos: fotos.length > 0 ? fotos : ['https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800'],
+          fotos,
           telefone,
           whatsapp,
           horario_funcionamento: horario,
-          website,
         },
         criteriaList
       );
 
-      try {
-        confetti({
-          particleCount: 100,
-          spread: 80,
-          origin: { y: 0.6 },
-        });
-      } catch {
-        // ignore
-      }
-
-      alert('Cadastro enviado com sucesso! O estabelecimento foi enviado para a fila de moderação e verificação.');
-      onSuccess();
+      setFormMessage('Cadastro recebido. As informações ficarão pendentes até serem revisadas.');
+      window.setTimeout(onSuccess, 1600);
     } catch (err) {
       console.error(err);
-      alert('Ocorreu um erro ao salvar. Tente novamente.');
+      setFormMessage('Não foi possível salvar o cadastro. Revise os dados e tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -188,15 +173,12 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-slate-800 animate-fadeIn">
       {/* Cabeçalho */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold mb-2">
-          <Sparkles size={16} aria-hidden="true" />
-          <span>Cadastro de Estabelecimento Acessível</span>
-        </div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
-          Cadastre seu Espaço Inclusivo
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700 mb-2">Cadastro de local</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+          Informe os recursos de acessibilidade
         </h1>
         <p className="text-sm text-slate-600 max-w-xl mx-auto">
-          Preencha o formulário em etapas guiadas. Detalhe com transparência quais recursos o seu local oferece.
+          Preencha apenas o que puder confirmar. Fotos recentes ajudam a comunidade a avaliar o acesso.
         </p>
       </div>
 
@@ -373,7 +355,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                   required
                   value={endereco}
                   onChange={(e) => setEndereco(e.target.value)}
-                  placeholder="Ex: Av. Paulista, 1420"
+                  placeholder="Ex.: Rua Major Vieira, 120"
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
                 />
               </div>
@@ -582,6 +564,8 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
           </section>
         )}
 
+        {formMessage && <p role="status" aria-live="polite" className="mt-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-950">{formMessage}</p>}
+
         {/* Botões de Navegação entre Etapas */}
         <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-slate-100">
           {currentStep > 1 ? (
@@ -600,11 +584,11 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
               type="button"
               onClick={() => {
                 if (currentStep === 1 && !nome.trim()) {
-                  alert('Por favor, informe o nome do estabelecimento.');
+                  setFormMessage('Informe o nome do estabelecimento para continuar.');
                   return;
                 }
                 if (currentStep === 2 && !endereco.trim()) {
-                  alert('Por favor, informe o endereço do estabelecimento.');
+                  setFormMessage('Informe o endereço do estabelecimento para continuar.');
                   return;
                 }
                 setCurrentStep((prev) => prev + 1);
@@ -622,7 +606,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
               className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg transition-colors flex items-center gap-2"
             >
               <CheckCircle2 size={18} />
-              <span>{isSubmitting ? 'Salvando...' : 'Finalizar e Enviar para Moderação'}</span>
+              <span>{isSubmitting ? 'Salvando...' : 'Enviar cadastro'}</span>
             </button>
           )}
         </div>

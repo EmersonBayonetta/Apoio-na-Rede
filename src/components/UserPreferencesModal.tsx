@@ -4,7 +4,6 @@ import { useAccessibility } from '../context/AccessibilityContext';
 import { DisabilityType } from '../types';
 import { DISABILITY_INFO } from './DisabilityBadge';
 import { X, Check, HeartHandshake } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 interface UserPreferencesModalProps {
   isOpen: boolean;
@@ -72,15 +71,6 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
     setIsSaving(true);
     try {
       setAccessibilityPreferences(selected);
-      try {
-        const reduceMotion = document.body.classList.contains('reduced-sensory')
-          || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (!reduceMotion) {
-          confetti({ particleCount: 35, spread: 50, origin: { y: 0.7 } });
-        }
-      } catch {
-        // ignore
-      }
       onClose();
     } catch (e) {
       console.error(e);

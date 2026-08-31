@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
   MapPin,
-  HeartPulse,
-  Route as RouteIcon,
   PlusCircle,
   Menu,
   X,
@@ -11,8 +9,8 @@ import {
 import { UserPreferencesModal } from './UserPreferencesModal';
 
 interface NavbarProps {
-  currentTab: 'explorer' | 'professionals' | 'routes' | 'register';
-  onSelectTab: (tab: 'explorer' | 'professionals' | 'routes' | 'register') => void;
+  currentTab: 'explorer' | 'register';
+  onSelectTab: (tab: 'explorer' | 'register') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -23,13 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isPrefModalOpen, setIsPrefModalOpen] = useState(false);
 
   const navItems: {
-    id: 'explorer' | 'professionals' | 'routes' | 'register';
+    id: 'explorer' | 'register';
     label: string;
     icon: React.ElementType;
   }[] = [
     { id: 'explorer', label: 'Mapa & Catálogo', icon: MapPin },
-    { id: 'professionals', label: 'Profissionais', icon: HeartPulse },
-    { id: 'routes', label: 'Rotas Acessíveis', icon: RouteIcon },
     { id: 'register', label: 'Cadastrar Local', icon: PlusCircle },
   ];
 

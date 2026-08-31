@@ -20,7 +20,6 @@ import { VerifiedBadge } from '../components/VerifiedBadge';
 import { DisabilityBadge, DISABILITY_INFO } from '../components/DisabilityBadge';
 import { AccessibilityChecklist } from '../components/AccessibilityChecklist';
 import { AudioReaderButton } from '../components/AudioReaderButton';
-import confetti from 'canvas-confetti';
 
 interface EstablishmentDetailViewProps {
   establishment: Establishment;
@@ -45,6 +44,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const [newComment, setNewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState(false);
+  const [actionMessage, setActionMessage] = useState('');
 
   const reviews = establishment.reviews || [];
   const criteria = establishment.criteria || [];
@@ -56,7 +56,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const photos =
     establishment.fotos && establishment.fotos.length > 0
       ? establishment.fotos
-      : ['https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800'];
+      : ['/brand/apoio-na-rede-logo.png'];
 
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,16 +71,6 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         nota: newRating,
         comentario: newComment,
       });
-
-      try {
-        confetti({
-          particleCount: 70,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      } catch {
-        // ignore
-      }
 
       setNewComment('');
       setReviewSuccessMsg(true);
@@ -97,7 +87,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
     const motivo = prompt('Por favor, informe o motivo da denúncia desta avaliação:');
     if (motivo) {
       await StorageService.reportReview(reviewId, motivo);
-      alert('Avaliação enviada para moderação da equipe.');
+      setActionMessage('Denúncia registrada para revisão.');
       onRefresh();
     }
   };
@@ -126,12 +116,11 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               if (navigator.share) {
                 navigator.share({
                   title: establishment.nome,
-                  text: `Confira os recursos de acessibilidade de ${establishment.nome} no AcessaCidade`,
+                  text: `Confira as informações de acessibilidade de ${establishment.nome} no Apoio na Rede`,
                   url: window.location.href,
                 });
               } else {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Link copiado para a área de transferência!');
+                navigator.clipboard.writeText(window.location.href).then(() => setActionMessage('Link copiado.'));
               }
             }}
             className="p-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-2xl transition-colors"
@@ -142,6 +131,8 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           </button>
         </div>
       </div>
+
+      {actionMessage && <p role="status" aria-live="polite" className="mb-4 text-sm font-semibold text-blue-800">{actionMessage}</p>}
 
       {/* Hero: Cabeçalho com Título, Avaliação e Badges */}
       <header className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-8">

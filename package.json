@@ -1,5 +1,5 @@
 {
-  "name": "summit-rpv",
+  "name": "apoio-na-rede",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,9 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/canvas-confetti": "^1.9.0",
     "@types/leaflet": "^1.9.22",
-    "canvas-confetti": "^1.9.4",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.31.0",
     "react": "^19.2.8",

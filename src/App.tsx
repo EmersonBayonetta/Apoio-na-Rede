@@ -6,14 +6,12 @@ import { AccessibilityOnboarding } from './components/AccessibilityOnboarding';
 import { ExplorerView } from './views/ExplorerView';
 import { EstablishmentDetailView } from './views/EstablishmentDetailView';
 import { MerchantRegisterWizard } from './views/MerchantRegisterWizard';
-import { ProfessionalsDirectoryView } from './views/ProfessionalsDirectoryView';
-import { AccessibleRoutesView } from './views/AccessibleRoutesView';
 import { Establishment } from './types';
 import { StorageService } from './services/storageService';
-import { Heart, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 export const MainAppContent: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'explorer' | 'professionals' | 'routes' | 'register'>('explorer');
+  const [currentTab, setCurrentTab] = useState<'explorer' | 'register'>('explorer');
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   useEffect(() => {
     document.title = 'Apoio na rede — Acessibilidade urbana';
@@ -57,8 +55,6 @@ export const MainAppContent: React.FC = () => {
             {currentTab === 'explorer' && (
               <ExplorerView onSelectEstablishment={handleSelectEstablishment} />
             )}
-            {currentTab === 'professionals' && <ProfessionalsDirectoryView />}
-            {currentTab === 'routes' && <AccessibleRoutesView />}
             {currentTab === 'register' && (
               <MerchantRegisterWizard
                 onSuccess={() => {
@@ -84,11 +80,11 @@ export const MainAppContent: React.FC = () => {
               className="h-14 w-auto object-contain mb-3"
             />
             <p className="text-sm text-slate-400 leading-relaxed max-w-md mb-4">
-              Plataforma comunitária e colaborativa para catalogação e mapeamento de acessibilidade urbana real. Construída para garantir autonomia e dignidade para todas as pessoas com deficiência.
+              Informações sobre acessibilidade em locais e serviços de Cataguases para ajudar no planejamento antes de sair de casa.
             </p>
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <ShieldCheck size={16} className="text-emerald-400" />
-              <span>Conforme diretrizes WCAG 2.1 Nível AA & NBR 9050</span>
+              <span>Interface orientada pelas WCAG; critérios dos locais baseados na NBR 9050</span>
             </div>
           </div>
 
@@ -139,10 +135,7 @@ export const MainAppContent: React.FC = () => {
 
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} Apoio na rede. Código aberto e inclusivo.</p>
-          <div className="flex items-center gap-1 text-slate-400">
-            <span>Desenvolvido com carinho para máxima inclusão</span>
-            <Heart size={14} className="text-rose-500 fill-rose-500 inline ml-1" />
-          </div>
+          <p className="text-slate-400">Informações comunitárias sujeitas a atualização.</p>
         </div>
       </footer>
     </div>

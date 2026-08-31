@@ -39,7 +39,7 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
         type="button"
         onClick={() => setIsOpen(true)}
         className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors text-xs font-bold shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        aria-label="Selo Verificado AcessaCidade. Clique para ver o que isso significa."
+        aria-label="Informações revisadas pelo Apoio na Rede. Saiba como funciona."
       >
         <ShieldCheck size={16} className="text-emerald-600" aria-hidden="true" />
         <span>Verificado</span>
@@ -76,20 +76,21 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
                   O que é o Selo Verificado?
                 </h3>
                 <p className="text-xs text-emerald-700 font-medium">
-                  Garantia de conformidade e validação real
+                  Registro revisado pela equipe
                 </p>
               </div>
             </div>
 
             <div className="space-y-3 text-sm text-slate-600 leading-relaxed mb-6">
               <p>
-                O selo <strong>Verificado pelo AcessaCidade</strong> atesta que as informações de acessibilidade foram confirmadas através de:
+                O selo <strong>Revisado pelo Apoio na Rede</strong> indica que as informações passaram por pelo menos uma destas etapas:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-slate-700 font-medium">
-                <li>Vistoria presencial ou checagem documental conforme NBR 9050.</li>
-                <li>Validação cruzada com relatos e fotos de pessoas com deficiência da comunidade.</li>
-                <li>Compromisso do estabelecimento com a manutenção contínua das rotas e recursos adaptados.</li>
+                <li>Conferência de fotos ou documentos enviados.</li>
+                <li>Comparação com relatos recentes da comunidade.</li>
+                <li>Contato com o responsável pelo local.</li>
               </ul>
+              <p>As condições podem mudar. Em caso de dúvida, confirme diretamente com o local antes da visita.</p>
               {verificadoEm && (
                 <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500">
                   📅 <strong>Data da última verificação:</strong> {verificadoEm}

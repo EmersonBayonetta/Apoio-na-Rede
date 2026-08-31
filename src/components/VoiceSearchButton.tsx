@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic } from 'lucide-react';
 
 interface VoiceSearchButtonProps {
   onTranscript: (text: string) => void;
