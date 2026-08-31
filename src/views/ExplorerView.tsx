@@ -658,30 +658,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-slate-800">
-      {/* Banner de Boas-Vindas Inclusivo */}
-      <section aria-label="Apresentação da Plataforma" className="mb-6">
-        <div className="bg-blue-950 text-white rounded-2xl px-6 py-8 sm:px-10 sm:py-10 relative overflow-hidden">
-          <div className="relative z-10 max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300 mb-3">
-              Acessibilidade em Cataguases
-            </p>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
-              Consulte antes de sair
-            </h1>
-            <p className="text-sm sm:text-base text-blue-100/90 leading-relaxed max-w-2xl">
-              Veja recursos informados por estabelecimentos e pela comunidade, pesquise endereços e planeje seu deslocamento.
-            </p>
-            <a
-              href="#search-filter-section"
-              className="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-xl bg-white text-blue-950 text-sm font-bold hover:bg-blue-50 transition-colors"
-            >
-              Explorar locais
-              <ChevronRight size={17} aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </section>
-
       <section aria-labelledby="category-shortcuts-title" className="mb-6">
         <div className="flex items-end justify-between gap-4 mb-3">
           <div>
