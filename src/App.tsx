@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { AccessibilityProvider } from './context/AccessibilityContext';
-import { SkipLinks } from './components/SkipLinks';
 import { Navbar } from './components/Navbar';
 import { AccessibilityToolbar } from './components/AccessibilityToolbar';
 import { AccessibilityOnboarding } from './components/AccessibilityOnboarding';
@@ -32,10 +31,7 @@ export const MainAppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      {/* 1. Skip Links de Acessibilidade */}
-      <SkipLinks />
-
-      {/* 2. Barra de Navegação Principal */}
+      {/* Barra de Navegação Principal */}
       <Navbar
         currentTab={currentTab}
         onSelectTab={(tab) => {
@@ -45,7 +41,7 @@ export const MainAppContent: React.FC = () => {
         }}
       />
 
-      {/* 3. Área de Conteúdo Principal */}
+      {/* Área de Conteúdo Principal */}
       <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
         {selectedEstablishment ? (
           <EstablishmentDetailView
@@ -74,11 +70,11 @@ export const MainAppContent: React.FC = () => {
         )}
       </main>
 
-      {/* 4. Barra Flutuante de Acessibilidade */}
+      {/* Barra Flutuante de Acessibilidade */}
       <AccessibilityOnboarding />
       <AccessibilityToolbar />
 
-      {/* 5. Rodapé Acessível */}
+      {/* Rodapé Acessível */}
       <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 py-12 px-4 sm:px-6 lg:px-8 mt-16">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
