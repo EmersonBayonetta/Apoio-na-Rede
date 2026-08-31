@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Establishment, DisabilityType } from '../types';
 import { StorageService } from '../services/storageService';
-import { useAuth } from '../context/AuthContext';
+import { useAccessibility } from '../context/AccessibilityContext';
 import {
   ArrowLeft,
   MapPin,
@@ -33,14 +33,14 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   onBack,
   onRefresh,
 }) => {
-  const { currentUser } = useAuth();
+  const { accessibilityPreferences } = useAccessibility();
   const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
   const [reviewFilter, setReviewFilter] = useState<DisabilityType | 'todas'>('todas');
 
   // Form de Avaliação
   const [newRating, setNewRating] = useState(5);
   const [newDisability, setNewDisability] = useState<DisabilityType>(
-    currentUser?.preferencias_acessibilidade[0] || 'mobilidade'
+    accessibilityPreferences[0] || 'mobilidade'
   );
   const [newComment, setNewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
@@ -66,8 +66,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
     try {
       await StorageService.addReview({
         establishment_id: establishment.id,
-        user_id: currentUser?.id,
-        user_nome: currentUser?.nome || 'Cidadão AcessaCidade',
+        user_nome: 'Visitante da comunidade',
         tipo_deficiencia_avaliada: newDisability,
         nota: newRating,
         comentario: newComment,
@@ -401,7 +400,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             Compartilhe sua experiência de acessibilidade
           </h3>
           <p className="text-xs text-slate-500 mb-4">
-            Avaliando como: <strong>{currentUser?.nome || 'Usuário'}</strong>
+            Sua avaliação será publicada como <strong>Visitante da comunidade</strong>
           </p>
 
           {reviewSuccessMsg && (

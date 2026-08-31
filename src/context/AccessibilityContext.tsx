@@ -1,9 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AccessibilitySettings } from '../types';
+import { AccessibilitySettings, DisabilityType } from '../types';
+
+const SETTINGS_KEY = 'acessacidade_accessibility_settings';
+const PREFERENCES_KEY = 'apoio_accessibility_preferences_v1';
 
 interface AccessibilityContextType {
   settings: AccessibilitySettings;
+  accessibilityPreferences: DisabilityType[];
   applySettings: (settings: Partial<AccessibilitySettings>) => void;
+  setAccessibilityPreferences: (preferences: DisabilityType[]) => void;
   setFontSize: (size: 'sm' | 'md' | 'lg' | 'xl') => void;
   setHighContrast: (mode: 'default' | 'dark' | 'yellow-black') => void;
   toggleDyslexicFont: () => void;
@@ -29,8 +34,20 @@ const AccessibilityContext = createContext<AccessibilityContextType | undefined>
 
 export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AccessibilitySettings>(() => {
-    const saved = localStorage.getItem('acessacidade_accessibility_settings');
-    return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    try {
+      const saved = localStorage.getItem(SETTINGS_KEY);
+      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  });
+  const [accessibilityPreferences, setAccessibilityPreferencesState] = useState<DisabilityType[]>(() => {
+    try {
+      const saved = localStorage.getItem(PREFERENCES_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -38,7 +55,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Persistir e aplicar classes globais no DOM
   useEffect(() => {
-    localStorage.setItem('acessacidade_accessibility_settings', JSON.stringify(settings));
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 
     // Escala de Fonte
     document.documentElement.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl');
@@ -68,6 +85,11 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
     document.body.classList.toggle('enhanced-focus', settings.enhancedFocus);
   }, [settings]);
+
+  const setAccessibilityPreferences = (preferences: DisabilityType[]) => {
+    setAccessibilityPreferencesState(preferences);
+    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+  };
 
   const setFontSize = (size: 'sm' | 'md' | 'lg' | 'xl') => {
     setSettings((prev) => ({ ...prev, fontSize: size }));
@@ -138,7 +160,9 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     <AccessibilityContext.Provider
       value={{
         settings,
+        accessibilityPreferences,
         applySettings,
+        setAccessibilityPreferences,
         setFontSize,
         setHighContrast,
         toggleDyslexicFont,

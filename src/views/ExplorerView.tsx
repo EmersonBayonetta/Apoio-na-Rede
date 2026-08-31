@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Establishment, FilterState, DisabilityType, EstablishmentCategory, NearbyPlace } from '../types';
 import { StorageService } from '../services/storageService';
-import { useAuth } from '../context/AuthContext';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { MapLeaflet } from '../components/MapLeaflet';
 import { DisabilityBadge } from '../components/DisabilityBadge';
@@ -135,8 +134,7 @@ const distanceInMeters = (a: [number, number], b: [number, number]) => {
 };
 
 export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishment }) => {
-  const { currentUser } = useAuth();
-  const { settings } = useAccessibility();
+  const { settings, accessibilityPreferences } = useAccessibility();
   const [viewMode, setViewMode] = useState<'map' | 'list'>(settings.preferredView);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
@@ -166,16 +164,12 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const [selectedCategory, setSelectedCategory] = useState<EstablishmentCategory | 'todas'>('todas');
   const [selectedCity, setSelectedCity] = useState<string>('Cataguases');
   const [onlyVerified, setOnlyVerified] = useState(false);
-  const [selectedDisabilities, setSelectedDisabilities] = useState<DisabilityType[]>(() => {
-    return currentUser?.preferencias_acessibilidade || [];
-  });
+  const [selectedDisabilities, setSelectedDisabilities] = useState<DisabilityType[]>(accessibilityPreferences);
 
-  // Atualizar quando o usuário trocar de perfil/preferências
+  // Reaplica as preferências persistidas neste navegador.
   useEffect(() => {
-    if (currentUser?.preferencias_acessibilidade && currentUser.preferencias_acessibilidade.length > 0) {
-      setSelectedDisabilities(currentUser.preferencias_acessibilidade);
-    }
-  }, [currentUser]);
+    setSelectedDisabilities(accessibilityPreferences);
+  }, [accessibilityPreferences]);
 
   useEffect(() => {
     setViewMode(settings.preferredView);

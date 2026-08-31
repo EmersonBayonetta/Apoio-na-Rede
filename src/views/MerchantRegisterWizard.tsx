@@ -5,7 +5,6 @@ import {
   AccessibilityCriteria,
 } from '../types';
 import { StorageService } from '../services/storageService';
-import { useAuth } from '../context/AuthContext';
 import { MapLeaflet } from '../components/MapLeaflet';
 import { DISABILITY_INFO } from '../components/DisabilityBadge';
 import {
@@ -61,7 +60,6 @@ const DEFAULT_CRITERIA_TEMPLATES: {
 ];
 
 export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ onSuccess }) => {
-  const { currentUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -151,7 +149,6 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
           longitude,
           descricao,
           fotos: fotos.length > 0 ? fotos : ['https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=800'],
-          dono_id: currentUser?.id,
           telefone,
           whatsapp,
           horario_funcionamento: horario,

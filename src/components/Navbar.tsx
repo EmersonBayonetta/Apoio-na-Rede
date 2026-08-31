@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 import {
   MapPin,
   HeartPulse,
   Route as RouteIcon,
   PlusCircle,
-  ShieldAlert,
-  User as UserIcon,
-  ChevronDown,
   Menu,
   X,
   SlidersHorizontal,
@@ -17,16 +13,12 @@ import { UserPreferencesModal } from './UserPreferencesModal';
 interface NavbarProps {
   currentTab: 'explorer' | 'professionals' | 'routes' | 'register';
   onSelectTab: (tab: 'explorer' | 'professionals' | 'routes' | 'register') => void;
-  onOpenAdmin?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentTab,
   onSelectTab,
-  onOpenAdmin,
 }) => {
-  const { currentUser } = useAuth();
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPrefModalOpen, setIsPrefModalOpen] = useState(false);
 
@@ -84,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          {/* Persona Switcher e Preferências */}
+          {/* Preferências locais e navegação móvel */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Botão de Preferências */}
             <button
@@ -97,71 +89,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <SlidersHorizontal size={18} aria-hidden="true" />
               <span className="hidden md:inline">Preferências</span>
             </button>
-
-            {/* Persona Switcher Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                aria-expanded={isProfileOpen}
-                aria-haspopup="menu"
-                className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600"
-                aria-label={`Perfil atual: ${currentUser?.nome || 'Usuário'}. Clique para trocar de perfil.`}
-              >
-                {currentUser?.avatar_url ? (
-                  <img
-                    src={currentUser.avatar_url}
-                    alt=""
-                    className="w-8 h-8 rounded-xl object-cover border border-slate-300"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                    <UserIcon size={18} />
-                  </div>
-                )}
-                <div className="text-left hidden sm:block">
-                  <div className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[130px]">
-                    {currentUser?.nome.split(' ')[0]}
-                  </div>
-                  <div className="text-[10px] font-semibold text-blue-700 uppercase tracking-wider">
-                    {currentUser?.tipo}
-                  </div>
-                </div>
-                <ChevronDown size={14} className="text-slate-400" aria-hidden="true" />
-              </button>
-
-              {/* Menu de Troca de Usuários */}
-              {isProfileOpen && (
-                <div
-                  role="menu"
-                  aria-label="Menu do perfil"
-                  className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-lg p-3 z-50 animate-fadeIn"
-                >
-                  <div className="flex items-center gap-3 px-2 py-2.5 border-b border-slate-100 mb-2">
-                    {currentUser?.avatar_url ? (
-                      <img src={currentUser.avatar_url} alt="" className="w-11 h-11 rounded-xl object-cover border border-slate-200" />
-                    ) : (
-                      <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><UserIcon size={20} /></div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="font-bold text-sm text-slate-900 truncate">{currentUser?.nome || 'Usuário'}</p>
-                      <p className="text-xs text-slate-500 truncate">{currentUser?.email}</p>
-                      <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mt-0.5">{currentUser?.tipo}</p>
-                    </div>
-                  </div>
-                  <button role="menuitem" onClick={() => { setIsPrefModalOpen(true); setIsProfileOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                    <SlidersHorizontal size={17} className="text-slate-500" aria-hidden="true" />
-                    Preferências de acessibilidade
-                  </button>
-                  {currentUser?.tipo === 'admin' && onOpenAdmin && (
-                    <button role="menuitem" onClick={() => { onOpenAdmin(); setIsProfileOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-blue-800 hover:bg-blue-50">
-                      <ShieldAlert size={17} aria-hidden="true" />
-                      Acessar área administrativa
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
 
             {/* Botão Mobile Menu */}
             <button

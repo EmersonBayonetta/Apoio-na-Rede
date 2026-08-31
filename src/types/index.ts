@@ -1,7 +1,5 @@
 export type DisabilityType = 'mobilidade' | 'visual' | 'auditiva' | 'intelectual' | 'invisivel';
 
-export type UserRole = 'comum' | 'comerciante' | 'admin';
-
 export type EstablishmentStatus = 'pendente' | 'verificado' | 'rejeitado';
 
 export type EstablishmentCategory =
@@ -14,17 +12,6 @@ export type EstablishmentCategory =
   | 'educacao'
   | 'transporte_mobilidade'
   | 'hospedagem';
-
-export interface User {
-  id: string;
-  nome: string;
-  email: string;
-  tipo: UserRole;
-  preferencias_acessibilidade: DisabilityType[];
-  avatar_url?: string;
-  bio?: string;
-  criado_em?: string;
-}
 
 export interface AccessibilityCriteria {
   id: string;

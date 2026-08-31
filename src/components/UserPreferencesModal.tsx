@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAccessibility } from '../context/AccessibilityContext';
 import { DisabilityType } from '../types';
 import { DISABILITY_INFO } from './DisabilityBadge';
 import { X, Check, HeartHandshake } from 'lucide-react';
@@ -12,10 +12,8 @@ interface UserPreferencesModalProps {
 }
 
 export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOpen, onClose }) => {
-  const { currentUser, updateUserPreferences } = useAuth();
-  const [selected, setSelected] = useState<DisabilityType[]>(
-    currentUser?.preferencias_acessibilidade || []
-  );
+  const { accessibilityPreferences, setAccessibilityPreferences } = useAccessibility();
+  const [selected, setSelected] = useState<DisabilityType[]>(accessibilityPreferences);
   const [isSaving, setIsSaving] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -23,7 +21,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
   useEffect(() => {
     if (!isOpen) return;
 
-    setSelected(currentUser?.preferencias_acessibilidade || []);
+    setSelected(accessibilityPreferences);
     previousFocusRef.current = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -60,7 +58,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
       document.removeEventListener('keydown', handleKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [isOpen, currentUser, onClose]);
+  }, [isOpen, accessibilityPreferences, onClose]);
 
   if (!isOpen) return null;
 
@@ -73,7 +71,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateUserPreferences(selected);
+      setAccessibilityPreferences(selected);
       try {
         const reduceMotion = document.body.classList.contains('reduced-sensory')
           || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -122,13 +120,13 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
               Suas Preferências de Acessibilidade
             </h2>
             <p className="text-xs text-slate-500">
-              Personalize o AcessaCidade para destacar os locais que atendem você
+              Personalize o Apoio na rede para destacar os locais que atendem você
             </p>
           </div>
         </div>
 
         <p className="text-sm text-slate-600 mb-4">
-          Selecione quais tipos de acessibilidade são essenciais para você ou seus familiares. Isso configurará seus filtros automáticos:
+          Selecione os tipos de acessibilidade essenciais para você ou seus familiares. A escolha fica salva neste navegador e configura seus filtros automaticamente:
         </p>
 
         <div className="space-y-2.5 mb-6">

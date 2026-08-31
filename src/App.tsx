@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { AccessibilityProvider } from './context/AccessibilityContext';
-import { AuthProvider } from './context/AuthContext';
-import { useAuth } from './context/AuthContext';
 import { SkipLinks } from './components/SkipLinks';
 import { Navbar } from './components/Navbar';
 import { AccessibilityToolbar } from './components/AccessibilityToolbar';
@@ -11,37 +9,16 @@ import { EstablishmentDetailView } from './views/EstablishmentDetailView';
 import { MerchantRegisterWizard } from './views/MerchantRegisterWizard';
 import { ProfessionalsDirectoryView } from './views/ProfessionalsDirectoryView';
 import { AccessibleRoutesView } from './views/AccessibleRoutesView';
-import { AdminDashboardView } from './views/AdminDashboardView';
-import { AdminLoginView } from './views/AdminLoginView';
 import { Establishment } from './types';
 import { StorageService } from './services/storageService';
-import { ArrowLeft, Heart, LogOut, ShieldCheck } from 'lucide-react';
+import { Heart, ShieldCheck } from 'lucide-react';
 
 export const MainAppContent: React.FC = () => {
-  const { adminUser, isLoading, loginAdmin, logoutAdmin } = useAuth();
   const [currentTab, setCurrentTab] = useState<'explorer' | 'professionals' | 'routes' | 'register'>('explorer');
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
-  const [pathname, setPathname] = useState(() => window.location.pathname);
-
   useEffect(() => {
-    const handlePopState = () => setPathname(window.location.pathname);
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    document.title = 'Apoio na rede — Acessibilidade urbana';
   }, []);
-
-  const navigateTo = (path: string) => {
-    if (window.location.pathname !== path) window.history.pushState({}, '', path);
-    setPathname(path);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
-
-  useEffect(() => {
-    document.title = isAdminRoute
-      ? 'Área administrativa — Apoio na rede'
-      : 'Apoio na rede — Acessibilidade urbana';
-  }, [isAdminRoute]);
 
   const handleSelectEstablishment = (est: Establishment) => {
     setSelectedEstablishment(est);
@@ -52,54 +29,6 @@ export const MainAppContent: React.FC = () => {
     setSelectedEstablishment(null);
     setCurrentTab('explorer');
   };
-
-  if (isAdminRoute && isLoading) {
-    return (
-      <main className="min-h-screen grid place-items-center bg-slate-100" aria-busy="true">
-        <p className="text-sm font-semibold text-slate-600">Verificando acesso administrativo…</p>
-      </main>
-    );
-  }
-
-  if (isAdminRoute && !adminUser) {
-    return <AdminLoginView onLogin={loginAdmin} onBack={() => navigateTo('/')} />;
-  }
-
-  if (isAdminRoute && adminUser) {
-    return (
-      <div className="min-h-screen bg-slate-100 text-slate-900">
-        <SkipLinks />
-        <header className="bg-slate-950 text-white border-b border-slate-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <img src="/brand/apoio-na-rede-logo-white.png" alt="Apoio na rede" className="h-11 w-auto" />
-              <div className="hidden sm:block border-l border-slate-700 pl-4">
-                <p className="text-sm font-bold">Área administrativa</p>
-                <p className="text-xs text-slate-400">Moderação e integridade dos dados</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-semibold">{adminUser.nome}</p>
-                <p className="text-xs text-slate-400">Administrador</p>
-              </div>
-              <button type="button" onClick={() => navigateTo('/')} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-sm font-semibold transition-colors">
-                <ArrowLeft size={17} aria-hidden="true" />
-                Voltar ao site
-              </button>
-              <button type="button" onClick={logoutAdmin} className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 text-sm font-semibold transition-colors" aria-label="Sair da administração">
-                <LogOut size={17} aria-hidden="true" />
-                <span className="hidden sm:inline">Sair</span>
-              </button>
-            </div>
-          </div>
-        </header>
-        <main id="main-content" tabIndex={-1}>
-          <AdminDashboardView onRefreshGlobal={() => undefined} />
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
@@ -114,7 +43,6 @@ export const MainAppContent: React.FC = () => {
           setCurrentTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        onOpenAdmin={() => navigateTo('/admin')}
       />
 
       {/* 3. Área de Conteúdo Principal */}
@@ -228,9 +156,7 @@ export const MainAppContent: React.FC = () => {
 export default function App() {
   return (
     <AccessibilityProvider>
-      <AuthProvider>
-        <MainAppContent />
-      </AuthProvider>
+      <MainAppContent />
     </AccessibilityProvider>
   );
 }

@@ -12,7 +12,6 @@ import {
   X,
 } from 'lucide-react';
 import { useAccessibility } from '../context/AccessibilityContext';
-import { useAuth } from '../context/AuthContext';
 import { DisabilityType } from '../types';
 
 const ONBOARDING_KEY = 'apoio_accessibility_onboarding_v1';
@@ -30,8 +29,7 @@ const NEEDS: Array<{ id: NeedId; title: string; description: string; icon: React
 ];
 
 export const AccessibilityOnboarding: React.FC = () => {
-  const { applySettings } = useAccessibility();
-  const { currentUser, updateUserPreferences } = useAuth();
+  const { applySettings, setAccessibilityPreferences } = useAccessibility();
   const [isOpen, setIsOpen] = useState(() => !localStorage.getItem(ONBOARDING_KEY));
   const [selected, setSelected] = useState<NeedId[]>([]);
   const [isApplying, setIsApplying] = useState(false);
@@ -113,7 +111,7 @@ export const AccessibilityOnboarding: React.FC = () => {
     if (selected.includes('mobility')) disabilityPreferences.add('mobilidade');
 
     applySettings(nextSettings);
-    if (currentUser) await updateUserPreferences(Array.from(disabilityPreferences));
+    setAccessibilityPreferences(Array.from(disabilityPreferences));
     setIsApplying(false);
     finish();
   };
