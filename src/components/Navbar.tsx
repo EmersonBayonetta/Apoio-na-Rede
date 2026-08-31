@@ -30,9 +30,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+    <header className="sticky top-0 z-40 border-b border-blue-950/10 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18">
+        <div className="flex items-center justify-between h-20">
           {/* Logo & Marca */}
           <div className="flex items-center gap-3">
             <button
@@ -44,13 +44,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <img
                 src="/brand/apoio-na-rede-logo.png"
                 alt="Apoio na rede"
-                className="h-11 sm:h-12 w-auto object-contain transition-opacity group-hover:opacity-85"
+                className="h-11 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
               />
             </button>
           </div>
 
           {/* Links Desktop */}
-          <nav aria-label="Navegação Principal" className="hidden lg:flex items-center gap-1">
+          <nav aria-label="Navegação Principal" className="hidden lg:flex items-center gap-1 rounded-full border border-blue-950/10 bg-white/70 p-1 shadow-sm">
             {navItems.map((item) => {
               const isActive = currentTab === item.id;
 
@@ -60,10 +60,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   onClick={() => onSelectTab(item.id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm transition-colors relative ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all relative ${
                     isActive
-                      ? 'bg-blue-50 text-blue-800'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-blue-950 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-blue-950 hover:bg-blue-50'
                   }`}
                 >
                   <span>{item.label}</span>
@@ -78,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setIsPrefModalOpen(true)}
-              className="p-2.5 text-slate-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2.5 text-slate-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors flex items-center gap-1.5 text-xs font-semibold"
               title="Ajustar preferências de deficiência para filtros automáticos"
               aria-label="Minhas preferências de acessibilidade"
             >

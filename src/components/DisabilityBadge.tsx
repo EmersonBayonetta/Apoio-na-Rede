@@ -19,40 +19,40 @@ export const DISABILITY_INFO: Record<
     shortLabel: 'Mobilidade',
     description: 'Rampas, elevadores, portas largas, banheiros adaptados',
     icon: Accessibility,
-    color: 'text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100',
-    activeBg: 'bg-blue-600 text-white border-blue-700 shadow-md',
+    color: 'text-blue-900 bg-white border-blue-950/15 hover:bg-blue-50',
+    activeBg: 'bg-blue-950 text-white border-blue-950 shadow-sm',
   },
   visual: {
     label: 'Deficiência Visual / Baixa Visão',
     shortLabel: 'Visual',
     description: 'Piso tátil, Braille, audiodescrição, cão-guia aceito',
     icon: Eye,
-    color: 'text-amber-800 bg-amber-50 border-amber-200 hover:bg-amber-100',
-    activeBg: 'bg-amber-600 text-white border-amber-700 shadow-md',
+    color: 'text-blue-900 bg-white border-blue-950/15 hover:bg-blue-50',
+    activeBg: 'bg-blue-950 text-white border-blue-950 shadow-sm',
   },
   auditiva: {
     label: 'Deficiência Auditiva / Libras',
     shortLabel: 'Auditiva',
     description: 'Atendimento em Libras, alertas visuais, suporte por texto',
     icon: Ear,
-    color: 'text-purple-800 bg-purple-50 border-purple-200 hover:bg-purple-100',
-    activeBg: 'bg-purple-600 text-white border-purple-700 shadow-md',
+    color: 'text-blue-900 bg-white border-blue-950/15 hover:bg-blue-50',
+    activeBg: 'bg-blue-950 text-white border-blue-950 shadow-sm',
   },
   intelectual: {
     label: 'Intelectual / Neurodivergência / TEA',
     shortLabel: 'Intelectual / TEA',
     description: 'Linguagem simples, baixo ruído sensorial, equipe acolhedora',
     icon: Brain,
-    color: 'text-emerald-800 bg-emerald-50 border-emerald-200 hover:bg-emerald-100',
-    activeBg: 'bg-emerald-600 text-white border-emerald-700 shadow-md',
+    color: 'text-blue-900 bg-white border-blue-950/15 hover:bg-blue-50',
+    activeBg: 'bg-blue-950 text-white border-blue-950 shadow-sm',
   },
   invisivel: {
     label: 'Deficiência Invisível / Doença Crônica',
     shortLabel: 'Invisível / Crônica',
     description: 'Cordão de Girassol aceito, assento e fila prioritária sem constrangimento',
     icon: HeartPulse,
-    color: 'text-rose-800 bg-rose-50 border-rose-200 hover:bg-rose-100',
-    activeBg: 'bg-rose-600 text-white border-rose-700 shadow-md',
+    color: 'text-blue-900 bg-white border-blue-950/15 hover:bg-blue-50',
+    activeBg: 'bg-blue-950 text-white border-blue-950 shadow-sm',
   },
 };
 
@@ -80,7 +80,7 @@ export const DisabilityBadge: React.FC<DisabilityBadgeProps> = ({
     lg: 18,
   };
 
-  const baseStyle = `inline-flex items-center rounded-full border transition-all duration-150 font-medium ${
+  const baseStyle = `inline-flex items-center rounded-full border transition-all duration-150 font-semibold shadow-sm ${
     sizeClasses[size]
   } ${active ? info.activeBg : info.color} ${onClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2' : ''}`;
 
