@@ -42,7 +42,7 @@ END $$;
 
 -- 2. TABELA: USERS
 CREATE TABLE IF NOT EXISTS public.users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     nome TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     tipo user_role NOT NULL DEFAULT 'comum',
@@ -163,18 +163,73 @@ ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.professionals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.routes ENABLE ROW LEVEL SECURITY;
 
--- Leitura pública para todos os dados aprovados
-CREATE POLICY "Leitura pública de estabelecimentos aprovados" 
-    ON public.establishments FOR SELECT USING (status = 'verificado' OR auth.role() = 'authenticated');
+-- O papel administrativo deve ser definido em auth.users.raw_app_meta_data.role.
+-- Nunca use raw_user_meta_data para autorização: esse campo pode ser editado pelo usuário.
 
-CREATE POLICY "Leitura pública de critérios" 
+DROP POLICY IF EXISTS "Usuário visualiza o próprio perfil" ON public.users;
+CREATE POLICY "Usuário visualiza o próprio perfil"
+    ON public.users FOR SELECT TO authenticated
+    USING ((SELECT auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Usuário atualiza o próprio perfil" ON public.users;
+CREATE POLICY "Usuário atualiza o próprio perfil"
+    ON public.users FOR UPDATE TO authenticated
+    USING ((SELECT auth.uid()) = id)
+    WITH CHECK ((SELECT auth.uid()) = id);
+
+REVOKE UPDATE ON public.users FROM authenticated;
+GRANT UPDATE (nome, preferencias_acessibilidade, avatar_url, bio) ON public.users TO authenticated;
+
+DROP POLICY IF EXISTS "Leitura pública de estabelecimentos aprovados" ON public.establishments;
+CREATE POLICY "Leitura pública de estabelecimentos aprovados"
+    ON public.establishments FOR SELECT TO anon, authenticated
+    USING (
+      status = 'verificado'
+      OR (SELECT auth.uid()) = dono_id
+      OR (SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    );
+
+DROP POLICY IF EXISTS "Comerciante cadastra local pendente" ON public.establishments;
+CREATE POLICY "Comerciante cadastra local pendente"
+    ON public.establishments FOR INSERT TO authenticated
+    WITH CHECK ((SELECT auth.uid()) = dono_id AND status = 'pendente');
+
+DROP POLICY IF EXISTS "Comerciante edita o próprio local pendente" ON public.establishments;
+CREATE POLICY "Comerciante edita o próprio local pendente"
+    ON public.establishments FOR UPDATE TO authenticated
+    USING ((SELECT auth.uid()) = dono_id AND status IN ('pendente', 'rejeitado'))
+    WITH CHECK ((SELECT auth.uid()) = dono_id AND status = 'pendente');
+
+DROP POLICY IF EXISTS "Admin modera estabelecimentos" ON public.establishments;
+CREATE POLICY "Admin modera estabelecimentos"
+    ON public.establishments FOR UPDATE TO authenticated
+    USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+    WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+DROP POLICY IF EXISTS "Leitura pública de critérios" ON public.accessibility_criteria;
+CREATE POLICY "Leitura pública de critérios"
     ON public.accessibility_criteria FOR SELECT USING (true);
 
-CREATE POLICY "Leitura pública de avaliações" 
-    ON public.reviews FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Leitura pública de avaliações" ON public.reviews;
+CREATE POLICY "Leitura pública de avaliações"
+    ON public.reviews FOR SELECT TO anon, authenticated
+    USING (denunciada = false OR (SELECT auth.uid()) = user_id OR (SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
-CREATE POLICY "Leitura pública de profissionais" 
+DROP POLICY IF EXISTS "Usuário publica avaliação própria" ON public.reviews;
+CREATE POLICY "Usuário publica avaliação própria"
+    ON public.reviews FOR INSERT TO authenticated
+    WITH CHECK ((SELECT auth.uid()) = user_id);
+
+DROP POLICY IF EXISTS "Admin modera avaliações" ON public.reviews;
+CREATE POLICY "Admin modera avaliações"
+    ON public.reviews FOR ALL TO authenticated
+    USING ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+    WITH CHECK ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+DROP POLICY IF EXISTS "Leitura pública de profissionais" ON public.professionals;
+CREATE POLICY "Leitura pública de profissionais"
     ON public.professionals FOR SELECT USING (true);
 
-CREATE POLICY "Leitura pública de rotas" 
+DROP POLICY IF EXISTS "Leitura pública de rotas" ON public.routes;
+CREATE POLICY "Leitura pública de rotas"
     ON public.routes FOR SELECT USING (true);

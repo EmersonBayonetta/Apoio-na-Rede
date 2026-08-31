@@ -109,6 +109,17 @@ export interface AccessibleRoute {
   nivel_seguranca: string;
   coordenadas: [number, number][]; // [lat, lng]
   distancia_metros: number;
+  duracao_segundos?: number;
+  auditada?: boolean;
+}
+
+export interface NearbyPlace {
+  id: string;
+  nome: string;
+  categoria: EstablishmentCategory;
+  latitude: number;
+  longitude: number;
+  endereco: string;
 }
 
 export interface AccessibilitySettings {
@@ -117,6 +128,8 @@ export interface AccessibilitySettings {
   dyslexicFont: boolean;
   reducedSensory: boolean;
   voiceReadingEnabled: boolean;
+  preferredView: 'map' | 'list';
+  enhancedFocus: boolean;
 }
 
 export interface FilterState {

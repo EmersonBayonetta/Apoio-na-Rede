@@ -26,6 +26,7 @@ const STORAGE_KEYS = {
   PROFESSIONALS: 'acessacidade_professionals',
   ROUTES: 'acessacidade_routes',
   CURRENT_USER_ID: 'acessacidade_current_user_id',
+  ADMIN_SESSION_USER_ID: 'apoio_admin_session_user_id',
 };
 
 // Inicialização segura dos dados locais
@@ -55,9 +56,52 @@ const initStorage = () => {
 
 initStorage();
 
+const assertAdmin = () => {
+  const rawUsers = localStorage.getItem(STORAGE_KEYS.USERS);
+  const users: User[] = rawUsers ? JSON.parse(rawUsers) : MOCK_USERS;
+  const adminSessionId = sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION_USER_ID);
+  const actor = users.find((user) => user.id === adminSessionId);
+
+  if (!actor || actor.tipo !== 'admin') {
+    throw new Error('Acesso negado: esta ação exige perfil de administrador.');
+  }
+};
+
 export const StorageService = {
+  authenticateLocalAdmin: async (email: string, password: string): Promise<User> => {
+    const expectedEmail = import.meta.env.VITE_LOCAL_ADMIN_EMAIL;
+    const expectedPassword = import.meta.env.VITE_LOCAL_ADMIN_PASSWORD;
+
+    if (!expectedEmail || !expectedPassword) {
+      throw new Error('Credenciais administrativas não configuradas.');
+    }
+    const users = await StorageService.getUsers();
+    const admin = users.find((user) => user.tipo === 'admin' && user.email.toLowerCase() === email.trim().toLowerCase());
+
+    if (!admin || email.trim().toLowerCase() !== expectedEmail.toLowerCase() || password !== expectedPassword) {
+      throw new Error('E-mail ou senha inválidos.');
+    }
+
+    sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION_USER_ID, admin.id);
+    return admin;
+  },
+
+  getAdminSessionUser: async (): Promise<User | null> => {
+    const sessionId = sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION_USER_ID);
+    if (!sessionId) return null;
+    const users = await StorageService.getUsers();
+    const admin = users.find((user) => user.id === sessionId && user.tipo === 'admin') || null;
+    if (!admin) sessionStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION_USER_ID);
+    return admin;
+  },
+
+  clearAdminSession: async (): Promise<void> => {
+    sessionStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION_USER_ID);
+  },
+
   // Resetar dados para o padrão de demonstração
   resetToDefaults: async () => {
+    assertAdmin();
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(MOCK_USERS));
     localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(MOCK_ESTABLISHMENTS));
     localStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(MOCK_CRITERIA));
@@ -222,6 +266,7 @@ export const StorageService = {
     status: EstablishmentStatus,
     motivoRejeicao?: string
   ): Promise<Establishment> => {
+    assertAdmin();
     const rawEst = localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS);
     const establishments: Establishment[] = rawEst ? JSON.parse(rawEst) : [];
 
@@ -291,10 +336,22 @@ export const StorageService = {
   },
 
   deleteReview: async (reviewId: string): Promise<void> => {
+    assertAdmin();
     const rawRev = localStorage.getItem(STORAGE_KEYS.REVIEWS);
     const reviews: Review[] = rawRev ? JSON.parse(rawRev) : [];
     const filtered = reviews.filter((r) => r.id !== reviewId);
     localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(filtered));
+  },
+
+  dismissReviewReport: async (reviewId: string): Promise<void> => {
+    assertAdmin();
+    const rawRev = localStorage.getItem(STORAGE_KEYS.REVIEWS);
+    const reviews: Review[] = rawRev ? JSON.parse(rawRev) : [];
+    const review = reviews.find((item) => item.id === reviewId);
+    if (!review) throw new Error('Avaliação não encontrada');
+    review.denunciada = false;
+    delete review.motivo_denuncia;
+    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
   },
 
   // PROFESSIONALS

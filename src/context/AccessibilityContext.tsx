@@ -3,6 +3,7 @@ import { AccessibilitySettings } from '../types';
 
 interface AccessibilityContextType {
   settings: AccessibilitySettings;
+  applySettings: (settings: Partial<AccessibilitySettings>) => void;
   setFontSize: (size: 'sm' | 'md' | 'lg' | 'xl') => void;
   setHighContrast: (mode: 'default' | 'dark' | 'yellow-black') => void;
   toggleDyslexicFont: () => void;
@@ -20,6 +21,8 @@ const DEFAULT_SETTINGS: AccessibilitySettings = {
   dyslexicFont: false,
   reducedSensory: false,
   voiceReadingEnabled: true,
+  preferredView: 'map',
+  enhancedFocus: false,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -27,7 +30,7 @@ const AccessibilityContext = createContext<AccessibilityContextType | undefined>
 export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AccessibilitySettings>(() => {
     const saved = localStorage.getItem('acessacidade_accessibility_settings');
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
   });
 
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -62,10 +65,16 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       document.body.classList.remove('reduced-sensory');
     }
+
+    document.body.classList.toggle('enhanced-focus', settings.enhancedFocus);
   }, [settings]);
 
   const setFontSize = (size: 'sm' | 'md' | 'lg' | 'xl') => {
     setSettings((prev) => ({ ...prev, fontSize: size }));
+  };
+
+  const applySettings = (nextSettings: Partial<AccessibilitySettings>) => {
+    setSettings((previous) => ({ ...previous, ...nextSettings }));
   };
 
   const setHighContrast = (mode: 'default' | 'dark' | 'yellow-black') => {
@@ -129,6 +138,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
     <AccessibilityContext.Provider
       value={{
         settings,
+        applySettings,
         setFontSize,
         setHighContrast,
         toggleDyslexicFont,

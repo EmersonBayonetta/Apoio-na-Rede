@@ -10,7 +10,6 @@ import {
   Volume2,
   ShieldCheck,
   Navigation,
-  Sparkles,
 } from 'lucide-react';
 
 export const AccessibleRoutesView: React.FC = () => {
@@ -37,14 +36,13 @@ export const AccessibleRoutesView: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-slate-800 animate-fadeIn">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-lg mb-8">
+      <div className="bg-blue-950 text-white rounded-2xl px-6 py-8 sm:px-10 mb-8">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-700/80 text-blue-100 text-xs font-bold mb-3 border border-blue-400/30">
-            <Sparkles size={14} className="text-yellow-300" aria-hidden="true" />
-            <span>Mapeamento de Calçadas & Rotas Seguras</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2">
-            Rotas Urbanas Acessíveis
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300 mb-3">
+            Trajetos avaliados pela comunidade
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
+            Rotas urbanas acessíveis
           </h1>
           <p className="text-sm sm:text-base text-blue-100/90 leading-relaxed">
             Consulte trajetos a pé auditados com foco em calçadas sem buracos, rampas de rebaixamento suaves, piso tátil direcional e semáforos sonoros.

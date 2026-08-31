@@ -4,17 +4,21 @@ import { StorageService } from '../services/storageService';
 
 interface AuthContextType {
   currentUser: User | null;
+  adminUser: User | null;
   allUsers: User[];
   isLoading: boolean;
   switchUser: (userId: string) => Promise<void>;
   updateUserPreferences: (preferences: DisabilityType[]) => Promise<void>;
   loginAsNewUser: (nome: string, email: string, tipo: UserRole, preferencias: DisabilityType[]) => Promise<User>;
+  loginAdmin: (email: string, password: string) => Promise<void>;
+  logoutAdmin: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [adminUser, setAdminUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAllUsers(users);
       const active = await StorageService.getCurrentUser();
       setCurrentUser(active);
+      setAdminUser(await StorageService.getAdminSessionUser());
     } catch (err) {
       console.error('Erro ao carregar usuário:', err);
     } finally {
@@ -48,6 +53,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Atualiza a lista geral de usuários
     const users = await StorageService.getUsers();
     setAllUsers(users);
+  };
+
+  const loginAdmin = async (email: string, password: string) => {
+    const admin = await StorageService.authenticateLocalAdmin(email, password);
+    setAdminUser(admin);
+  };
+
+  const logoutAdmin = async () => {
+    await StorageService.clearAdminSession();
+    setAdminUser(null);
   };
 
   const loginAsNewUser = async (
@@ -74,11 +89,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         currentUser,
+        adminUser,
         allUsers,
         isLoading,
         switchUser,
         updateUserPreferences,
         loginAsNewUser,
+        loginAdmin,
+        logoutAdmin,
       }}
     >
       {children}

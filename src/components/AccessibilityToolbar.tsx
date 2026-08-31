@@ -5,7 +5,6 @@ import {
   Type,
   SunMoon,
   Volume2,
-  VolumeX,
   Sparkles,
   RotateCcw,
   X,
@@ -16,6 +15,7 @@ export const AccessibilityToolbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const {
     settings,
+    applySettings,
     setFontSize,
     setHighContrast,
     toggleDyslexicFont,
@@ -25,10 +25,15 @@ export const AccessibilityToolbar: React.FC = () => {
   } = useAccessibility();
 
   const resetAll = () => {
-    setFontSize('md');
-    setHighContrast('default');
-    if (settings.dyslexicFont) toggleDyslexicFont();
-    if (settings.reducedSensory) toggleReducedSensory();
+    applySettings({
+      fontSize: 'md',
+      highContrast: 'default',
+      dyslexicFont: false,
+      reducedSensory: false,
+      voiceReadingEnabled: true,
+      preferredView: 'map',
+      enhancedFocus: false,
+    });
     stopSpeaking();
   };
 
@@ -37,7 +42,7 @@ export const AccessibilityToolbar: React.FC = () => {
       {/* Botão Flutuante de Acessibilidade */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
         {isSpeaking && (
-          <div className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg text-sm font-semibold animate-pulse">
+          <div className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded-xl shadow-md text-sm font-semibold">
             <Volume2 size={18} aria-hidden="true" />
             <span>Lendo em voz alta...</span>
             <button
@@ -57,7 +62,7 @@ export const AccessibilityToolbar: React.FC = () => {
           aria-expanded={isOpen}
           aria-controls="accessibility-menu"
           aria-label="Abrir menu de recursos de acessibilidade e visualização"
-          className="flex items-center gap-2 px-4 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-full shadow-xl hover:shadow-2xl border-2 border-white transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+          className="flex items-center gap-2 px-4 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow-md border border-white transition-colors focus:outline-none focus:ring-4 focus:ring-yellow-400"
         >
           <Sliders size={20} aria-hidden="true" />
           <span className="text-sm font-extrabold tracking-wide">Acessibilidade</span>
@@ -70,7 +75,7 @@ export const AccessibilityToolbar: React.FC = () => {
           id="accessibility-menu"
           role="region"
           aria-label="Painel de Ferramentas de Acessibilidade"
-          className="fixed bottom-24 right-6 z-50 w-88 bg-white border-2 border-slate-300 rounded-3xl shadow-2xl p-6 text-slate-800 animate-fadeIn"
+          className="fixed bottom-24 right-6 z-50 w-88 bg-white border border-slate-200 rounded-2xl shadow-xl p-6 text-slate-800 animate-fadeIn"
         >
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
             <div className="flex items-center gap-2 text-blue-800 font-extrabold">
@@ -218,6 +223,17 @@ export const AccessibilityToolbar: React.FC = () => {
 
             {/* Botão de Reset */}
             <div className="pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  window.dispatchEvent(new Event('open-accessibility-onboarding'));
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2 mb-2 text-xs font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+              >
+                <Sliders size={14} aria-hidden="true" />
+                <span>Refazer configuração guiada</span>
+              </button>
               <button
                 type="button"
                 onClick={resetAll}

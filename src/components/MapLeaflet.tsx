@@ -1,7 +1,7 @@
 import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { Circle, CircleMarker, MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { Establishment, AccessibleRoute } from '../types';
+import { Establishment, AccessibleRoute, NearbyPlace } from '../types';
 import {
   Utensils,
   Stethoscope,
@@ -22,6 +22,16 @@ import { VerifiedBadge } from './VerifiedBadge';
 const ChangeView: React.FC<{ center: [number, number]; zoom: number }> = ({ center, zoom }) => {
   const map = useMap();
   map.setView(center, zoom);
+  return null;
+};
+
+const FitRoute: React.FC<{ coordinates: [number, number][] }> = ({ coordinates }) => {
+  const map = useMap();
+  React.useEffect(() => {
+    if (coordinates.length > 1) {
+      map.fitBounds(L.latLngBounds(coordinates), { padding: [36, 36], maxZoom: 16 });
+    }
+  }, [coordinates, map]);
   return null;
 };
 
@@ -82,8 +92,8 @@ const createCustomIcon = (category: string, isSelected: boolean) => {
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-      border: 3px solid white;
+      box-shadow: 0 3px 10px rgba(8,55,70,0.24);
+      border: ${isSelected ? '4px solid #70e2d1' : '3px solid white'};
       transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
       transition: all 0.2s ease;
     ">
@@ -110,6 +120,9 @@ interface MapLeafletProps {
   center?: [number, number];
   zoom?: number;
   heightClass?: string;
+  searchedAddress?: { latitude: number; longitude: number; label: string } | null;
+  nearbyPlaces?: NearbyPlace[];
+  userLocation?: { latitude: number; longitude: number; accuracy: number } | null;
 }
 
 // Sub-componente para clique de seleção de coordenadas (modo comerciante)
@@ -137,11 +150,16 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
   activeRoute,
   interactivePointSelection = false,
   onPointSelected,
-  center = [-23.5614, -46.6559], // Av. Paulista como centro padrão
+  center = [-21.3924, -42.6896], // Centro de Cataguases, Minas Gerais
   zoom = 14,
   heightClass = 'h-[550px]',
+  searchedAddress,
+  nearbyPlaces = [],
+  userLocation,
 }) => {
-  const mapCenter: [number, number] = selectedEstablishment
+  const mapCenter: [number, number] = searchedAddress
+    ? [searchedAddress.latitude, searchedAddress.longitude]
+    : selectedEstablishment
     ? [selectedEstablishment.latitude, selectedEstablishment.longitude]
     : center;
 
@@ -154,6 +172,7 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
         className="w-full h-full"
       >
         <ChangeView center={mapCenter} zoom={zoom} />
+        {activeRoute && <FitRoute coordinates={activeRoute.coordenadas} />}
 
         {/* Tile Layer OpenStreetMap Standard */}
         <TileLayer
@@ -227,16 +246,69 @@ export const MapLeaflet: React.FC<MapLeafletProps> = ({
 
         {/* Traçado de Rota Acessível */}
         {activeRoute && (
-          <Polyline
-            positions={activeRoute.coordenadas}
-            pathOptions={{
-              color: '#2563eb',
-              weight: 6,
-              opacity: 0.85,
-              dashArray: '8, 8',
-            }}
-          />
+          <>
+            <Polyline
+              positions={activeRoute.coordenadas}
+              pathOptions={{
+                color: '#0b9b8c',
+                weight: 6,
+                opacity: 0.9,
+                dashArray: activeRoute.auditada === false ? '8, 8' : undefined,
+              }}
+            />
+            <CircleMarker
+              center={activeRoute.coordenadas[0]}
+              radius={8}
+              pathOptions={{ color: '#ffffff', weight: 3, fillColor: '#064b5f', fillOpacity: 1 }}
+            >
+              <Tooltip direction="top">Sua localização</Tooltip>
+            </CircleMarker>
+          </>
         )}
+
+        {searchedAddress && (
+          <CircleMarker
+            center={[searchedAddress.latitude, searchedAddress.longitude]}
+            radius={10}
+            pathOptions={{ color: '#ffffff', weight: 3, fillColor: '#0b9b8c', fillOpacity: 1 }}
+          >
+            <Tooltip permanent direction="top">{searchedAddress.label}</Tooltip>
+          </CircleMarker>
+        )}
+
+        {userLocation && (
+          <>
+            <Circle
+              center={[userLocation.latitude, userLocation.longitude]}
+              radius={userLocation.accuracy}
+              pathOptions={{ color: '#087b72', weight: 1, fillColor: '#70e2d1', fillOpacity: 0.13 }}
+            />
+            <CircleMarker
+              center={[userLocation.latitude, userLocation.longitude]}
+              radius={9}
+              pathOptions={{ color: '#ffffff', weight: 3, fillColor: '#087b72', fillOpacity: 1 }}
+            >
+              <Tooltip permanent direction="top">Você está aqui</Tooltip>
+            </CircleMarker>
+          </>
+        )}
+
+        {nearbyPlaces.map((place) => (
+          <Marker
+            key={place.id}
+            position={[place.latitude, place.longitude]}
+            icon={createCustomIcon(place.categoria, false)}
+          >
+            <Popup>
+              <div className="max-w-[240px] text-slate-800">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">{place.categoria.replaceAll('_', ' ')}</span>
+                <h3 className="mt-1 text-sm font-bold text-slate-900">{place.nome}</h3>
+                <p className="mt-1 text-xs text-slate-500">{place.endereco}</p>
+                <p className="mt-2 text-[10px] text-slate-400">Dados colaborativos do OpenStreetMap</p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </div>
   );

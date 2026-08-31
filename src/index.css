@@ -1,21 +1,65 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Nunito Sans', system-ui, -apple-system, sans-serif;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 0.875rem;
+  --shadow-sm: 0 1px 2px rgb(8 55 70 / 0.05);
+  --shadow-md: 0 4px 12px rgb(8 55 70 / 0.08);
+  --shadow-lg: 0 8px 24px rgb(8 55 70 / 0.1);
+  --shadow-xl: 0 12px 32px rgb(8 55 70 / 0.12);
+  --shadow-2xl: 0 16px 40px rgb(8 55 70 / 0.14);
+
+  /* Paleta derivada da marca Apoio na rede. As escalas substituem os antigos
+     azuis/índigos para atualizar de forma consistente todos os componentes. */
+  --color-blue-50: #edfcf9;
+  --color-blue-100: #d3f8f1;
+  --color-blue-200: #a9efe3;
+  --color-blue-300: #70e2d1;
+  --color-blue-400: #35d2bb;
+  --color-blue-500: #16bea8;
+  --color-blue-600: #0b9b8c;
+  --color-blue-700: #087b72;
+  --color-blue-800: #075f5a;
+  --color-blue-900: #064b49;
+  --color-blue-950: #022f30;
+  --color-indigo-400: #2baec0;
+  --color-indigo-600: #087891;
+  --color-indigo-800: #075a70;
+  --color-indigo-900: #06465b;
+}
+
 @layer base {
   :root {
-    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-main: 'Nunito Sans', system-ui, -apple-system, sans-serif;
     --font-dyslexic: 'Lexend', 'Comic Sans MS', sans-serif;
+    --brand-mint: #16bea8;
+    --brand-petrol: #064b5f;
+    --brand-ink: #083746;
+    --brand-surface: #f4fbfa;
+    --brand-focus: #087b72;
   }
 
   body {
     font-family: var(--font-main);
-    color: #1e293b;
-    background-color: #f8fafc;
+    color: var(--brand-ink);
+    background-color: var(--brand-surface);
     line-height: 1.6;
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  button, input, select, textarea {
+    font: inherit;
   }
 
   /* Focus visible WCAG 2.1 AA requirement: minimum 3px offset ring */
   *:focus-visible {
-    outline: 3px solid #2563eb !important;
+    outline: 3px solid var(--brand-focus) !important;
     outline-offset: 3px !important;
     border-radius: 4px;
     z-index: 50;
@@ -96,12 +140,30 @@ body.reduced-sensory * {
   background-image: none !important;
 }
 
+body.enhanced-focus *:focus-visible {
+  outline-width: 4px !important;
+  outline-offset: 4px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Skip link (Pular para o conteúdo) */
 .skip-link {
   position: absolute;
   top: -100px;
   left: 1rem;
-  background: #1e3a8a;
+  background: var(--brand-petrol);
   color: #ffffff;
   padding: 0.75rem 1.5rem;
   z-index: 9999;

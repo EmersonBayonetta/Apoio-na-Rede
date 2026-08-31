@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { DisabilityType } from '../types';
 import { DISABILITY_INFO } from './DisabilityBadge';
@@ -16,6 +17,50 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
     currentUser?.preferencias_acessibilidade || []
   );
   const [isSaving, setIsSaving] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setSelected(currentUser?.preferencias_acessibilidade || []);
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    requestAnimationFrame(() => {
+      dialogRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (event.key === 'Tab' && dialogRef.current) {
+        const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(focusableSelector));
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (!first || !last) return;
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen, currentUser, onClose]);
 
   if (!isOpen) return null;
 
@@ -30,11 +75,11 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
     try {
       await updateUserPreferences(selected);
       try {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.7 },
-        });
+        const reduceMotion = document.body.classList.contains('reduced-sensory')
+          || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduceMotion) {
+          confetti({ particleCount: 35, spread: 50, origin: { y: 0.7 } });
+        }
       } catch {
         // ignore
       }
@@ -48,14 +93,17 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
 
   const disabilityKeys: DisabilityType[] = ['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'];
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="pref-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4 sm:p-6 bg-slate-950/65 backdrop-blur-xs animate-fadeIn"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative text-slate-800">
+      <div ref={dialogRef} className="bg-white rounded-2xl max-w-lg w-full max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-6 shadow-xl border border-slate-200 relative text-slate-800">
         <button
           type="button"
           onClick={onClose}
@@ -140,6 +188,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

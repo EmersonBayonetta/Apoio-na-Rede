@@ -15,6 +15,12 @@ export const SkipLinks: React.FC = () => {
       >
         Pular para a busca e filtros (Enter)
       </a>
+      <a
+        href="#results-section"
+        className="skip-link !left-[31rem] focus:ring-4 focus:ring-yellow-300 focus:outline-none"
+      >
+        Pular para os resultados (Enter)
+      </a>
     </nav>
   );
 };

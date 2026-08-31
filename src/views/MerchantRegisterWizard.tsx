@@ -580,7 +580,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
               <div className="font-bold text-sm">Resumo do Cadastro:</div>
               <div>🏢 <strong>Nome:</strong> {nome || 'Não preenchido'}</div>
               <div>📍 <strong>Endereço:</strong> {endereco}, {cidade} ({estado})</div>
-              <div>♿ <strong>Critérios Atendidos:</strong> {criteriaState.filter((c) => c.presente).length} itens marcados</div>
+              <div><strong>Critérios atendidos:</strong> {criteriaState.filter((c) => c.presente).length} itens marcados</div>
             </div>
           </section>
         )}

@@ -10,7 +10,6 @@ import {
   MessageCircle,
   Mail,
   Award,
-  Sparkles,
 } from 'lucide-react';
 
 export const ProfessionalsDirectoryView: React.FC = () => {
@@ -49,14 +48,13 @@ export const ProfessionalsDirectoryView: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-slate-800 animate-fadeIn">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-emerald-900 via-teal-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-lg mb-8">
+      <div className="bg-blue-950 text-white rounded-2xl px-6 py-8 sm:px-10 mb-8">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700/80 text-emerald-100 text-xs font-bold mb-3 border border-emerald-400/30">
-            <Sparkles size={14} className="text-emerald-300" aria-hidden="true" />
-            <span>Saúde & Cuidado Especializado</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2">
-            Diretório de Profissionais Inclusivos
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300 mb-3">
+            Saúde e cuidado especializado
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
+            Profissionais com atendimento inclusivo
           </h1>
           <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed">
             Encontre médicos, dentistas, psicólogos e terapeutas com consultórios adaptados e capacitação comprovada para atender pessoas com deficiência.

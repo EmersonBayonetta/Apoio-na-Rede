@@ -5,27 +5,24 @@ import {
   ShieldCheck,
   CheckCircle,
   XCircle,
-  AlertTriangle,
-  RotateCcw,
-  Sparkles,
   MapPin,
   Trash2,
   Check,
 } from 'lucide-react';
 import { DisabilityBadge } from '../components/DisabilityBadge';
+import { useAuth } from '../context/AuthContext';
 
 interface AdminDashboardViewProps {
   onRefreshGlobal: () => void;
 }
 
 export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onRefreshGlobal }) => {
+  const { adminUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'pending' | 'reports'>('pending');
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
-    setIsLoading(true);
     try {
       const allEst = await StorageService.getEstablishments();
       setEstablishments(allEst);
@@ -35,8 +32,6 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onRefres
       setReviews(allRev);
     } catch (err) {
       console.error(err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -67,18 +62,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onRefres
   };
 
   const handleDismissReport = async (reviewId: string) => {
-    const rawRev = localStorage.getItem('acessacidade_reviews');
-    if (rawRev) {
-      const allRev: Review[] = JSON.parse(rawRev);
-      const idx = allRev.findIndex((r) => r.id === reviewId);
-      if (idx >= 0) {
-        allRev[idx].denunciada = false;
-        delete allRev[idx].motivo_denuncia;
-        localStorage.setItem('acessacidade_reviews', JSON.stringify(allRev));
-        loadData();
-        onRefreshGlobal();
-      }
-    }
+    await StorageService.dismissReviewReport(reviewId);
+    loadData();
+    onRefreshGlobal();
   };
 
   const handleDeleteReview = async (reviewId: string) => {
@@ -90,23 +76,24 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onRefres
     }
   };
 
-  const handleResetDefaults = async () => {
-    if (confirm('Deseja restaurar todos os dados fictícios padrão da plataforma?')) {
-      await StorageService.resetToDefaults();
-      alert('Dados restaurados com sucesso!');
-      loadData();
-      onRefreshGlobal();
-    }
-  };
+  if (adminUser?.tipo !== 'admin') {
+    return (
+      <section role="alert" className="max-w-xl mx-auto px-6 py-20 text-center">
+        <ShieldCheck size={36} className="mx-auto text-slate-400 mb-4" aria-hidden="true" />
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Acesso restrito</h1>
+        <p className="text-sm text-slate-600">Esta área está disponível apenas para administradores autorizados.</p>
+      </section>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-slate-800 animate-fadeIn">
       {/* Banner */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-lg mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-lg mb-8">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-blue-300 text-xs font-bold mb-3 border border-slate-700">
             <ShieldCheck size={14} className="text-blue-400" aria-hidden="true" />
-            <span>Painel de Moderação & Qualidade</span>
+            <span>Moderação e qualidade</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight mb-1">
             Gestão de Conteúdo e Acessibilidade
@@ -116,14 +103,6 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ onRefres
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleResetDefaults}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition-colors"
-        >
-          <RotateCcw size={14} />
-          <span>Restaurar Dados Mock</span>
-        </button>
       </div>
 
       {/* Tabs de Moderação */}
