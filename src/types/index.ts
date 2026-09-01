@@ -1,4 +1,4 @@
-export type DisabilityType = 'mobilidade' | 'visual' | 'auditiva' | 'intelectual' | 'invisivel';
+export type DisabilityType = 'mobilidade' | 'visual' | 'auditiva' | 'intelectual' | 'invisivel' | 'outro';
 
 export type EstablishmentStatus = 'pendente' | 'verificado' | 'rejeitado';
 

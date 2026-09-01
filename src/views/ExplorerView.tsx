@@ -659,12 +659,12 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 text-slate-800">
       <header className="mb-8 max-w-3xl">
-        <p className="eyebrow mb-3">Mapa de Cataguases</p>
+        <p className="eyebrow mb-3">Catálogo Inclusivo — Apoio na rede</p>
         <h1 className="display-title text-4xl sm:text-5xl text-blue-950 leading-[1.02] mb-3">
-          Encontre um lugar que funcione para você.
+          Catálogo de Locais & Serviços Acessíveis
         </h1>
         <p className="max-w-2xl text-sm sm:text-base leading-relaxed text-slate-600">
-          Pesquise endereços e consulte informações de acesso antes da visita.
+          Encontre locais que atendem pessoas com necessidades especiais (saúde, comércio, lazer e serviços públicos). O mapa atua como complemento para a sua navegação.
         </p>
       </header>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { DisabilityType } from '../types';
-import { Accessibility, Eye, Ear, Brain, HeartPulse } from 'lucide-react';
+import { Accessibility, Eye, Ear, Brain, HeartPulse, HelpCircle } from 'lucide-react';
 
 interface DisabilityBadgeProps {
   type: DisabilityType;
@@ -51,6 +51,14 @@ export const DISABILITY_INFO: Record<
     shortLabel: 'Invisível / Crônica',
     description: 'Cordão de Girassol aceito, assento e fila prioritária sem constrangimento',
     icon: HeartPulse,
+    color: 'text-blue-900 bg-white border-blue-950/15 hover:bg-blue-50',
+    activeBg: 'bg-blue-950 text-white border-blue-950 shadow-sm',
+  },
+  outro: {
+    label: 'Outro / Acessibilidade Geral',
+    shortLabel: 'Outro',
+    description: 'Outros aspectos de acessibilidade e atendimento inclusivo',
+    icon: HelpCircle,
     color: 'text-blue-900 bg-white border-blue-950/15 hover:bg-blue-50',
     activeBg: 'bg-blue-950 text-white border-blue-950 shadow-sm',
   },

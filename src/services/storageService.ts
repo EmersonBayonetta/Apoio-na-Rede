@@ -23,17 +23,59 @@ const STORAGE_KEYS = {
   ROUTES: 'acessacidade_routes',
 };
 
-// Inicialização segura dos dados locais
+// Inicialização segura dos dados locais com mesclagem automática
 const initStorage = () => {
-  if (!localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS)) {
+  const rawEst = localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS);
+  if (!rawEst) {
     localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(MOCK_ESTABLISHMENTS));
+  } else {
+    const list: Establishment[] = JSON.parse(rawEst);
+    let updated = false;
+    MOCK_ESTABLISHMENTS.forEach((mock) => {
+      if (!list.some((e) => e.id === mock.id)) {
+        list.unshift(mock);
+        updated = true;
+      }
+    });
+    if (updated) {
+      localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(list));
+    }
   }
-  if (!localStorage.getItem(STORAGE_KEYS.CRITERIA)) {
+
+  const rawCrit = localStorage.getItem(STORAGE_KEYS.CRITERIA);
+  if (!rawCrit) {
     localStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(MOCK_CRITERIA));
+  } else {
+    const list: AccessibilityCriteria[] = JSON.parse(rawCrit);
+    let updated = false;
+    MOCK_CRITERIA.forEach((mock) => {
+      if (!list.some((c) => c.id === mock.id)) {
+        list.push(mock);
+        updated = true;
+      }
+    });
+    if (updated) {
+      localStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(list));
+    }
   }
-  if (!localStorage.getItem(STORAGE_KEYS.REVIEWS)) {
+
+  const rawRev = localStorage.getItem(STORAGE_KEYS.REVIEWS);
+  if (!rawRev) {
     localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(MOCK_REVIEWS));
+  } else {
+    const list: Review[] = JSON.parse(rawRev);
+    let updated = false;
+    MOCK_REVIEWS.forEach((mock) => {
+      if (!list.some((r) => r.id === mock.id)) {
+        list.unshift(mock);
+        updated = true;
+      }
+    });
+    if (updated) {
+      localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(list));
+    }
   }
+
   if (!localStorage.getItem(STORAGE_KEYS.PROFESSIONALS)) {
     localStorage.setItem(STORAGE_KEYS.PROFESSIONALS, JSON.stringify(MOCK_PROFESSIONALS));
   }

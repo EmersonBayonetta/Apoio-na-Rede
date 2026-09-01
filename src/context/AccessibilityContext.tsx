@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS: AccessibilitySettings = {
   dyslexicFont: false,
   reducedSensory: false,
   voiceReadingEnabled: true,
-  preferredView: 'map',
+  preferredView: 'list',
   enhancedFocus: false,
 };
 
