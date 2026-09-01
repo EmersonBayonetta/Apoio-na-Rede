@@ -2,6 +2,56 @@ import { Establishment, AccessibilityCriteria, Review, Professional, AccessibleR
 
 export const MOCK_ESTABLISHMENTS: Establishment[] = [
   {
+    id: 'est-dentista-jose',
+    nome: 'Dentista Dr. José Silva - Odontologia Especializada & Acessível',
+    categoria: 'saude',
+    endereco: 'Rua Major Vieira, 145 - Centro',
+    bairro: 'Centro',
+    cidade: 'Cataguases',
+    estado: 'MG',
+    cep: '36770-000',
+    latitude: -21.3892,
+    longitude: -42.6965,
+    descricao: 'Consultório odontológico totalmente adaptado para pessoas com necessidades especiais. Conta com sala ampla de atendimento para fácil deslocamento e giro de cadeirantes, estrutura de prédio comercial moderno com elevador social adaptado, rampa de acesso suave e sanitário acessível.',
+    fotos: [
+      'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=800'
+    ],
+    status: 'verificado',
+    telefone: '(32) 3421-8890',
+    whatsapp: '(32) 99876-5432',
+    email_contato: 'drjose.odonto@apoiona-rede.com',
+    horario_funcionamento: 'Seg a Sex: 08:00 às 18:00 | Sáb: 08:00 às 12:00',
+    nota_media: 5.0,
+    total_avaliacoes: 18,
+    verificado_em: '2024-03-01',
+    criado_em: '2024-01-10',
+  },
+  {
+    id: 'est-centro-cultural-humberto-mauro',
+    nome: 'Centro Cultural Humberto Mauro',
+    categoria: 'lazer_cultura',
+    endereco: 'Rua Coronel Arthur Cruz, 170 - Centro',
+    bairro: 'Centro',
+    cidade: 'Cataguases',
+    estado: 'MG',
+    cep: '36770-000',
+    latitude: -21.3888,
+    longitude: -42.6970,
+    descricao: 'Importante polo cultural e cine-teatro de Cataguases. Conta com excelente acessibilidade para cadeirantes, incluindo entrada nivelada com rampa suave, elevador adaptado com aviso sonoro e botoeira em Braille para os andares superiores, sanitários acessíveis e assentos adaptados no auditório.',
+    fotos: [
+      'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=800'
+    ],
+    status: 'verificado',
+    telefone: '(32) 3421-5280',
+    horario_funcionamento: 'Ter a Dom: 13:00 às 21:00',
+    nota_media: 5.0,
+    total_avaliacoes: 14,
+    verificado_em: '2024-03-01',
+    criado_em: '2024-01-15',
+  },
+  {
     id: 'est-1',
     nome: 'Café & Livraria Sem Barreiras',
     categoria: 'alimentacao',
@@ -271,6 +321,20 @@ export const MOCK_ESTABLISHMENTS: Establishment[] = [
 ];
 
 export const MOCK_CRITERIA: AccessibilityCriteria[] = [
+  // est-centro-cultural-humberto-mauro (Centro Cultural Humberto Mauro)
+  { id: 'cr-hm-1', establishment_id: 'est-centro-cultural-humberto-mauro', tipo_deficiencia: 'mobilidade', criterio: 'Entrada 100% nivelada e rampa de acesso suave', presente: true, observacao_livre: 'Entrada sem degraus com portas amplas e facilidade de acesso.' },
+  { id: 'cr-hm-2', establishment_id: 'est-centro-cultural-humberto-mauro', tipo_deficiencia: 'mobilidade', criterio: 'Elevador adaptado com aviso sonoro e painel em Braille para acesso aos andares superiores', presente: true, observacao_livre: 'Acesso garantido a salas de exposições e piso superior.' },
+  { id: 'cr-hm-3', establishment_id: 'est-centro-cultural-humberto-mauro', tipo_deficiencia: 'mobilidade', criterio: 'Espaço reservado para cadeirantes no cinema/teatro com excelente visão', presente: true },
+  { id: 'cr-hm-4', establishment_id: 'est-centro-cultural-humberto-mauro', tipo_deficiencia: 'mobilidade', criterio: 'Sanitário adaptado para cadeirantes com barras de apoio e lava-mãos acessível', presente: true },
+  { id: 'cr-hm-5', establishment_id: 'est-centro-cultural-humberto-mauro', tipo_deficiencia: 'visual', criterio: 'Piso tátil na recepção e entrada principal', presente: true },
+
+  // est-dentista-jose (Dentista Dr. José Silva)
+  { id: 'cr-dj-1', establishment_id: 'est-dentista-jose', tipo_deficiencia: 'mobilidade', criterio: 'Sala de atendimento ampla com vão livre para giro de 360° de cadeira de rodas', presente: true, observacao_livre: 'Sem barreiras físicas entre o consultório e a recepção.' },
+  { id: 'cr-dj-2', establishment_id: 'est-dentista-jose', tipo_deficiencia: 'mobilidade', criterio: 'Estrutura do prédio comercial com elevador social adaptado e rampas', presente: true, observacao_livre: 'Elevador amplo com botoeira em Braille e aviso sonoro de andar.' },
+  { id: 'cr-dj-3', establishment_id: 'est-dentista-jose', tipo_deficiencia: 'mobilidade', criterio: 'Sanitário adaptado para cadeirantes com barras de apoio e lavatório rebaixado', presente: true },
+  { id: 'cr-dj-4', establishment_id: 'est-dentista-jose', tipo_deficiencia: 'intelectual', criterio: 'Atendimento humanizado com tempo estendido e ambiente tranquilo', presente: true },
+  { id: 'cr-dj-5', establishment_id: 'est-dentista-jose', tipo_deficiencia: 'auditiva', criterio: 'Agendamento e atendimento via WhatsApp com confirmação por texto', presente: true },
+
   // est-1 (Café & Livraria Sem Barreiras)
   { id: 'cr-1', establishment_id: 'est-1', tipo_deficiencia: 'mobilidade', criterio: 'Rampa de acesso suave com corrimão duplo', presente: true, observacao_livre: 'Inclinação dentro do padrão NBR 9050, sem degraus na entrada.' },
   { id: 'cr-2', establishment_id: 'est-1', tipo_deficiencia: 'mobilidade', criterio: 'Banheiro adaptado com barras de apoio e espaço de giro de 1,50m', presente: true, observacao_livre: 'Porta com 90cm de largura e tranca de fácil abertura.' },
@@ -319,6 +383,36 @@ export const MOCK_CRITERIA: AccessibilityCriteria[] = [
 ];
 
 export const MOCK_REVIEWS: Review[] = [
+  {
+    id: 'rev-hm-1',
+    establishment_id: 'est-centro-cultural-humberto-mauro',
+    user_id: 'usr-103',
+    user_nome: 'Gabriel Resende',
+    tipo_deficiencia_avaliada: 'mobilidade',
+    nota: 5,
+    comentario: 'Espaço cultural incrível e acessível! Usei o elevador para ir à galeria de exposições superior sem dificuldades. Entrada 100% plana e equipe atenciosa.',
+    data: '2024-03-26',
+  },
+  {
+    id: 'rev-dj-1',
+    establishment_id: 'est-dentista-jose',
+    user_id: 'usr-101',
+    user_nome: 'Marcos Vinícius Oliveira',
+    tipo_deficiencia_avaliada: 'mobilidade',
+    nota: 5,
+    comentario: 'Excelente atendimento! A sala de atendimento do Dr. José é realmente muito ampla, consegui manobrar minha cadeira motorizada sem nenhuma complicação. O elevador do prédio comercial é acessível e espaçoso.',
+    data: '2024-03-22',
+  },
+  {
+    id: 'rev-dj-2',
+    establishment_id: 'est-dentista-jose',
+    user_id: 'usr-102',
+    user_nome: 'Beatriz Vasconcelos',
+    tipo_deficiencia_avaliada: 'intelectual',
+    nota: 5,
+    comentario: 'Atendimento nota 1000! Levei meu filho autista e o Dr. José explicou cada procedimento com calma e sem ruídos bruscos. Estrutura impecável.',
+    data: '2024-03-25',
+  },
   {
     id: 'rev-1',
     establishment_id: 'est-1',

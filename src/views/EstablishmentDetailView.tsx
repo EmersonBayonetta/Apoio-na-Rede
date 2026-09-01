@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Establishment, DisabilityType } from '../types';
 import { StorageService } from '../services/storageService';
 import { useAccessibility } from '../context/AccessibilityContext';
@@ -15,11 +15,22 @@ import {
   Flag,
   Send,
   CheckCircle,
+  Mail,
+  Key,
+  ShieldCheck,
+  UserCheck,
+  AlertCircle,
 } from 'lucide-react';
 import { VerifiedBadge } from '../components/VerifiedBadge';
 import { DisabilityBadge, DISABILITY_INFO } from '../components/DisabilityBadge';
 import { AccessibilityChecklist } from '../components/AccessibilityChecklist';
 import { AudioReaderButton } from '../components/AudioReaderButton';
+
+import { sendValidationEmailResend } from '../services/emailService';
+
+const USER_PROFILE_KEY = 'apoio_user_profile_v1';
+const MIN_COMMENT_CHARS = 15;
+const MAX_COMMENT_CHARS = 250;
 
 interface EstablishmentDetailViewProps {
   establishment: Establishment;
@@ -36,6 +47,18 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
   const [reviewFilter, setReviewFilter] = useState<DisabilityType | 'todas'>('todas');
 
+  // Form de Cadastro & Verificação por Token
+  const [userName, setUserName] = useState('');
+  const [userSurname, setUserSurname] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
+  const [inputToken, setInputToken] = useState('');
+  const [isTokenSent, setIsTokenSent] = useState(false);
+  const [isSendingTokenEmail, setIsSendingTokenEmail] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [tokenError, setTokenError] = useState('');
+  const [tokenNoticeMsg, setTokenNoticeMsg] = useState('');
+
   // Form de Avaliação
   const [newRating, setNewRating] = useState(5);
   const [newDisability, setNewDisability] = useState<DisabilityType>(
@@ -45,6 +68,24 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
+
+  // Carregar usuário verificado salvo
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(USER_PROFILE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.nome && parsed.sobrenome && parsed.email && parsed.verified) {
+          setUserName(parsed.nome);
+          setUserSurname(parsed.sobrenome);
+          setUserEmail(parsed.email);
+          setIsEmailVerified(true);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const reviews = establishment.reviews || [];
   const criteria = establishment.criteria || [];
@@ -58,23 +99,98 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
       ? establishment.fotos
       : ['/brand/apoio-na-rede-logo.png'];
 
+  // Enviar Token por E-mail (Resend API)
+  const handleRequestToken = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTokenError('');
+    if (!userName.trim() || !userSurname.trim() || !userEmail.trim()) {
+      setTokenError('Por favor, informe seu Nome, Sobrenome e E-mail.');
+      return;
+    }
+
+    if (!userEmail.includes('@') || !userEmail.includes('.')) {
+      setTokenError('Insira um endereço de e-mail válido.');
+      return;
+    }
+
+    setIsSendingTokenEmail(true);
+
+    // Gerar token aleatório de 6 dígitos
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedToken(code);
+
+    const result = await sendValidationEmailResend({
+      emailUsuario: userEmail.trim(),
+      nomeUsuario: `${userName.trim()} ${userSurname.trim()}`,
+      tokenGerado: code,
+    });
+
+    setIsSendingTokenEmail(false);
+    setIsTokenSent(true);
+
+    if (result.success) {
+      setTokenNoticeMsg(`Enviamos um e-mail de verificação com um código de 6 dígitos para ${userEmail}. Por favor, verifique sua caixa de entrada (ou spam) e digite o código abaixo.`);
+    } else {
+      setTokenError(`Falha ao enviar e-mail: ${result.error}. Tente novamente.`);
+    }
+  };
+
+  // Validar Token
+  const handleVerifyToken = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTokenError('');
+    if (inputToken.trim() === generatedToken) {
+      setIsEmailVerified(true);
+      setTokenNoticeMsg('');
+      // Salva perfil verificado para facilitar próximos comentários
+      localStorage.setItem(
+        USER_PROFILE_KEY,
+        JSON.stringify({
+          nome: userName.trim(),
+          sobrenome: userSurname.trim(),
+          email: userEmail.trim(),
+          verified: true,
+        })
+      );
+    } else {
+      setTokenError('Token de validação incorreto. Verifique os dígitos e tente novamente.');
+    }
+  };
+
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    const cleanComment = newComment.trim();
+    if (!cleanComment) return;
+
+    if (!isEmailVerified) {
+      setTokenError('É necessário cadastrar e validar seu e-mail com o token antes de comentar.');
+      return;
+    }
+
+    if (cleanComment.length < MIN_COMMENT_CHARS) {
+      alert(`Seu comentário precisa ter pelo menos ${MIN_COMMENT_CHARS} caracteres.`);
+      return;
+    }
+
+    if (cleanComment.length > MAX_COMMENT_CHARS) {
+      alert(`Seu comentário pode ter no máximo ${MAX_COMMENT_CHARS} caracteres.`);
+      return;
+    }
 
     setIsSubmittingReview(true);
     try {
+      const fullUserNome = `${userName.trim()} ${userSurname.trim()}`;
       await StorageService.addReview({
         establishment_id: establishment.id,
-        user_nome: 'Visitante da comunidade',
+        user_nome: fullUserNome,
         tipo_deficiencia_avaliada: newDisability,
         nota: newRating,
-        comentario: newComment,
+        comentario: cleanComment,
       });
 
       setNewComment('');
       setReviewSuccessMsg(true);
-      setTimeout(() => setReviewSuccessMsg(false), 4000);
+      setTimeout(() => setReviewSuccessMsg(false), 5000);
       onRefresh();
     } catch (err) {
       console.error('Erro ao adicionar avaliação:', err);
@@ -323,7 +439,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             >
               Todas ({reviews.length})
             </button>
-            {(['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'] as DisabilityType[]).map((type) => (
+            {(['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel', 'outro'] as DisabilityType[]).map((type) => (
               <DisabilityBadge
                 key={type}
                 type={type}
@@ -384,23 +500,210 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           </div>
         )}
 
-        {/* Formulário: Adicionar Avaliação */}
-        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-          <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-            <Sparkles size={18} className="text-blue-600" aria-hidden="true" />
-            Compartilhe sua experiência de acessibilidade
-          </h3>
-          <p className="text-xs text-slate-500 mb-4">
-            Sua avaliação será publicada como <strong>Visitante da comunidade</strong>
+        {/* Formulário: Adicionar Avaliação com Cadastro e Token */}
+        <div className="bg-slate-50 rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2.5 mb-2">
+            <Sparkles size={20} className="text-blue-700" aria-hidden="true" />
+            <h3 className="text-lg font-black text-slate-900">
+              Compartilhe sua experiência de acessibilidade
+            </h3>
+          </div>
+          <p className="text-xs text-slate-600 mb-6">
+            Para garantir avaliações autênticas e confiáveis, cadastre seu <strong>Nome, Sobrenome e E-mail</strong> para receber e validar seu token de segurança.
           </p>
 
           {reviewSuccessMsg && (
-            <div className="p-3 mb-4 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-2 text-sm font-semibold animate-fadeIn">
-              <CheckCircle size={18} />
-              <span>Avaliação enviada com sucesso! Obrigado por fortalecer a acessibilidade.</span>
+            <div className="p-4 mb-6 rounded-2xl bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-3 text-sm font-bold animate-fadeIn">
+              <CheckCircle size={20} className="text-emerald-700 shrink-0" />
+              <span>Avaliação verificada e enviada com sucesso! Obrigado por fortalecer a acessibilidade comunitária.</span>
             </div>
           )}
 
+          {/* Etapa 1: Cadastro de Usuário e Validação de Token de E-mail */}
+          {!isEmailVerified ? (
+            <div className="bg-white rounded-2xl p-5 border border-blue-950/10 mb-6 space-y-4 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-black uppercase text-blue-950 tracking-wider pb-2 border-b border-slate-100">
+                <ShieldCheck size={16} className="text-blue-700" />
+                <span>Passo 1: Identificação & Validação de E-mail por Token</span>
+              </div>
+
+              {tokenError && (
+                <div role="alert" className="p-3 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-xs font-semibold flex items-start gap-2">
+                  <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                  <span>{tokenError}</span>
+                </div>
+              )}
+
+              {!isTokenSent ? (
+                <form onSubmit={handleRequestToken} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="user-name-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Nome *
+                      </label>
+                      <input
+                        id="user-name-input"
+                        type="text"
+                        required
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Ex: Carlos"
+                        className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="user-surname-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Sobrenome *
+                      </label>
+                      <input
+                        id="user-surname-input"
+                        type="text"
+                        required
+                        value={userSurname}
+                        onChange={(e) => setUserSurname(e.target.value)}
+                        placeholder="Ex: Oliveira"
+                        className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="user-email-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      E-mail para Receber Token *
+                    </label>
+                    <div className="relative">
+                      <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        id="user-email-input"
+                        type="email"
+                        required
+                        value={userEmail}
+                        onChange={(e) => setUserEmail(e.target.value)}
+                        placeholder="seu.email@exemplo.com"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={isSendingTokenEmail}
+                      className={`flex-1 py-3 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 ${
+                        isSendingTokenEmail
+                          ? 'bg-blue-800 cursor-wait opacity-80'
+                          : 'bg-blue-900 hover:bg-blue-950 cursor-pointer'
+                      }`}
+                    >
+                      <Key size={16} aria-hidden="true" />
+                      <span>
+                        {isSendingTokenEmail
+                          ? 'Enviando E-mail via Resend...'
+                          : 'Gerar & Enviar Token de Verificação por E-mail'}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserName('');
+                        setUserSurname('');
+                        setUserEmail('');
+                        setTokenError('');
+                      }}
+                      className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyToken} className="space-y-4 animate-fadeIn">
+                  {tokenNoticeMsg && (
+                    <div className="p-3.5 rounded-xl bg-blue-50 text-blue-950 border border-blue-200 text-xs font-medium leading-relaxed">
+                      <strong className="block text-blue-900 font-bold mb-1">📬 Token enviado por e-mail!</strong>
+                      <span>{tokenNoticeMsg}</span>
+                    </div>
+                  )}
+
+                  <div>
+                    <label htmlFor="token-input" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Digite o Token de 6 Dígitos *
+                    </label>
+                    <div className="relative">
+                      <Key size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        id="token-input"
+                        type="text"
+                        maxLength={6}
+                        required
+                        value={inputToken}
+                        onChange={(e) => setInputToken(e.target.value.replace(/\D/g, ''))}
+                        placeholder="Ex: 849201"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-base font-black tracking-widest text-blue-950 focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <UserCheck size={16} aria-hidden="true" />
+                      <span>Validar Token e Autorizar Comentário</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => { setIsTokenSent(false); setInputToken(''); }}
+                      className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                    >
+                      Alterar E-mail
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsTokenSent(false);
+                        setGeneratedToken(null);
+                        setInputToken('');
+                        setTokenError('');
+                        setTokenNoticeMsg('');
+                      }}
+                      className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          ) : (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
+              <div className="flex items-center gap-2.5">
+                <UserCheck size={20} className="text-emerald-700 shrink-0" />
+                <div>
+                  <span className="text-xs font-extrabold text-emerald-950 uppercase tracking-wider block">
+                    Identidade Verificada por E-mail ✓
+                  </span>
+                  <span className="text-xs font-medium text-emerald-800">
+                    Avaliando como: <strong>{userName} {userSurname}</strong> ({userEmail})
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsEmailVerified(false)}
+                className="text-xs font-bold text-emerald-900 hover:underline cursor-pointer"
+              >
+                Alterar Usuário
+              </button>
+            </div>
+          )}
+
+          {/* Etapa 2: Formulário da Avaliação (Liberado somente após verificação de e-mail) */}
           <form onSubmit={handleAddReview} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -412,7 +715,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                   onChange={(e) => setNewDisability(e.target.value as DisabilityType)}
                   className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
                 >
-                  {(['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'] as DisabilityType[]).map((t) => (
+                  {(['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel', 'outro'] as DisabilityType[]).map((t) => (
                     <option key={t} value={t}>
                       {DISABILITY_INFO[t].label}
                     </option>
@@ -430,7 +733,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                       key={star}
                       type="button"
                       onClick={() => setNewRating(star)}
-                      className="p-1 text-amber-400 hover:scale-125 transition-transform"
+                      className="p-1 text-amber-400 hover:scale-125 transition-transform cursor-pointer"
                       aria-label={`Avaliar com ${star} estrelas`}
                     >
                       <Star
@@ -445,28 +748,77 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             </div>
 
             <div>
-              <label htmlFor="review-comment" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Seu Relato Detalhado (Como foi a circulação, atendimento e recursos?)
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="review-comment" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Seu Relato Detalhado de Acessibilidade *
+                </label>
+                <span className={`text-xs font-bold ${
+                  newComment.trim().length < MIN_COMMENT_CHARS
+                    ? 'text-amber-700'
+                    : newComment.trim().length > MAX_COMMENT_CHARS
+                    ? 'text-rose-700'
+                    : 'text-emerald-700'
+                }`}>
+                  {newComment.trim().length} / {MAX_COMMENT_CHARS} caracteres
+                </span>
+              </div>
+
               <textarea
                 id="review-comment"
-                rows={3}
+                rows={4}
                 required
+                maxLength={MAX_COMMENT_CHARS}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Exemplo: Fui com cadeira de rodas e o acesso foi excelente, sem degraus. Os atendentes foram muito atenciosos..."
+                placeholder="Exemplo: Fui ao consultório do Dr. José Silva usando cadeira de rodas motorizada. A sala é super ampla com fácil circulação, e o elevador do prédio comercial atendeu perfeitamente..."
                 className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
               />
+
+              <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+                <span>Recomendação: Mínimo {MIN_COMMENT_CHARS} caracteres e máximo {MAX_COMMENT_CHARS} caracteres.</span>
+                {newComment.trim().length > 0 && newComment.trim().length < MIN_COMMENT_CHARS && (
+                  <span className="text-amber-700 font-semibold">Faltam {MIN_COMMENT_CHARS - newComment.trim().length} caracteres</span>
+                )}
+                {newComment.trim().length >= MIN_COMMENT_CHARS && (
+                  <span className="text-emerald-700 font-bold">✓ Tamanho ideal</span>
+                )}
+              </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isSubmittingReview}
-              className="px-6 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-600"
-            >
-              <Send size={16} aria-hidden="true" />
-              <span>{isSubmittingReview ? 'Enviando avaliação...' : 'Publicar Avaliação'}</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                disabled={!isEmailVerified || newComment.trim().length < MIN_COMMENT_CHARS || newComment.trim().length > MAX_COMMENT_CHARS || isSubmittingReview}
+                className={`w-full sm:w-auto px-7 py-3 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  !isEmailVerified || newComment.trim().length < MIN_COMMENT_CHARS || newComment.trim().length > MAX_COMMENT_CHARS
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                    : 'bg-blue-700 hover:bg-blue-800 text-white'
+                }`}
+              >
+                <Send size={16} aria-hidden="true" />
+                <span>
+                  {!isEmailVerified
+                    ? 'Valide o E-mail com Token no Passo 1 para Publicar'
+                    : newComment.trim().length < MIN_COMMENT_CHARS
+                    ? `Escreva pelo menos ${MIN_COMMENT_CHARS} caracteres`
+                    : isSubmittingReview
+                    ? 'Enviando avaliação...'
+                    : 'Publicar Avaliação Verificada'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setNewComment('');
+                  setNewRating(5);
+                  setNewDisability(accessibilityPreferences[0] || 'mobilidade');
+                }}
+                className="w-full sm:w-auto px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-sm rounded-xl transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+            </div>
           </form>
         </div>
       </section>

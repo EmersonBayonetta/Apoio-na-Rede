@@ -657,36 +657,22 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-slate-800">
-      {/* Banner de Boas-Vindas Inclusivo */}
-      <section aria-label="Apresentação da Plataforma" className="mb-6">
-        <div className="bg-blue-950 text-white rounded-2xl px-6 py-8 sm:px-10 sm:py-10 relative overflow-hidden">
-          <div className="relative z-10 max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300 mb-3">
-              Acessibilidade em Cataguases
-            </p>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
-              Consulte antes de sair
-            </h1>
-            <p className="text-sm sm:text-base text-blue-100/90 leading-relaxed max-w-2xl">
-              Veja recursos informados por estabelecimentos e pela comunidade, pesquise endereços e planeje seu deslocamento.
-            </p>
-            <a
-              href="#search-filter-section"
-              className="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-xl bg-white text-blue-950 text-sm font-bold hover:bg-blue-50 transition-colors"
-            >
-              Explorar locais
-              <ChevronRight size={17} aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </section>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 text-slate-800">
+      <header className="mb-8 max-w-3xl">
+        <p className="eyebrow mb-3">Catálogo Inclusivo — Apoio na rede</p>
+        <h1 className="display-title text-4xl sm:text-5xl text-blue-950 leading-[1.02] mb-3">
+          Catálogo de Locais & Serviços Acessíveis
+        </h1>
+        <p className="max-w-2xl text-sm sm:text-base leading-relaxed text-slate-600">
+          Encontre locais que atendem pessoas com necessidades especiais (saúde, comércio, lazer e serviços públicos). O mapa atua como complemento para a sua navegação.
+        </p>
+      </header>
 
       <section aria-labelledby="category-shortcuts-title" className="mb-6">
         <div className="flex items-end justify-between gap-4 mb-3">
           <div>
-            <h2 id="category-shortcuts-title" className="text-lg font-bold text-slate-900">Encontre por categoria</h2>
-            <p className="text-sm text-slate-500">Comece pelos lugares mais procurados.</p>
+            <h2 id="category-shortcuts-title" className="text-base font-bold text-blue-950">Categorias</h2>
+            <p className="text-sm text-slate-500">Atalhos para a busca.</p>
           </div>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
@@ -695,7 +681,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
               key={category.id}
               type="button"
               onClick={() => selectCategory(category.id as EstablishmentCategory)}
-              className="shrink-0 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-800 transition-colors"
+              className="shrink-0 px-4 py-2.5 rounded-full bg-white/80 border border-blue-950/10 text-sm font-semibold text-slate-700 shadow-sm hover:border-blue-500/50 hover:bg-blue-50 hover:text-blue-900 transition-all"
             >
               {category.label}
             </button>
@@ -707,7 +693,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       <section
         id="search-filter-section"
         aria-label="Filtros e Busca de Estabelecimentos"
-        className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 mb-6 space-y-5"
+        className="premium-surface rounded-2xl p-5 sm:p-7 mb-7 space-y-6"
       >
         {/* Barra de Busca + Reconhecimento de Voz */}
         <div className="flex flex-col sm:flex-row gap-3">
@@ -731,7 +717,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
               aria-controls="address-suggestions"
               aria-activedescendant={activeSuggestion >= 0 ? `address-option-${activeSuggestion}` : undefined}
               autoComplete="off"
-              className="w-full pl-11 pr-11 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+              className="w-full pl-11 pr-11 py-4 bg-white border border-blue-950/15 rounded-xl text-sm font-medium shadow-inner focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
             />
             {(isSearchingAddress || isLoadingAddressIndex) && <LoaderCircle size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-700 animate-spin" aria-hidden="true" />}
             {addressSuggestions.length > 0 && (
@@ -758,7 +744,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
           <VoiceSearchButton
             onTranscript={(text) => setSearchQuery(text)}
-            className="sm:w-auto w-full py-3.5 px-4"
+            className="sm:w-auto w-full py-4 px-5"
           />
         </div>
         <p role="status" aria-live="polite" className="text-xs text-slate-500">
@@ -868,14 +854,14 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         <div
           role="radiogroup"
           aria-label="Modo de visualização"
-          className="flex items-center bg-slate-200/80 p-1 rounded-2xl"
+          className="flex items-center bg-blue-950/5 border border-blue-950/10 p-1 rounded-full"
         >
           <button
             type="button"
             role="radio"
             aria-checked={viewMode === 'map'}
             onClick={() => setViewMode('map')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
               viewMode === 'map'
                 ? 'bg-white text-blue-700 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -890,7 +876,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             role="radio"
             aria-checked={viewMode === 'list'}
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
               viewMode === 'list'
                 ? 'bg-white text-blue-700 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -973,7 +959,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             </div>
 
             {selectedEstablishment ? (
-              <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4 animate-fadeIn">
+              <div className="premium-card rounded-2xl p-5 space-y-4 animate-fadeIn">
                 <div className="h-44 w-full rounded-2xl overflow-hidden bg-slate-100 relative">
                   <img
                     src={selectedEstablishment.fotos[0] || '/brand/apoio-na-rede-logo.png'}
@@ -1119,7 +1105,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
               return (
                 <article
                   key={est.id}
-                  className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col md:flex-row gap-6 items-start justify-between"
+                  className="premium-card rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row gap-6 items-start justify-between"
                 >
                   <div className="w-full md:w-56 h-44 rounded-2xl overflow-hidden bg-slate-100 shrink-0">
                     <img

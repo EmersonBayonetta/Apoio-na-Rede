@@ -62,10 +62,10 @@ export const AccessibilityToolbar: React.FC = () => {
           aria-expanded={isOpen}
           aria-controls="accessibility-menu"
           aria-label="Abrir menu de recursos de acessibilidade e visualização"
-          className="flex items-center gap-2 px-4 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow-md border border-white transition-colors focus:outline-none focus:ring-4 focus:ring-yellow-400"
+          className="premium-button flex items-center gap-2 p-3.5 sm:px-5 sm:py-3.5 text-white font-bold rounded-full border border-white/70 transition-all focus:outline-none focus:ring-4 focus:ring-yellow-400"
         >
           <Sliders size={20} aria-hidden="true" />
-          <span className="text-sm font-extrabold tracking-wide">Acessibilidade</span>
+          <span className="hidden sm:inline text-sm font-bold tracking-wide">Acessibilidade</span>
         </button>
       </div>
 
@@ -75,7 +75,7 @@ export const AccessibilityToolbar: React.FC = () => {
           id="accessibility-menu"
           role="region"
           aria-label="Painel de Ferramentas de Acessibilidade"
-          className="fixed bottom-24 right-6 z-50 w-88 bg-white border border-slate-200 rounded-2xl shadow-xl p-6 text-slate-800 animate-fadeIn"
+          className="premium-surface fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-88 rounded-2xl p-6 text-slate-800 animate-fadeIn"
         >
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
             <div className="flex items-center gap-2 text-blue-800 font-extrabold">
