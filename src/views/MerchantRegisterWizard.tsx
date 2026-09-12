@@ -4,8 +4,11 @@ import {
   DisabilityType,
   AccessibilityCriteria,
 } from '../types';
+import { ACCESSIBILITY_RESOURCES } from '../data/accessibilityResources';
+import { PlacesService } from '../services/placesService';
+import type { NearbyPlace } from '../types';
 import { StorageService } from '../services/storageService';
-import { MapLeaflet } from '../components/MapLeaflet';
+import { GoogleMap } from '../components/GoogleMap';
 import { DISABILITY_INFO } from '../components/DisabilityBadge';
 import {
   Building2,
@@ -62,6 +65,9 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Step 1: Dados Básicos
+  const [linkedPlace, setLinkedPlace] = useState<NearbyPlace | null>(null);
+  const [placeResults, setPlaceResults] = useState<NearbyPlace[]>([]);
+  const [placeSearchStatus, setPlaceSearchStatus] = useState('');
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState<EstablishmentCategory>('alimentacao');
   const [descricao, setDescricao] = useState('');
@@ -80,12 +86,12 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
 
   // Step 3: Checklist de Critérios
   const [criteriaState, setCriteriaState] = useState<
-    { tipo: DisabilityType; criterio: string; presente: boolean; observacao: string }[]
+    { tipo: DisabilityType; criterio: string; presente: boolean | null; observacao: string }[]
   >(() =>
-    DEFAULT_CRITERIA_TEMPLATES.map((item) => ({
+    [...DEFAULT_CRITERIA_TEMPLATES, ...ACCESSIBILITY_RESOURCES.filter(resource => !DEFAULT_CRITERIA_TEMPLATES.some(item => item.criterio === resource.legacy)).map(resource => ({ tipo: 'mobilidade' as const, criterio: resource.legacy, defaultChecked: false }))].map((item) => ({
       tipo: item.tipo,
       criterio: item.criterio,
-      presente: item.defaultChecked,
+      presente: null,
       observacao: '',
     }))
   );
@@ -95,9 +101,9 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [formMessage, setFormMessage] = useState('');
 
-  const toggleCriteriaPresent = (index: number) => {
+  const updateCriteriaPresent = (index: number, value: string) => {
     setCriteriaState((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, presente: !c.presente } : c))
+      prev.map((c, i) => (i === index ? { ...c, presente: value === 'sim' ? true : value === 'nao' ? false : null } : c))
     );
   };
 
@@ -124,17 +130,18 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
 
     try {
       const criteriaList: Omit<AccessibilityCriteria, 'id' | 'establishment_id'>[] = criteriaState
-        .filter((c) => c.presente)
         .map((c) => ({
           tipo_deficiencia: c.tipo,
           criterio: c.criterio,
-          presente: true,
+          presente: c.presente,
+          recurso: ACCESSIBILITY_RESOURCES.find(resource => resource.legacy === c.criterio)?.id,
           observacao_livre: c.observacao || undefined,
         }));
 
       await StorageService.createEstablishment(
         {
           nome,
+          place_id: linkedPlace?.place_id,
           categoria,
           endereco,
           bairro,
@@ -156,7 +163,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
       window.setTimeout(onSuccess, 1600);
     } catch (err) {
       console.error(err);
-      setFormMessage('Não foi possível salvar o cadastro. Revise os dados e tente novamente.');
+      setFormMessage(err instanceof Error ? err.message : 'Não foi possível salvar o cadastro. Revise os dados e tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -250,10 +257,24 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                   type="text"
                   required
                   value={nome}
-                  onChange={(e) => setNome(e.target.value)}
+                  onChange={(e) => { setNome(e.target.value); setLinkedPlace(null); }}
                   placeholder="Ex: Livraria & Café Acessível"
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
                 />
+                <button type="button" disabled={nome.trim().length < 3 || placeSearchStatus === 'Buscando locais…'} className="mt-2 rounded-xl border border-blue-700 px-3 py-2 text-xs font-bold text-blue-800 disabled:opacity-50" onClick={async () => {
+                  setPlaceSearchStatus('Buscando locais…');
+                  setPlaceResults([]);
+                  try {
+                    const results = await PlacesService.search(nome);
+                    setPlaceResults(results);
+                    setPlaceSearchStatus(results.length ? 'Selecione o local correto para vincular o cadastro.' : 'Nenhum local encontrado. Você pode continuar com o cadastro manual.');
+                  } catch { setPlaceSearchStatus('Não foi possível buscar no Google Maps. Tente novamente.'); }
+                }}>Buscar este local no Google Maps</button>
+                <p role="status" className="mt-2 text-xs text-slate-600">{linkedPlace ? `Vinculado a ${linkedPlace.nome}.` : placeSearchStatus}</p>
+                <ul className="mt-2 space-y-2">{placeResults.map(place => <li key={place.id}><button type="button" className="w-full rounded-xl border border-slate-200 p-3 text-left text-xs hover:bg-blue-50" onClick={() => {
+                  setLinkedPlace(place); setNome(place.nome); setEndereco(place.endereco); setLatitude(place.latitude); setLongitude(place.longitude); setCategoria(place.categoria); setPlaceResults([]);
+                }}><strong>{place.nome}</strong><span className="block">{place.endereco}</span></button></li>)}</ul>
+                <p className="mt-2 text-xs text-slate-500">Vincule o local para que suas informações sejam encontradas pela busca do mapa. Neste protótipo, os novos cadastros ficam neste navegador.</p>
               </div>
 
               <div>
@@ -425,7 +446,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
               <div className="text-xs text-slate-500 mb-2">
                 Latitude: <strong>{latitude.toFixed(5)}</strong> | Longitude: <strong>{longitude.toFixed(5)}</strong>
               </div>
-              <MapLeaflet
+              <GoogleMap
                 center={[latitude, longitude]}
                 zoom={15}
                 heightClass="h-72"
@@ -466,13 +487,9 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        id={`crit-${idx}`}
-                        checked={crit.presente}
-                        onChange={() => toggleCriteriaPresent(idx)}
-                        className="w-5 h-5 mt-0.5 text-blue-600 rounded-md focus:ring-blue-500 shrink-0"
-                      />
+                      <select id={`crit-${idx}`} value={crit.presente === true ? 'sim' : crit.presente === false ? 'nao' : 'desconhecido'} onChange={event => updateCriteriaPresent(idx, event.target.value)} className="max-w-[135px] rounded-lg border border-slate-300 bg-white p-2 text-xs">
+                        <option value="desconhecido">Não verificado</option><option value="sim">Sim</option><option value="nao">Não</option>
+                      </select>
                       <div className="flex-1">
                         <label htmlFor={`crit-${idx}`} className="font-bold text-sm text-slate-900 cursor-pointer block">
                           {crit.criterio}

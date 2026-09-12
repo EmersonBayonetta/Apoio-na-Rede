@@ -1,8 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Establishment, FilterState, DisabilityType, EstablishmentCategory, NearbyPlace } from '../types';
+import { MAP_CATEGORIES } from '../data/mapCategories';
+import { formatDistance } from '../services/formatDistance';
+import { MapLegend } from '../components/MapLegend';
+import { PlacesService } from '../services/placesService';
+import { fetchWalkingRoute, type RouteDestination } from '../services/routeService';
+import { PlaceAccessibilityPanel } from '../components/PlaceAccessibilityPanel';
+import { AccessibilitySummary } from '../components/AccessibilitySummary';
 import { StorageService } from '../services/storageService';
 import { useAccessibility } from '../context/AccessibilityContext';
-import { MapLeaflet } from '../components/MapLeaflet';
+import { GoogleMap } from '../components/GoogleMap';
 import { DisabilityBadge } from '../components/DisabilityBadge';
 import { VerifiedBadge } from '../components/VerifiedBadge';
 import { VoiceSearchButton } from '../components/VoiceSearchButton';
@@ -38,6 +45,7 @@ interface ExplorerViewProps {
 }
 
 interface AddressSuggestion {
+  externalPlace?: NearbyPlace;
   cep: string;
   logradouro: string;
   complemento: string;
@@ -73,6 +81,7 @@ const CATEGORIES: { id: EstablishmentCategory | 'todas'; label: string }[] = [
   { id: 'comercio_loja', label: 'Comércio & Lojas' },
   { id: 'servico_publico', label: 'Serviço Público' },
   { id: 'banheiro_adaptado', label: 'Banheiro Adaptado' },
+  { id: 'educacao', label: 'Educação' },
   { id: 'hospedagem', label: 'Hospedagem' },
   { id: 'transporte_mobilidade', label: 'Transporte' },
 ];
@@ -111,18 +120,6 @@ const inferCategory = (tags: Record<string, string>): EstablishmentCategory => {
   return 'servico_publico';
 };
 
-const overpassFilters: Record<EstablishmentCategory, string[]> = {
-  alimentacao: ['["amenity"~"restaurant|cafe|fast_food|bar|food_court"]'],
-  saude: ['["amenity"~"hospital|clinic|doctors|dentist|pharmacy"]'],
-  lazer_cultura: ['["leisure"]', '["tourism"~"museum|gallery|attraction|arts_centre"]'],
-  comercio_loja: ['["shop"]'],
-  servico_publico: ['["amenity"~"townhall|courthouse|post_office|bank|police|fire_station|community_centre"]', '["office"]'],
-  banheiro_adaptado: ['["amenity"="toilets"]'],
-  educacao: ['["amenity"~"school|college|university|kindergarten|library"]'],
-  transporte_mobilidade: ['["public_transport"]', '["highway"="bus_stop"]', '["amenity"="bus_station"]'],
-  hospedagem: ['["tourism"~"hotel|hostel|guest_house|motel"]'],
-};
-
 const distanceInMeters = (a: [number, number], b: [number, number]) => {
   const toRad = (value: number) => value * Math.PI / 180;
   const dLat = toRad(b[0] - a[0]);
@@ -155,7 +152,9 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
   const [locationMessage, setLocationMessage] = useState('Solicitando sua localização…');
   const [placesSearchCenter, setPlacesSearchCenter] = useState<[number, number]>(CATAGUASES_CENTER);
+  const [selectedPlace, setSelectedPlace] = useState<NearbyPlace | null>(null);
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
+  const [searchedPlaces, setSearchedPlaces] = useState<NearbyPlace[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
   const [placesMessage, setPlacesMessage] = useState('');
 
@@ -165,6 +164,19 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const [selectedCity, setSelectedCity] = useState<string>('Cataguases');
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [selectedDisabilities, setSelectedDisabilities] = useState<DisabilityType[]>(accessibilityPreferences);
+  const visibleNearbyPlaces = (searchQuery.trim().length >= 3 ? searchedPlaces : nearbyPlaces)
+    .filter(place => !onlyVerified && selectedDisabilities.length === 0
+      && (selectedCategory === 'todas' || place.categoria === selectedCategory)
+      && !establishments.some(est => est.place_id === place.place_id && place.place_id));
+
+  useEffect(() => {
+    routeRequestRef.current++;
+    setSelectedPlace(null);
+    setSelectedEstablishment(null);
+    setSuggestedRoute(null);
+    setRouteStatus('idle');
+    setRouteMessage('');
+  }, [selectedCategory, onlyVerified, selectedDisabilities]);
 
   // Reaplica as preferências persistidas neste navegador.
   useEffect(() => {
@@ -242,56 +254,12 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       setIsLoadingPlaces(true);
       setPlacesMessage('Consultando locais próximos…');
       try {
-        const filters = selectedCategory === 'todas'
-          ? Array.from(new Set(Object.values(overpassFilters).flat()))
-          : overpassFilters[selectedCategory];
-        const [latitude, longitude] = placesSearchCenter;
-        const selectors = filters.map((filter) => `nwr${filter}["name"](around:7000,${latitude},${longitude});`).join('');
-        const query = `[out:json][timeout:25];(${selectors});out center tags;`;
-        const endpoints = [
-          'https://overpass-api.de/api/interpreter',
-          'https://overpass.kumi.systems/api/interpreter',
-          'https://overpass.nchc.org.tw/api/interpreter',
-        ];
-        let data: { elements?: OverpassElement[] } | null = null;
-        for (const endpoint of endpoints) {
-          try {
-            const response = await fetch(endpoint, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-              body: `data=${encodeURIComponent(query)}`,
-              signal: controller.signal,
-            });
-            if (response.ok) {
-              data = await response.json();
-              break;
-            }
-          } catch (error) {
-            if ((error as Error).name === 'AbortError') throw error;
-          }
-        }
-        if (!data) throw new Error('Serviços indisponíveis');
-        const elements = (data.elements || []) as OverpassElement[];
-        const places: NearbyPlace[] = elements.flatMap((element) => {
-          const latitudeValue = Number(element.lat ?? element.center?.lat);
-          const longitudeValue = Number(element.lon ?? element.center?.lon);
-          if (!Number.isFinite(latitudeValue) || !Number.isFinite(longitudeValue) || !element.tags?.name) return [];
-          const category = selectedCategory === 'todas' ? inferCategory(element.tags) : selectedCategory;
-          const street = [element.tags['addr:street'], element.tags['addr:housenumber']].filter(Boolean).join(', ');
-          const address = [street, element.tags['addr:suburb'] || element.tags['addr:neighbourhood'], 'Cataguases - MG'].filter(Boolean).join(' — ');
-          return [{
-            id: `osm-${element.type}-${element.id}`,
-            nome: element.tags.name,
-            categoria: category,
-            latitude: latitudeValue,
-            longitude: longitudeValue,
-            endereco: address,
-          }];
-        });
+        const places = await PlacesService.nearby(placesSearchCenter, selectedCategory);
+        if (controller.signal.aborted) return;
         setNearbyPlaces(places.slice(0, 500));
         setPlacesMessage(`${places.length} locais encontrados para ${CATEGORIES.find((item) => item.id === selectedCategory)?.label.toLowerCase() || 'a categoria selecionada'}.`);
       } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
+        if (!controller.signal.aborted && (error as Error).name !== 'AbortError') {
           setNearbyPlaces([]);
           setPlacesMessage('Não foi possível sincronizar os locais próximos agora.');
         }
@@ -403,6 +371,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     }
 
     const normalizedQuery = normalizeSearchText(searchQuery);
+    setIsSearchingAddress(false);
     if (!normalizedQuery) {
       setAddressSuggestions([]);
       setAddressMessage('');
@@ -429,13 +398,20 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     const timer = window.setTimeout(async () => {
       setIsSearchingAddress(true);
       try {
+        const searchSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]);
         const viaCepRequest = isCepQuery || streetQuery.length >= 3
           ? fetch(isCepQuery
             ? `https://viacep.com.br/ws/${cepQuery}/json/`
-            : `https://viacep.com.br/ws/MG/Cataguases/${encodeURIComponent(streetQuery)}/json/`, { signal: controller.signal })
+            : `https://viacep.com.br/ws/MG/Cataguases/${encodeURIComponent(streetQuery)}/json/`, { signal: searchSignal })
           : Promise.resolve(null);
-        const photonRequest = fetch(`https://photon.komoot.io/api/?limit=50&lat=${CATAGUASES_CENTER[0]}&lon=${CATAGUASES_CENTER[1]}&q=${encodeURIComponent(`${searchQuery}, Cataguases, Minas Gerais`)}`, { signal: controller.signal });
-        const [viaCepResult, photonResult] = await Promise.allSettled([viaCepRequest, photonRequest]);
+        const photonRequest = fetch(`https://photon.komoot.io/api/?limit=50&lat=${CATAGUASES_CENTER[0]}&lon=${CATAGUASES_CENTER[1]}&q=${encodeURIComponent(`${searchQuery}, Cataguases, Minas Gerais`)}`, { signal: searchSignal });
+        const [viaCepResult, photonResult, googleResult] = await Promise.allSettled([viaCepRequest, photonRequest, PlacesService.search(searchQuery)]);
+        if (controller.signal.aborted) return;
+        setSearchedPlaces(googleResult.status === 'fulfilled' ? googleResult.value : []);
+        const googleSuggestions: AddressSuggestion[] = googleResult.status === 'fulfilled' ? googleResult.value.map(place => ({
+          cep: '', logradouro: place.nome, complemento: '', bairro: place.endereco, localidade: 'Cataguases', uf: 'MG', kind: 'place',
+          latitude: place.latitude, longitude: place.longitude, category: place.categoria, typeLabel: MAP_CATEGORIES[place.categoria].label, externalPlace: place,
+        })) : [];
 
         let viaCepSuggestions: AddressSuggestion[] = [];
         if (viaCepResult.status === 'fulfilled' && viaCepResult.value?.ok) {
@@ -474,10 +450,10 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           });
         }
 
-        const combined = [...photonSuggestions, ...localMatches, ...viaCepSuggestions].filter((item, index, items) => {
+        const combined = [...googleSuggestions, ...photonSuggestions, ...localMatches, ...viaCepSuggestions].filter((item, index, items) => {
           if (!item.logradouro) return false;
-          const key = `${item.logradouro}|${item.complemento}|${item.bairro}`.toLowerCase();
-          return items.findIndex((candidate) => `${candidate.logradouro}|${candidate.complemento}|${candidate.bairro}`.toLowerCase() === key) === index;
+          const identity = (entry: AddressSuggestion) => entry.externalPlace?.id ?? `${entry.logradouro}|${entry.complemento}|${entry.bairro}`.toLowerCase();
+          return items.findIndex(candidate => identity(candidate) === identity(item)) === index;
         });
         setAddressSuggestions(combined);
         setActiveSuggestion(-1);
@@ -502,6 +478,12 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   };
 
   const handleResetFilters = () => {
+    routeRequestRef.current++;
+    setSelectedPlace(null);
+    setSelectedEstablishment(null);
+    setSuggestedRoute(null);
+    setRouteStatus('idle');
+    setRouteMessage('');
     setSearchQuery('');
     setSelectedCategory('todas');
     setSelectedCity('Cataguases');
@@ -525,7 +507,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     : null;
   const SelectedCategoryIcon = selectedCategory === 'todas' ? MapPin : categoryIcons[selectedCategory];
 
-  const planRouteTo = async (establishment: Establishment) => {
+  const planRouteTo = async (establishment: RouteDestination) => {
     const requestId = ++routeRequestRef.current;
     setSuggestedRoute(null);
     setRouteStatus('locating');
@@ -548,23 +530,17 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       if (requestId !== routeRequestRef.current) return;
 
       setRouteStatus('routing');
-      setRouteMessage('Calculando o melhor trajeto disponível…');
+      setRouteMessage('Calculando trajeto de pedestres…');
       const { latitude, longitude } = position.coords;
-      const endpoint = `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${longitude},${latitude};${establishment.longitude},${establishment.latitude}?overview=full&geometries=geojson&steps=true`;
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error('Serviço de rotas indisponível');
-      const data = await response.json();
-      const result = data.routes?.[0];
-      if (!result?.geometry?.coordinates?.length) throw new Error('Rota não encontrada');
+      setUserLocation({ latitude, longitude, accuracy: position.coords.accuracy });
+      setLocationMessage(`Localização obtida para a rota, precisão aproximada de ${Math.round(position.coords.accuracy)} metros.`);
+      const result = await fetchWalkingRoute({ latitude, longitude }, establishment);
       if (requestId !== routeRequestRef.current) return;
-
-      const coordinates: [number, number][] = result.geometry.coordinates.map(
-        ([lng, lat]: [number, number]) => [lat, lng]
-      );
+      const coordinates = result.coordinates;
       setSuggestedRoute({
         id: `suggested-${establishment.id}`,
         titulo: `Rota até ${establishment.nome}`,
-        cidade: establishment.cidade,
+        cidade: establishment.cidade ?? 'Cataguases',
         ponto_origem: 'Sua localização',
         ponto_destino: establishment.nome,
         trecho_descricao: 'Trajeto de pedestres sugerido pelo serviço de mapas.',
@@ -590,12 +566,43 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   };
 
   const handleMapSelection = (establishment: Establishment) => {
+    setSelectedPlace(null);
     setSearchedAddress(null);
     setSelectedEstablishment(establishment);
     void planRouteTo(establishment);
   };
 
+  const selectPlace = (place: NearbyPlace) => {
+    routeRequestRef.current++;
+    setSelectedPlace(place);
+    setSelectedEstablishment(null);
+    setSearchedAddress(null);
+    setSuggestedRoute(null);
+    setRouteStatus('idle');
+    setRouteMessage('');
+    setViewMode('map');
+  };
+
+  const requestPlaceRoute = (place: NearbyPlace) => {
+    // Routing only needs destination coordinates, never an accessibility record.
+    setSelectedPlace(place);
+    setSelectedEstablishment(null);
+    setSearchedAddress(null);
+    setViewMode('map');
+    void planRouteTo(place);
+    document.getElementById('explorer-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   const selectAddress = async (suggestion: AddressSuggestion) => {
+    routeRequestRef.current++;
+    setSelectedPlace(null);
+    if (suggestion.externalPlace) {
+      skipAddressLookupRef.current = true;
+      setSearchQuery(suggestion.externalPlace.nome);
+      setAddressSuggestions([]);
+      selectPlace(suggestion.externalPlace);
+      return;
+    }
     const typedNumber = searchQuery.match(/\d+[A-Za-z]?/)?.[0] || suggestion.complemento;
     const displayAddress = `${suggestion.logradouro}${typedNumber ? `, ${typedNumber}` : ''} — ${suggestion.bairro || 'Cataguases'}, Cataguases - MG`;
     skipAddressLookupRef.current = true;
@@ -707,7 +714,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
               type="text"
               id="main-search-input"
               value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setSearchedAddress(null); }}
+              onChange={(e) => { routeRequestRef.current++; setSearchQuery(e.target.value); setSearchedAddress(null); setSelectedPlace(null); setSelectedEstablishment(null); setSuggestedRoute(null); setRouteStatus('idle'); setRouteMessage(''); setSearchedPlaces([]); }}
               onKeyDown={handleAddressKeyDown}
               placeholder="Busque ruas, lojas, empresas, praças, serviços ou CEPs"
               role="combobox"
@@ -750,7 +757,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         <p role="status" aria-live="polite" className="text-xs text-slate-500">
           {addressMessage || 'A busca inclui endereços, empresas, comércio, serviços e espaços públicos de Cataguases.'}
         </p>
-        <p className="text-[11px] text-slate-400">Logradouros e CEPs: ViaCEP. Coordenadas e mapa: OpenStreetMap.</p>
+        <p className="text-[11px] text-slate-400">Locais e mapa: Google Maps. Endereços: ViaCEP e OpenStreetMap.</p>
 
         {/* Chips de Filtros Multi-Seleção por Deficiência */}
         <div>
@@ -843,8 +850,8 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             <span>Carregando estabelecimentos...</span>
           ) : (
             <span>
-              Mostrando <strong>{viewMode === 'map' ? nearbyPlaces.length : establishments.length}</strong>{' '}
-              {viewMode === 'map' ? 'locais mapeados em Cataguases' : establishments.length === 1 ? 'local acessível' : 'locais acessíveis'}
+              Mostrando <strong>{visibleNearbyPlaces.length + establishments.length}</strong>{' '}
+              locais encontrados em Cataguases
               {searchQuery ? ` para "${searchQuery}"` : ''}
             </span>
           )}
@@ -924,7 +931,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             </div>
           </div>
         </section>
-      ) : establishments.length === 0 && viewMode === 'list' && !searchedAddress ? (
+      ) : establishments.length === 0 && visibleNearbyPlaces.length === 0 && viewMode === 'list' && !searchedAddress ? (
         <section className="bg-white rounded-2xl px-6 py-12 text-center border border-slate-200 mb-12">
           <Search size={28} className="mx-auto mb-3 text-slate-400" aria-hidden="true" />
           <h2 className="text-lg font-bold text-slate-900 mb-1">Nenhum local encontrado</h2>
@@ -937,28 +944,34 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       ) : viewMode === 'map' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
           {/* Mapa Leaflet */}
-          <div className="lg:col-span-2">
-            <MapLeaflet
+          <div id="explorer-map" className="lg:col-span-2">
+            <GoogleMap
               establishments={establishments}
               selectedEstablishment={selectedEstablishment}
               onSelectEstablishment={handleMapSelection}
               activeRoute={suggestedRoute}
               searchedAddress={searchedAddress}
-              nearbyPlaces={nearbyPlaces}
+              nearbyPlaces={visibleNearbyPlaces}
+              selectedPlace={selectedPlace}
+              onSelectPlace={selectPlace}
+              onRequestRoute={requestPlaceRoute}
               userLocation={userLocation}
               center={placesSearchCenter}
               zoom={14}
               heightClass="h-[440px] sm:h-[560px]"
             />
+            <MapLegend selected={selectedCategory} onSelect={setSelectedCategory} />
           </div>
 
           {/* Coluna Lateral de Estabelecimento em Destaque */}
           <div className="space-y-4">
             <div className="text-xs font-black text-slate-500 uppercase tracking-wider">
-              {selectedEstablishment ? 'Local selecionado no mapa' : searchedAddress ? 'Endereço encontrado' : 'Pesquise um endereço em Cataguases'}
+              {selectedPlace ? 'Local selecionado no mapa' : selectedEstablishment ? 'Local selecionado no mapa' : searchedAddress ? 'Endereço encontrado' : 'Pesquise um endereço em Cataguases'}
             </div>
 
-            {selectedEstablishment ? (
+            {selectedPlace ? (
+              <PlaceAccessibilityPanel key={selectedPlace.id} place={selectedPlace} onRoute={() => requestPlaceRoute(selectedPlace)} route={suggestedRoute} routeMessage={routeMessage} busy={routeStatus === 'locating' || routeStatus === 'routing'} />
+            ) : selectedEstablishment ? (
               <div className="premium-card rounded-2xl p-5 space-y-4 animate-fadeIn">
                 <div className="h-44 w-full rounded-2xl overflow-hidden bg-slate-100 relative">
                   <img
@@ -1011,7 +1024,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
                       <span className="block mt-0.5">{routeMessage || 'Selecione o local novamente para calcular uma rota.'}</span>
                       {suggestedRoute && (
                         <span className="block mt-1.5 font-bold">
-                          {(suggestedRoute.distancia_metros / 1000).toFixed(1).replace('.', ',')} km · cerca de {Math.max(1, Math.round((suggestedRoute.duracao_segundos || 0) / 60))} min a pé
+                          {formatDistance(suggestedRoute.distancia_metros)} · cerca de {Math.max(1, Math.round((suggestedRoute.duracao_segundos || 0) / 60))} min a pé
                         </span>
                       )}
                     </div>
@@ -1028,6 +1041,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
                   )}
                 </div>
 
+                <AccessibilitySummary establishment={selectedEstablishment} />
                 {/* Badges */}
                 <div className="flex flex-wrap gap-1.5">
                   {Array.from(
@@ -1062,6 +1076,9 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
                   <h3 className="text-lg font-bold text-slate-900">Endereço localizado</h3>
                   <p className="text-sm text-slate-600 mt-1 leading-relaxed">{searchedAddress.label}</p>
                 </div>
+                <button type="button" disabled={routeStatus === 'locating' || routeStatus === 'routing'} onClick={() => void planRouteTo({ id: 'address', nome: searchedAddress.label, ...searchedAddress })} className="rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">Como chegar</button>
+                <p role="status" className="text-xs text-slate-600">{routeMessage}</p>
+                {suggestedRoute && <p className="text-xs text-amber-900">{formatDistance(suggestedRoute.distancia_metros)} · Trajeto de pedestres não auditado; acessibilidade do percurso não verificada.</p>}
                 <p className="text-xs text-slate-500">O marcador mostra a melhor coordenada disponível nas bases cartográficas consultadas.</p>
               </div>
             ) : (
@@ -1078,7 +1095,8 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       ) : (
         /* MODO LISTA ACESSÍVEL (OTIMIZADO PARA LEITOR DE TELA) */
         <div className="space-y-4 mb-12">
-          {establishments.length === 0 ? (
+          {visibleNearbyPlaces.map(place => <article key={place.id} className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-bold">{place.nome}</h2><p className="mt-1 text-sm text-slate-600">{place.endereco}</p><p className="mt-1 text-xs">{MAP_CATEGORIES[place.categoria].label} · Google Maps</p><button type="button" className="mt-3 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white" onClick={() => selectPlace(place)}>Consultar acessibilidade e trajeto</button></article>)}
+          {establishments.length === 0 && visibleNearbyPlaces.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
               <p className="text-base font-bold text-slate-700 mb-2">
                 Nenhum local atende a todos os critérios selecionados simultaneamente.

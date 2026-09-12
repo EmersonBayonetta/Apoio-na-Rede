@@ -30,7 +30,7 @@ export const AccessibilityChecklist: React.FC<AccessibilityChecklistProps> = ({ 
             Checklist de Critérios de Acessibilidade
           </h3>
           <p className="text-xs text-slate-500">
-            Itens auditados e classificados por tipo de necessidade
+            Informações cadastradas por tipo de necessidade
           </p>
         </div>
       </div>
@@ -100,23 +100,24 @@ export const AccessibilityChecklist: React.FC<AccessibilityChecklistProps> = ({ 
                 key={crit.id}
                 className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50/70 border border-slate-200/80 transition-colors"
               >
-                {crit.presente ? (
+                {crit.presente === true ? (
                   <CheckCircle2
                     size={20}
                     className="text-emerald-600 shrink-0 mt-0.5"
                     aria-label="Atendido"
                   />
-                ) : (
+                ) : crit.presente === false ? (
                   <XCircle
                     size={20}
-                    className="text-slate-400 shrink-0 mt-0.5"
-                    aria-label="Não informado ou ausente"
+                    className="text-rose-600 shrink-0 mt-0.5"
+                    aria-label="Não"
                   />
-                )}
+                ) : <Info size={20} className="text-slate-500 shrink-0 mt-0.5" aria-label="Não verificado" />}
                 <div className="flex-1">
                   <div className="font-semibold text-sm text-slate-800 leading-snug">
                     {crit.criterio}
                   </div>
+                  <p className="text-xs text-slate-600">{crit.presente === true ? 'Sim' : crit.presente === false ? 'Não' : 'Não verificado'}</p>
                   {crit.observacao_livre && (
                     <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-600 bg-white p-2 rounded-xl border border-slate-100">
                       <Info size={13} className="text-blue-600 shrink-0" aria-hidden="true" />

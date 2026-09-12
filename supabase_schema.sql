@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- 3. TABELA: ESTABLISHMENTS
 CREATE TABLE IF NOT EXISTS public.establishments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    place_id TEXT,
     nome TEXT NOT NULL,
     categoria establishment_category NOT NULL,
     endereco TEXT NOT NULL,
@@ -88,7 +89,8 @@ CREATE TABLE IF NOT EXISTS public.accessibility_criteria (
     establishment_id UUID NOT NULL REFERENCES public.establishments(id) ON DELETE CASCADE,
     tipo_deficiencia disability_type NOT NULL,
     criterio TEXT NOT NULL,
-    presente BOOLEAN NOT NULL DEFAULT true,
+    presente BOOLEAN DEFAULT NULL,
+    recurso TEXT,
     observacao_livre TEXT,
     criado_em TIMESTAMPTZ DEFAULT NOW()
 );
@@ -208,7 +210,8 @@ CREATE POLICY "Admin modera estabelecimentos"
 
 DROP POLICY IF EXISTS "Leitura pública de critérios" ON public.accessibility_criteria;
 CREATE POLICY "Leitura pública de critérios"
-    ON public.accessibility_criteria FOR SELECT USING (true);
+    ON public.accessibility_criteria FOR SELECT TO anon, authenticated
+    USING (EXISTS (SELECT 1 FROM public.establishments e WHERE e.id = establishment_id));
 
 DROP POLICY IF EXISTS "Leitura pública de avaliações" ON public.reviews;
 CREATE POLICY "Leitura pública de avaliações"

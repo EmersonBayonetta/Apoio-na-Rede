@@ -26,19 +26,19 @@ const STORAGE_KEYS = {
 // Inicialização segura dos dados locais
 const initStorage = () => {
   if (!localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS)) {
-    localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(MOCK_ESTABLISHMENTS));
+    localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(import.meta.env.DEV ? MOCK_ESTABLISHMENTS : []));
   }
   if (!localStorage.getItem(STORAGE_KEYS.CRITERIA)) {
-    localStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(MOCK_CRITERIA));
+    localStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(import.meta.env.DEV ? MOCK_CRITERIA : []));
   }
   if (!localStorage.getItem(STORAGE_KEYS.REVIEWS)) {
-    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(MOCK_REVIEWS));
+    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(import.meta.env.DEV ? MOCK_REVIEWS : []));
   }
   if (!localStorage.getItem(STORAGE_KEYS.PROFESSIONALS)) {
-    localStorage.setItem(STORAGE_KEYS.PROFESSIONALS, JSON.stringify(MOCK_PROFESSIONALS));
+    localStorage.setItem(STORAGE_KEYS.PROFESSIONALS, JSON.stringify(import.meta.env.DEV ? MOCK_PROFESSIONALS : []));
   }
   if (!localStorage.getItem(STORAGE_KEYS.ROUTES)) {
-    localStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(MOCK_ROUTES));
+    localStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(import.meta.env.DEV ? MOCK_ROUTES : []));
   }
 };
 
@@ -48,13 +48,13 @@ export const StorageService = {
   // ESTABLISHMENTS
   getEstablishments: async (filters?: Partial<FilterState>): Promise<Establishment[]> => {
     const rawEst = localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS);
-    const establishments: Establishment[] = rawEst ? JSON.parse(rawEst) : MOCK_ESTABLISHMENTS;
+    const establishments: Establishment[] = rawEst ? JSON.parse(rawEst) : import.meta.env.DEV ? MOCK_ESTABLISHMENTS : [];
 
     const rawCrit = localStorage.getItem(STORAGE_KEYS.CRITERIA);
-    const allCriteria: AccessibilityCriteria[] = rawCrit ? JSON.parse(rawCrit) : MOCK_CRITERIA;
+    const allCriteria: AccessibilityCriteria[] = rawCrit ? JSON.parse(rawCrit) : import.meta.env.DEV ? MOCK_CRITERIA : [];
 
     const rawRev = localStorage.getItem(STORAGE_KEYS.REVIEWS);
-    const allReviews: Review[] = rawRev ? JSON.parse(rawRev) : MOCK_REVIEWS;
+    const allReviews: Review[] = rawRev ? JSON.parse(rawRev) : import.meta.env.DEV ? MOCK_REVIEWS : [];
 
     // Attach criteria and reviews
     const fullEstablishments = establishments.map((est) => ({
@@ -133,6 +133,9 @@ export const StorageService = {
       criado_em: new Date().toISOString(),
     };
 
+    if (data.place_id && establishments.some(item => item.place_id === data.place_id)) {
+      throw new Error('Este local já possui cadastro neste navegador.');
+    }
     establishments.unshift(newEst);
     localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(establishments));
 
@@ -210,7 +213,7 @@ export const StorageService = {
     tipoDeficiencia?: DisabilityType
   ): Promise<Professional[]> => {
     const raw = localStorage.getItem(STORAGE_KEYS.PROFESSIONALS);
-    const list: Professional[] = raw ? JSON.parse(raw) : MOCK_PROFESSIONALS;
+    const list: Professional[] = raw ? JSON.parse(raw) : import.meta.env.DEV ? MOCK_PROFESSIONALS : [];
 
     return list.filter((p) => {
       if (especialidade && especialidade !== 'todas') {
@@ -230,7 +233,7 @@ export const StorageService = {
   // ROUTES
   getRoutes: async (cidade?: string): Promise<AccessibleRoute[]> => {
     const raw = localStorage.getItem(STORAGE_KEYS.ROUTES);
-    const list: AccessibleRoute[] = raw ? JSON.parse(raw) : MOCK_ROUTES;
+    const list: AccessibleRoute[] = raw ? JSON.parse(raw) : import.meta.env.DEV ? MOCK_ROUTES : [];
     if (cidade && cidade !== 'todas') {
       return list.filter((r) => r.cidade.toLowerCase().includes(cidade.toLowerCase()));
     }

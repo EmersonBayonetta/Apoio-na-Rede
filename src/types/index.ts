@@ -18,7 +18,8 @@ export interface AccessibilityCriteria {
   establishment_id: string;
   tipo_deficiencia: DisabilityType;
   criterio: string;
-  presente: boolean;
+  presente: boolean | null;
+  recurso?: string;
   observacao_livre?: string;
 }
 
@@ -38,6 +39,7 @@ export interface Review {
 
 export interface Establishment {
   id: string;
+  place_id?: string;
   nome: string;
   categoria: EstablishmentCategory;
   endereco: string;
@@ -102,6 +104,8 @@ export interface AccessibleRoute {
 
 export interface NearbyPlace {
   id: string;
+  place_id?: string;
+  fonte?: 'google' | 'osm';
   nome: string;
   categoria: EstablishmentCategory;
   latitude: number;
