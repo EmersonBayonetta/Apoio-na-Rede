@@ -40,7 +40,7 @@ export const AccessibilityToolbar: React.FC = () => {
   return (
     <>
       {/* Botão Flutuante de Acessibilidade */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+      <div className="accessibility-launcher fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
         {isSpeaking && (
           <div className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded-xl shadow-md text-sm font-semibold">
             <Volume2 size={18} aria-hidden="true" />
@@ -75,7 +75,7 @@ export const AccessibilityToolbar: React.FC = () => {
           id="accessibility-menu"
           role="region"
           aria-label="Painel de Ferramentas de Acessibilidade"
-          className="premium-surface fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-88 rounded-2xl p-6 text-slate-800 animate-fadeIn"
+          className="accessibility-panel premium-surface fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-88 rounded-2xl p-6 text-slate-800 animate-fadeIn"
         >
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
             <div className="flex items-center gap-2 text-blue-800 font-extrabold">

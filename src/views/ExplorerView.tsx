@@ -1,3 +1,6 @@
+import { ExplorerHero } from '../components/ExplorerHero';
+import { PlaceDiscoveryCards } from '../components/PlaceDiscoveryCards';
+import { ExploreCategories } from '../components/ExploreCategories';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Establishment, FilterState, DisabilityType, EstablishmentCategory, NearbyPlace } from '../types';
 import { MAP_CATEGORIES } from '../data/mapCategories';
@@ -132,6 +135,7 @@ const distanceInMeters = (a: [number, number], b: [number, number]) => {
 
 export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishment }) => {
   const { settings, accessibilityPreferences } = useAccessibility();
+  const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'list'>(settings.preferredView);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
@@ -495,13 +499,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   };
 
   const disabilityKeys: DisabilityType[] = ['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'];
-  const featuredCategories = CATEGORIES.filter((category) => category.id !== 'todas').slice(0, 5);
-
-  const selectCategory = (category: EstablishmentCategory) => {
-    setSelectedCategory(category);
-    document.getElementById('search-filter-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   const formatVerificationDate = (date?: string) => date
     ? new Intl.DateTimeFormat('pt-BR', { month: 'short', year: 'numeric' }).format(new Date(`${date}T12:00:00`))
     : null;
@@ -664,46 +661,19 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 text-slate-800">
-      <header className="mb-8 max-w-3xl">
-        <p className="eyebrow mb-3">Mapa de Cataguases</p>
-        <h1 className="display-title text-4xl sm:text-5xl text-blue-950 leading-[1.02] mb-3">
-          Encontre um lugar que funcione para você.
-        </h1>
-        <p className="max-w-2xl text-sm sm:text-base leading-relaxed text-slate-600">
-          Pesquise endereços e consulte informações de acesso antes da visita.
-        </p>
-      </header>
+    <div className="explorer-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 text-slate-800">
+      <ExplorerHero />
 
-      <section aria-labelledby="category-shortcuts-title" className="mb-6">
-        <div className="flex items-end justify-between gap-4 mb-3">
-          <div>
-            <h2 id="category-shortcuts-title" className="text-base font-bold text-blue-950">Categorias</h2>
-            <p className="text-sm text-slate-500">Atalhos para a busca.</p>
-          </div>
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-          {featuredCategories.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => selectCategory(category.id as EstablishmentCategory)}
-              className="shrink-0 px-4 py-2.5 rounded-full bg-white/80 border border-blue-950/10 text-sm font-semibold text-slate-700 shadow-sm hover:border-blue-500/50 hover:bg-blue-50 hover:text-blue-900 transition-all"
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
-      </section>
+
 
       {/* Seção de Busca e Filtros */}
       <section
         id="search-filter-section"
         aria-label="Filtros e Busca de Estabelecimentos"
-        className="premium-surface rounded-2xl p-5 sm:p-7 mb-7 space-y-6"
+        className="explorer-search premium-surface rounded-2xl p-5 sm:p-7 mb-7 space-y-6"
       >
         {/* Barra de Busca + Reconhecimento de Voz */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="search-controls flex gap-3">
           <div className="relative flex-1">
             <Search
               size={20}
@@ -749,9 +719,10 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             )}
           </div>
 
+          <button type="button" className="search-filter-toggle" aria-label="Mostrar filtros" aria-expanded={showFilters} aria-controls="advanced-search-filters" onClick={() => setShowFilters(value => !value)}><SlidersHorizontal size={22} aria-hidden="true" /></button>
           <VoiceSearchButton
             onTranscript={(text) => setSearchQuery(text)}
-            className="sm:w-auto w-full py-4 px-5"
+            className="voice-search-control py-4 px-5"
           />
         </div>
         <p role="status" aria-live="polite" className="text-xs text-slate-500">
@@ -759,6 +730,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         </p>
         <p className="text-[11px] text-slate-400">Locais e mapa: Google Maps. Endereços: ViaCEP e OpenStreetMap.</p>
 
+        <div id="advanced-search-filters" hidden={!showFilters} className="advanced-search-filters space-y-5">
         {/* Chips de Filtros Multi-Seleção por Deficiência */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -841,7 +813,11 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             </label>
           </div>
         </div>
+        </div>
       </section>
+      <ExploreCategories selected={selectedCategory} onSelect={setSelectedCategory} />
+      <PlaceDiscoveryCards places={visibleNearbyPlaces} onSelect={place => { selectPlace(place); document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} />
+
 
       {/* Barra de Status de Resultados e Alternador Mapa / Lista */}
       <div id="results-section" tabIndex={-1} className="flex flex-wrap items-center justify-between gap-4 mb-6">

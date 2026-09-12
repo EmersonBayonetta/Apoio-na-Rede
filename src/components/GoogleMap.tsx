@@ -68,6 +68,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       instance = new google.maps.Map(container.current, {
         ...initialView.current,
         mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID',
+        colorScheme: 'DARK',
         mapTypeControl: false, streetViewControl: false, clickableIcons: false,
         gestureHandling: 'greedy',
       });
