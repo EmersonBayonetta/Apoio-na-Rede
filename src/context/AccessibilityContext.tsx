@@ -1,3 +1,4 @@
+import { browserStorage, readStoredArray } from '../lib/browserStorage';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AccessibilitySettings, DisabilityType } from '../types';
 
@@ -35,7 +36,7 @@ const AccessibilityContext = createContext<AccessibilityContextType | undefined>
 export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AccessibilitySettings>(() => {
     try {
-      const saved = localStorage.getItem(SETTINGS_KEY);
+      const saved = browserStorage.getItem(SETTINGS_KEY);
       return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
     } catch {
       return DEFAULT_SETTINGS;
@@ -43,8 +44,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   });
   const [accessibilityPreferences, setAccessibilityPreferencesState] = useState<DisabilityType[]>(() => {
     try {
-      const saved = localStorage.getItem(PREFERENCES_KEY);
-      return saved ? JSON.parse(saved) : [];
+      return readStoredArray<DisabilityType>(PREFERENCES_KEY).filter(type => ['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'].includes(type));
     } catch {
       return [];
     }
@@ -55,7 +55,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Persistir e aplicar classes globais no DOM
   useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    browserStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 
     // Escala de Fonte
     document.documentElement.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl');
@@ -88,7 +88,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const setAccessibilityPreferences = (preferences: DisabilityType[]) => {
     setAccessibilityPreferencesState(preferences);
-    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+    browserStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
   };
 
   const setFontSize = (size: 'sm' | 'md' | 'lg' | 'xl') => {
@@ -117,6 +117,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Síntese de Voz (TTS)
   const speakText = (text: string) => {
+    if (!settings.voiceReadingEnabled) return;
     if (!('speechSynthesis' in window)) {
       alert('Seu navegador não suporta leitura em voz alta.');
       return;
@@ -155,6 +156,11 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       setActiveSpeechText('');
     }
   };
+
+  useEffect(() => {
+    if (!settings.voiceReadingEnabled) stopSpeaking();
+    return () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); };
+  }, [settings.voiceReadingEnabled]);
 
   return (
     <AccessibilityContext.Provider

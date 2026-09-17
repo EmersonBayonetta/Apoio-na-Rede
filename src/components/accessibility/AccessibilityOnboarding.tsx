@@ -1,3 +1,4 @@
+import { browserStorage } from '../../lib/browserStorage';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -11,8 +12,8 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
-import { useAccessibility } from '../context/AccessibilityContext';
-import { DisabilityType } from '../types';
+import { useAccessibility } from '../../context/AccessibilityContext';
+import { DisabilityType } from '../../types';
 
 const ONBOARDING_KEY = 'apoio_accessibility_onboarding_v1';
 
@@ -30,7 +31,7 @@ const NEEDS: Array<{ id: NeedId; title: string; description: string; icon: React
 
 export const AccessibilityOnboarding: React.FC = () => {
   const { applySettings, setAccessibilityPreferences } = useAccessibility();
-  const [isOpen, setIsOpen] = useState(() => !localStorage.getItem(ONBOARDING_KEY));
+  const [isOpen, setIsOpen] = useState(() => !browserStorage.getItem(ONBOARDING_KEY));
   const [selected, setSelected] = useState<NeedId[]>([]);
   const [isApplying, setIsApplying] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -52,7 +53,7 @@ export const AccessibilityOnboarding: React.FC = () => {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        localStorage.setItem(ONBOARDING_KEY, 'completed');
+        browserStorage.setItem(ONBOARDING_KEY, 'completed');
         setIsOpen(false);
         return;
       }
@@ -81,7 +82,7 @@ export const AccessibilityOnboarding: React.FC = () => {
   if (!isOpen) return null;
 
   const finish = () => {
-    localStorage.setItem(ONBOARDING_KEY, 'completed');
+    browserStorage.setItem(ONBOARDING_KEY, 'completed');
     setIsOpen(false);
   };
 

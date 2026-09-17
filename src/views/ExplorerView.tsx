@@ -1,37 +1,24 @@
-import { ExplorerHero } from '../components/ExplorerHero';
-import { PlaceDiscoveryCards } from '../components/PlaceDiscoveryCards';
-import { ExploreCategories } from '../components/ExploreCategories';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { StreetViewCatalog, type CatalogEntry } from '../components/explore/StreetViewCatalog';
+import { externalDiscoveryPlaces } from '../utils/discoveryPlaces';
+import { normalizeSearchText } from '../utils/normalizeSearchText';
+import { browserStorage } from '../lib/browserStorage';
+import { ExplorerHero } from '../components/explore/ExplorerHero';
+import { ExploreCategories } from '../components/explore/ExploreCategories';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Establishment, FilterState, DisabilityType, EstablishmentCategory, NearbyPlace } from '../types';
 import { MAP_CATEGORIES } from '../data/mapCategories';
-import { formatDistance } from '../services/formatDistance';
-import { MapLegend } from '../components/MapLegend';
 import { PlacesService } from '../services/placesService';
-import { fetchWalkingRoute, type RouteDestination } from '../services/routeService';
-import { PlaceAccessibilityPanel } from '../components/PlaceAccessibilityPanel';
-import { AccessibilitySummary } from '../components/AccessibilitySummary';
 import { StorageService } from '../services/storageService';
 import { useAccessibility } from '../context/AccessibilityContext';
-import { GoogleMap } from '../components/GoogleMap';
-import { DisabilityBadge } from '../components/DisabilityBadge';
-import { VerifiedBadge } from '../components/VerifiedBadge';
-import { VoiceSearchButton } from '../components/VoiceSearchButton';
-import { AudioReaderButton } from '../components/AudioReaderButton';
+import { DisabilityBadge } from '../components/accessibility/DisabilityBadge';
+import { VoiceSearchButton } from '../components/accessibility/VoiceSearchButton';
 import {
   Search,
-  Map,
-  List,
   MapPin,
-  Star,
   SlidersHorizontal,
-  ChevronRight,
   RotateCcw,
-  CalendarDays,
   AlertCircle,
   LoaderCircle,
-  Navigation,
-  Route as RouteIcon,
-  LocateFixed,
   Utensils,
   Stethoscope,
   Landmark,
@@ -92,12 +79,6 @@ const CATEGORIES: { id: EstablishmentCategory | 'todas'; label: string }[] = [
 const CATAGUASES_CENTER: [number, number] = [-21.3924, -42.6896];
 const ADDRESS_INDEX_CACHE_KEY = 'apoio_cataguases_urban_index_v3';
 
-const normalizeSearchText = (value: string) => value
-  .normalize('NFD')
-  .replace(/[\u0300-\u036f]/g, '')
-  .toLowerCase()
-  .replace(/\s+/g, ' ')
-  .trim();
 
 const categoryIcons: Record<EstablishmentCategory, React.ElementType> = {
   alimentacao: Utensils,
@@ -133,17 +114,12 @@ const distanceInMeters = (a: [number, number], b: [number, number]) => {
   return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 };
 
-export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishment }) => {
-  const { settings, accessibilityPreferences } = useAccessibility();
+export const ExplorerView: React.FC<ExplorerViewProps> = () => {
+  const { accessibilityPreferences } = useAccessibility();
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<'map' | 'list'>(settings.preferredView);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
-  const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [suggestedRoute, setSuggestedRoute] = useState<import('../types').AccessibleRoute | null>(null);
-  const [routeStatus, setRouteStatus] = useState<'idle' | 'locating' | 'routing' | 'ready' | 'error'>('idle');
-  const [routeMessage, setRouteMessage] = useState('');
   const routeRequestRef = useRef(0);
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [cityAddressIndex, setCityAddressIndex] = useState<AddressSuggestion[]>([]);
@@ -153,14 +129,18 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const [addressMessage, setAddressMessage] = useState('');
   const [searchedAddress, setSearchedAddress] = useState<{ latitude: number; longitude: number; label: string } | null>(null);
   const skipAddressLookupRef = useRef(false);
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
-  const [locationMessage, setLocationMessage] = useState('Solicitando sua localização…');
+  const addressSelectionRef = useRef(0);
+  const [selectedAddressLabel, setSelectedAddressLabel] = useState('');
+  const [addressFilter, setAddressFilter] = useState<string | null>(null);
   const [placesSearchCenter, setPlacesSearchCenter] = useState<[number, number]>(CATAGUASES_CENTER);
+  const [locationNotice, setLocationNotice] = useState('Permita sua localização para ordenar os locais próximos. Sem ela, usamos o centro de Cataguases.');
+  const hasLocation = useRef(false);
   const [selectedPlace, setSelectedPlace] = useState<NearbyPlace | null>(null);
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
   const [searchedPlaces, setSearchedPlaces] = useState<NearbyPlace[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
-  const [placesMessage, setPlacesMessage] = useState('');
+  const [placesError, setPlacesError] = useState(false);
+  const [placesAttempt, setPlacesAttempt] = useState(0);
 
   // Filtros
   const [searchQuery, setSearchQuery] = useState('');
@@ -168,35 +148,44 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const [selectedCity, setSelectedCity] = useState<string>('Cataguases');
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [selectedDisabilities, setSelectedDisabilities] = useState<DisabilityType[]>(accessibilityPreferences);
-  const visibleNearbyPlaces = (searchQuery.trim().length >= 3 ? searchedPlaces : nearbyPlaces)
-    .filter(place => !onlyVerified && selectedDisabilities.length === 0
-      && (selectedCategory === 'todas' || place.categoria === selectedCategory)
-      && !establishments.some(est => est.place_id === place.place_id && place.place_id));
+  const [includeUnknownPlaces, setIncludeUnknownPlaces] = useState(true);
+  const visibleNearbyPlaces = useMemo(() => externalDiscoveryPlaces(searchQuery.trim().length >= 3 ? searchedPlaces : nearbyPlaces,
+    establishments, selectedCategory, onlyVerified, includeUnknownPlaces), [searchQuery, searchedPlaces, nearbyPlaces, establishments, selectedCategory, onlyVerified, includeUnknownPlaces]);
+  const catalogEntries = useMemo<CatalogEntry[]>(() => {
+    if (selectedAddressLabel) return searchedAddress ? [{ addressLabel: selectedAddressLabel, place: { id: 'selected-address', nome: selectedAddressLabel, endereco: selectedAddressLabel, categoria: 'servico_publico', ...searchedAddress } }] : [];
+    if (selectedPlace) return [{ place: selectedPlace, establishment: establishments.find(est => est.place_id && est.place_id === selectedPlace.place_id) }];
+    return [...establishments.map(establishment => ({ establishment })), ...visibleNearbyPlaces.map(place => ({ place }))];
+  }, [selectedAddressLabel, searchedAddress, selectedPlace, establishments, visibleNearbyPlaces]);
+  const chooseCategory = (category: EstablishmentCategory | 'todas') => {
+    addressSelectionRef.current++;
+    setSelectedAddressLabel(''); setAddressFilter(null);
+    skipAddressLookupRef.current = false;
+    setSearchQuery(''); setSearchedPlaces([]); setAddressSuggestions([]); setSearchedAddress(null);
+    setAddressMessage(''); setSelectedCategory(category);
+  };
 
   useEffect(() => {
     routeRequestRef.current++;
     setSelectedPlace(null);
-    setSelectedEstablishment(null);
-    setSuggestedRoute(null);
-    setRouteStatus('idle');
-    setRouteMessage('');
-  }, [selectedCategory, onlyVerified, selectedDisabilities]);
+    
+    
+    
+    
+  }, [selectedCategory, onlyVerified, selectedDisabilities, includeUnknownPlaces]);
 
   // Reaplica as preferências persistidas neste navegador.
   useEffect(() => {
     setSelectedDisabilities(accessibilityPreferences);
   }, [accessibilityPreferences]);
 
-  useEffect(() => {
-    setViewMode(settings.preferredView);
-  }, [settings.preferredView]);
+
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setLoadError(false);
     try {
       const filters: Partial<FilterState> = {
-        searchQuery,
+        searchQuery: addressFilter ?? searchQuery,
         category: selectedCategory,
         city: selectedCity,
         onlyVerified,
@@ -210,7 +199,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     } finally {
       setIsLoading(false);
     }
-  }, [searchQuery, selectedCategory, selectedCity, onlyVerified, selectedDisabilities]);
+  }, [searchQuery, addressFilter, selectedCategory, selectedCity, onlyVerified, selectedDisabilities]);
 
   useEffect(() => {
     loadData();
@@ -218,7 +207,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setLocationMessage('Geolocalização não disponível neste navegador.');
+      
       return;
     }
 
@@ -229,23 +218,22 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
         };
-        setUserLocation(nextLocation);
+        
         const insideCataguases = nextLocation.latitude >= -21.55 && nextLocation.latitude <= -21.20
           && nextLocation.longitude >= -42.90 && nextLocation.longitude <= -42.50;
-        setLocationMessage(insideCataguases
-          ? `Localização atualizada, precisão aproximada de ${Math.round(nextLocation.accuracy)} metros.`
-          : 'Sua localização foi encontrada fora da região de Cataguases; o mapa permanece focado na cidade.');
+        
         if (insideCataguases) {
-          setPlacesSearchCenter((previous) => distanceInMeters(previous, [nextLocation.latitude, nextLocation.longitude]) > 350
+          setLocationNotice('Sugestões ordenadas pela proximidade da sua localização.');
+          const firstLocation = !hasLocation.current;
+          setPlacesSearchCenter((previous) => firstLocation || distanceInMeters(previous, [nextLocation.latitude, nextLocation.longitude]) > 350
             ? [nextLocation.latitude, nextLocation.longitude]
             : previous);
+          hasLocation.current = true;
+        } else {
+          setLocationNotice('Você está fora da área atendida. As sugestões usam o centro de Cataguases.');
         }
       },
-      (error) => {
-        setLocationMessage(error.code === 1
-          ? 'Permita o acesso à localização para ver sua posição em tempo real.'
-          : 'Não foi possível atualizar sua localização agora.');
-      },
+      () => {},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
 
@@ -256,16 +244,19 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     const controller = new AbortController();
     const loadNearbyPlaces = async () => {
       setIsLoadingPlaces(true);
-      setPlacesMessage('Consultando locais próximos…');
+      setPlacesError(false);
+      setNearbyPlaces([]);
+      
       try {
         const places = await PlacesService.nearby(placesSearchCenter, selectedCategory);
         if (controller.signal.aborted) return;
         setNearbyPlaces(places.slice(0, 500));
-        setPlacesMessage(`${places.length} locais encontrados para ${CATEGORIES.find((item) => item.id === selectedCategory)?.label.toLowerCase() || 'a categoria selecionada'}.`);
+        
       } catch (error) {
         if (!controller.signal.aborted && (error as Error).name !== 'AbortError') {
           setNearbyPlaces([]);
-          setPlacesMessage('Não foi possível sincronizar os locais próximos agora.');
+          setPlacesError(true);
+          
         }
       } finally {
         if (!controller.signal.aborted) setIsLoadingPlaces(false);
@@ -273,10 +264,10 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     };
     void loadNearbyPlaces();
     return () => controller.abort();
-  }, [placesSearchCenter, selectedCategory]);
+  }, [placesSearchCenter, selectedCategory, placesAttempt]);
 
   useEffect(() => {
-    const cached = localStorage.getItem(ADDRESS_INDEX_CACHE_KEY);
+    const cached = browserStorage.getItem(ADDRESS_INDEX_CACHE_KEY);
     if (cached) {
       try {
         const parsed = JSON.parse(cached) as { savedAt: number; addresses: AddressSuggestion[] };
@@ -286,7 +277,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           return;
         }
       } catch {
-        localStorage.removeItem(ADDRESS_INDEX_CACHE_KEY);
+        browserStorage.removeItem(ADDRESS_INDEX_CACHE_KEY);
       }
     }
 
@@ -357,7 +348,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           return items.findIndex((candidate) => `${candidate.kind}|${candidate.logradouro}|${candidate.complemento}|${candidate.bairro}|${candidate.cep}`.toLowerCase() === key) === index;
         }).sort((a, b) => a.logradouro.localeCompare(b.logradouro, 'pt-BR'));
         setCityAddressIndex(unique);
-        localStorage.setItem(ADDRESS_INDEX_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), addresses: unique }));
+        browserStorage.setItem(ADDRESS_INDEX_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), addresses: unique }));
       } catch (error) {
         if ((error as Error).name !== 'AbortError') setAddressMessage('O índice urbano completo está temporariamente indisponível; a busca por endereços continua ativa.');
       } finally {
@@ -370,7 +361,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
   useEffect(() => {
     if (skipAddressLookupRef.current) {
-      skipAddressLookupRef.current = false;
       return;
     }
 
@@ -459,11 +449,12 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           const identity = (entry: AddressSuggestion) => entry.externalPlace?.id ?? `${entry.logradouro}|${entry.complemento}|${entry.bairro}`.toLowerCase();
           return items.findIndex(candidate => identity(candidate) === identity(item)) === index;
         });
+        if (controller.signal.aborted || skipAddressLookupRef.current) return;
         setAddressSuggestions(combined);
         setActiveSuggestion(-1);
         setAddressMessage(combined.length ? `${combined.length} locais correspondem ao texto digitado.` : 'Nenhum endereço ou local encontrado em Cataguases.');
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') setAddressMessage('Não foi possível consultar os locais agora.');
+      } catch {
+        if (!controller.signal.aborted && !skipAddressLookupRef.current) setAddressMessage('Não foi possível consultar os locais agora.');
       } finally {
         if (!controller.signal.aborted) setIsSearchingAddress(false);
       }
@@ -482,12 +473,15 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   };
 
   const handleResetFilters = () => {
+    addressSelectionRef.current++;
+    skipAddressLookupRef.current = false;
+    setSelectedAddressLabel(''); setAddressFilter(null); setSearchedPlaces([]);
     routeRequestRef.current++;
     setSelectedPlace(null);
-    setSelectedEstablishment(null);
-    setSuggestedRoute(null);
-    setRouteStatus('idle');
-    setRouteMessage('');
+    
+    
+    
+    
     setSearchQuery('');
     setSelectedCategory('todas');
     setSelectedCity('Cataguases');
@@ -499,122 +493,52 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   };
 
   const disabilityKeys: DisabilityType[] = ['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'];
-  const formatVerificationDate = (date?: string) => date
-    ? new Intl.DateTimeFormat('pt-BR', { month: 'short', year: 'numeric' }).format(new Date(`${date}T12:00:00`))
-    : null;
-  const SelectedCategoryIcon = selectedCategory === 'todas' ? MapPin : categoryIcons[selectedCategory];
-
-  const planRouteTo = async (establishment: RouteDestination) => {
-    const requestId = ++routeRequestRef.current;
-    setSuggestedRoute(null);
-    setRouteStatus('locating');
-    setRouteMessage('Obtendo sua localização…');
-
-    if (!navigator.geolocation) {
-      setRouteStatus('error');
-      setRouteMessage('Seu navegador não oferece geolocalização.');
-      return;
-    }
-
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 12000,
-          maximumAge: 60000,
-        });
-      });
-      if (requestId !== routeRequestRef.current) return;
-
-      setRouteStatus('routing');
-      setRouteMessage('Calculando trajeto de pedestres…');
-      const { latitude, longitude } = position.coords;
-      setUserLocation({ latitude, longitude, accuracy: position.coords.accuracy });
-      setLocationMessage(`Localização obtida para a rota, precisão aproximada de ${Math.round(position.coords.accuracy)} metros.`);
-      const result = await fetchWalkingRoute({ latitude, longitude }, establishment);
-      if (requestId !== routeRequestRef.current) return;
-      const coordinates = result.coordinates;
-      setSuggestedRoute({
-        id: `suggested-${establishment.id}`,
-        titulo: `Rota até ${establishment.nome}`,
-        cidade: establishment.cidade ?? 'Cataguases',
-        ponto_origem: 'Sua localização',
-        ponto_destino: establishment.nome,
-        trecho_descricao: 'Trajeto de pedestres sugerido pelo serviço de mapas.',
-        tem_rampa: false,
-        tem_piso_tatil: false,
-        tem_semaforo_sonoro: false,
-        nivel_seguranca: 'Trajeto ainda não auditado pela comunidade',
-        coordenadas: coordinates,
-        distancia_metros: Math.round(result.distance),
-        duracao_segundos: Math.round(result.duration),
-        auditada: false,
-      });
-      setRouteStatus('ready');
-      setRouteMessage('Rota exibida no mapa.');
-    } catch (error) {
-      if (requestId !== routeRequestRef.current) return;
-      setRouteStatus('error');
-      const geolocationError = error as GeolocationPositionError;
-      setRouteMessage(geolocationError?.code === 1
-        ? 'Permita o acesso à localização para calcular a rota.'
-        : 'Não foi possível calcular a rota agora. Tente novamente.');
-    }
-  };
-
-  const handleMapSelection = (establishment: Establishment) => {
-    setSelectedPlace(null);
-    setSearchedAddress(null);
-    setSelectedEstablishment(establishment);
-    void planRouteTo(establishment);
-  };
-
   const selectPlace = (place: NearbyPlace) => {
     routeRequestRef.current++;
     setSelectedPlace(place);
-    setSelectedEstablishment(null);
+    
     setSearchedAddress(null);
-    setSuggestedRoute(null);
-    setRouteStatus('idle');
-    setRouteMessage('');
-    setViewMode('map');
+    
+    
+    
   };
 
-  const requestPlaceRoute = (place: NearbyPlace) => {
-    // Routing only needs destination coordinates, never an accessibility record.
-    setSelectedPlace(place);
-    setSelectedEstablishment(null);
-    setSearchedAddress(null);
-    setViewMode('map');
-    void planRouteTo(place);
-    document.getElementById('explorer-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
 
   const selectAddress = async (suggestion: AddressSuggestion) => {
+    const selectionId = ++addressSelectionRef.current;
     routeRequestRef.current++;
+    setSearchedAddress(null);
+    setSelectedAddressLabel('');
+    setIsSearchingAddress(false);
+    setActiveSuggestion(-1);
     setSelectedPlace(null);
     if (suggestion.externalPlace) {
       skipAddressLookupRef.current = true;
       setSearchQuery(suggestion.externalPlace.nome);
+      setAddressFilter(suggestion.externalPlace.nome);
+      setSearchedPlaces([suggestion.externalPlace]);
+      setAddressMessage('Local selecionado. Consulte a acessibilidade abaixo.');
       setAddressSuggestions([]);
       selectPlace(suggestion.externalPlace);
       return;
     }
-    const typedNumber = searchQuery.match(/\d+[A-Za-z]?/)?.[0] || suggestion.complemento;
+    const typedNumber = suggestion.complemento;
     const displayAddress = `${suggestion.logradouro}${typedNumber ? `, ${typedNumber}` : ''} — ${suggestion.bairro || 'Cataguases'}, Cataguases - MG`;
     skipAddressLookupRef.current = true;
     setSearchQuery(displayAddress);
+    setSelectedAddressLabel(displayAddress);
+    setAddressFilter(suggestion.logradouro);
+    setSearchedPlaces([]);
     setAddressSuggestions([]);
-    setSelectedEstablishment(null);
-    setSuggestedRoute(null);
-    setRouteStatus('idle');
-    setAddressMessage('Localizando o endereço no mapa…');
+    
+    
+    
+    setAddressMessage('Localizando o endereço…');
 
     try {
-      if (suggestion.kind === 'place' && Number.isFinite(suggestion.latitude) && Number.isFinite(suggestion.longitude)) {
+      if (Number.isFinite(suggestion.latitude) && Number.isFinite(suggestion.longitude)) {
         setSearchedAddress({ latitude: suggestion.latitude!, longitude: suggestion.longitude!, label: displayAddress });
-        setViewMode('map');
-        setAddressMessage(`Local encontrado no mapa: ${displayAddress}`);
+        setAddressMessage(`Endereço selecionado: ${displayAddress}`);
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }
@@ -635,11 +559,12 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       }
 
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !isInsideCataguases(latitude, longitude)) throw new Error('Coordenadas não encontradas');
+      if (selectionId !== addressSelectionRef.current) return;
       setSearchedAddress({ latitude, longitude, label: displayAddress });
-      setViewMode('map');
-      setAddressMessage(`Endereço localizado no mapa: ${displayAddress}`);
+      setAddressMessage(`Endereço selecionado: ${displayAddress}`);
       document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch {
+      if (selectionId !== addressSelectionRef.current) return;
       setAddressMessage('O logradouro existe em Cataguases, mas não foi possível posicioná-lo com precisão no mapa. Confira o CEP e o número.');
     }
   };
@@ -684,7 +609,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
               type="text"
               id="main-search-input"
               value={searchQuery}
-              onChange={(e) => { routeRequestRef.current++; setSearchQuery(e.target.value); setSearchedAddress(null); setSelectedPlace(null); setSelectedEstablishment(null); setSuggestedRoute(null); setRouteStatus('idle'); setRouteMessage(''); setSearchedPlaces([]); }}
+              onChange={(e) => { addressSelectionRef.current++; skipAddressLookupRef.current = false; setSelectedAddressLabel(''); setAddressFilter(null); routeRequestRef.current++; setSearchQuery(e.target.value); setSearchedAddress(null); setSelectedPlace(null); setSearchedPlaces([]); }}
               onKeyDown={handleAddressKeyDown}
               placeholder="Busque ruas, lojas, empresas, praças, serviços ou CEPs"
               role="combobox"
@@ -721,14 +646,14 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
           <button type="button" className="search-filter-toggle" aria-label="Mostrar filtros" aria-expanded={showFilters} aria-controls="advanced-search-filters" onClick={() => setShowFilters(value => !value)}><SlidersHorizontal size={22} aria-hidden="true" /></button>
           <VoiceSearchButton
-            onTranscript={(text) => setSearchQuery(text)}
+            onTranscript={(text) => { addressSelectionRef.current++; skipAddressLookupRef.current = false; setSelectedAddressLabel(''); setAddressFilter(null); setSearchedAddress(null); setSelectedPlace(null); setSearchedPlaces([]); setSearchQuery(text); }}
             className="voice-search-control py-4 px-5"
           />
         </div>
         <p role="status" aria-live="polite" className="text-xs text-slate-500">
           {addressMessage || 'A busca inclui endereços, empresas, comércio, serviços e espaços públicos de Cataguases.'}
         </p>
-        <p className="text-[11px] text-slate-400">Locais e mapa: Google Maps. Endereços: ViaCEP e OpenStreetMap.</p>
+        <p className="text-[11px] text-slate-400">Locais: Google Maps. Endereços: ViaCEP e OpenStreetMap.</p>
 
         <div id="advanced-search-filters" hidden={!showFilters} className="advanced-search-filters space-y-5">
         {/* Chips de Filtros Multi-Seleção por Deficiência */}
@@ -774,7 +699,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             <select
               id="category-select"
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value as EstablishmentCategory | 'todas')}
+              onChange={(e) => chooseCategory(e.target.value as EstablishmentCategory | 'todas')}
               className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-600"
             >
               {CATEGORIES.map((cat) => (
@@ -815,76 +740,33 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         </div>
         </div>
       </section>
-      <ExploreCategories selected={selectedCategory} onSelect={setSelectedCategory} />
-      <PlaceDiscoveryCards places={visibleNearbyPlaces} onSelect={place => { selectPlace(place); document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} />
+      <ExploreCategories selected={selectedCategory} onSelect={chooseCategory} />
+      <label className="mb-4 flex items-start gap-2 text-sm">
+        <input type="checkbox" checked={includeUnknownPlaces} disabled={onlyVerified} onChange={event => setIncludeUnknownPlaces(event.target.checked)} />
+        <span>Incluir lugares sem informações de acessibilidade. Seus recursos precisam ser consultados; a exibição não confirma que atendem às suas preferências.</span>
+      </label>
 
 
-      {/* Barra de Status de Resultados e Alternador Mapa / Lista */}
+
+      {/* Resultados do cat?logo */}
       <div id="results-section" tabIndex={-1} className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div role="status" aria-live="polite" className="text-sm font-bold text-slate-700">
           {isLoading ? (
             <span>Carregando estabelecimentos...</span>
           ) : (
             <span>
-              Mostrando <strong>{visibleNearbyPlaces.length + establishments.length}</strong>{' '}
-              locais encontrados em Cataguases
+              {searchQuery.trim() ? 'Resultados da busca' : 'Até 5 sugestões próximas'}
               {searchQuery ? ` para "${searchQuery}"` : ''}
             </span>
           )}
         </div>
 
-        {/* Alternador Obrigatório: Visual Mapa vs Lista Semântica */}
-        <div
-          role="radiogroup"
-          aria-label="Modo de visualização"
-          className="flex items-center bg-blue-950/5 border border-blue-950/10 p-1 rounded-full"
-        >
-          <button
-            type="button"
-            role="radio"
-            aria-checked={viewMode === 'map'}
-            onClick={() => setViewMode('map')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
-              viewMode === 'map'
-                ? 'bg-white text-blue-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Map size={16} aria-hidden="true" />
-            <span>Mapa</span>
-          </button>
-
-          <button
-            type="button"
-            role="radio"
-            aria-checked={viewMode === 'list'}
-            onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
-              viewMode === 'list'
-                ? 'bg-white text-blue-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <List size={16} aria-hidden="true" />
-            <span>Lista</span>
-          </button>
-        </div>
       </div>
 
-      {viewMode === 'map' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4" aria-live="polite">
-          <div className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs text-slate-600">
-            <LocateFixed size={17} className="text-blue-700 shrink-0" aria-hidden="true" />
-            <span><strong className="block text-slate-800">Localização em tempo real</strong>{locationMessage}</span>
-          </div>
-          <div className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs text-slate-600">
-            {isLoadingPlaces ? <LoaderCircle size={17} className="text-blue-700 shrink-0 animate-spin" aria-hidden="true" /> : <SelectedCategoryIcon size={17} className="text-blue-700 shrink-0" aria-hidden="true" />}
-            <span><strong className="block text-slate-800">Categoria exibida: {CATEGORIES.find((item) => item.id === selectedCategory)?.label}</strong>{placesMessage}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Conteúdo Principal: Mapa ou Lista */}
+      {/* Cartões do catálogo */}
+      {!searchQuery.trim() && <p className="mb-4 text-sm" role="status">{locationNotice}</p>}
+      {isLoadingPlaces && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Buscando locais…</p>}
+      {placesError && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Não foi possível carregar locais do Google Maps. <button type="button" className="underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></p>}
       {loadError ? (
         <section role="alert" className="bg-white border border-rose-200 rounded-2xl px-6 py-10 text-center mb-12">
           <AlertCircle size={28} className="mx-auto text-rose-600 mb-3" aria-hidden="true" />
@@ -907,7 +789,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             </div>
           </div>
         </section>
-      ) : establishments.length === 0 && visibleNearbyPlaces.length === 0 && viewMode === 'list' && !searchedAddress ? (
+      ) : establishments.length === 0 && visibleNearbyPlaces.length === 0 && !selectedAddressLabel && !selectedPlace ? (
         <section className="bg-white rounded-2xl px-6 py-12 text-center border border-slate-200 mb-12">
           <Search size={28} className="mx-auto mb-3 text-slate-400" aria-hidden="true" />
           <h2 className="text-lg font-bold text-slate-900 mb-1">Nenhum local encontrado</h2>
@@ -917,260 +799,8 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             Limpar filtros
           </button>
         </section>
-      ) : viewMode === 'map' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-          {/* Mapa Leaflet */}
-          <div id="explorer-map" className="lg:col-span-2">
-            <GoogleMap
-              establishments={establishments}
-              selectedEstablishment={selectedEstablishment}
-              onSelectEstablishment={handleMapSelection}
-              activeRoute={suggestedRoute}
-              searchedAddress={searchedAddress}
-              nearbyPlaces={visibleNearbyPlaces}
-              selectedPlace={selectedPlace}
-              onSelectPlace={selectPlace}
-              onRequestRoute={requestPlaceRoute}
-              userLocation={userLocation}
-              center={placesSearchCenter}
-              zoom={14}
-              heightClass="h-[440px] sm:h-[560px]"
-            />
-            <MapLegend selected={selectedCategory} onSelect={setSelectedCategory} />
-          </div>
-
-          {/* Coluna Lateral de Estabelecimento em Destaque */}
-          <div className="space-y-4">
-            <div className="text-xs font-black text-slate-500 uppercase tracking-wider">
-              {selectedPlace ? 'Local selecionado no mapa' : selectedEstablishment ? 'Local selecionado no mapa' : searchedAddress ? 'Endereço encontrado' : 'Pesquise um endereço em Cataguases'}
-            </div>
-
-            {selectedPlace ? (
-              <PlaceAccessibilityPanel key={selectedPlace.id} place={selectedPlace} onRoute={() => requestPlaceRoute(selectedPlace)} route={suggestedRoute} routeMessage={routeMessage} busy={routeStatus === 'locating' || routeStatus === 'routing'} />
-            ) : selectedEstablishment ? (
-              <div className="premium-card rounded-2xl p-5 space-y-4 animate-fadeIn">
-                <div className="h-44 w-full rounded-2xl overflow-hidden bg-slate-100 relative">
-                  <img
-                    src={selectedEstablishment.fotos[0] || '/brand/apoio-na-rede-logo.png'}
-                    alt={`Foto de ${selectedEstablishment.nome}`}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <VerifiedBadge status={selectedEstablishment.status} />
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
-                    {selectedEstablishment.categoria.replace('_', ' ')}
-                  </span>
-                  <h3 className="text-lg font-bold text-slate-900 mt-1">
-                    {selectedEstablishment.nome}
-                  </h3>
-                  <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                    <MapPin size={14} className="text-blue-600 shrink-0" />
-                    <span>{selectedEstablishment.endereco} - {selectedEstablishment.cidade}</span>
-                  </p>
-                </div>
-
-                <p className="text-xs text-slate-600 line-clamp-3">
-                  {selectedEstablishment.descricao}
-                </p>
-
-                {selectedEstablishment.verificado_em && (
-                  <p className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <CalendarDays size={14} aria-hidden="true" />
-                    Verificado em {formatVerificationDate(selectedEstablishment.verificado_em)}
-                  </p>
-                )}
-
-                <div aria-live="polite" className={`rounded-xl border px-3.5 py-3 text-xs ${routeStatus === 'error' ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-blue-200 bg-blue-50 text-blue-950'}`}>
-                  <div className="flex items-start gap-2">
-                    {routeStatus === 'locating' || routeStatus === 'routing' ? (
-                      <LoaderCircle size={16} className="mt-0.5 shrink-0 animate-spin" aria-hidden="true" />
-                    ) : routeStatus === 'ready' ? (
-                      <RouteIcon size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-                    ) : (
-                      <Navigation size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-                    )}
-                    <div className="flex-1">
-                      <strong className="block text-sm">{routeStatus === 'ready' ? 'Rota sugerida' : 'Como chegar'}</strong>
-                      <span className="block mt-0.5">{routeMessage || 'Selecione o local novamente para calcular uma rota.'}</span>
-                      {suggestedRoute && (
-                        <span className="block mt-1.5 font-bold">
-                          {formatDistance(suggestedRoute.distancia_metros)} · cerca de {Math.max(1, Math.round((suggestedRoute.duracao_segundos || 0) / 60))} min a pé
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {routeStatus === 'ready' && (
-                    <p className="mt-2 border-t border-blue-200 pt-2 text-[11px] leading-relaxed">
-                      {selectedDisabilities.includes('mobilidade')
-                        ? 'O trajeto considera vias de pedestres, mas ainda não confirma rampas, inclinações ou obstáculos. Consulte os trechos auditados antes de sair.'
-                        : 'Este trajeto ainda não foi auditado pela comunidade. Confirme as condições do percurso antes de sair.'}
-                    </p>
-                  )}
-                  {routeStatus === 'error' && (
-                    <button type="button" onClick={() => void planRouteTo(selectedEstablishment)} className="mt-2 font-bold underline underline-offset-2">Tentar novamente</button>
-                  )}
-                </div>
-
-                <AccessibilitySummary establishment={selectedEstablishment} />
-                {/* Badges */}
-                <div className="flex flex-wrap gap-1.5">
-                  {Array.from(
-                    new Set(
-                      selectedEstablishment.criteria?.filter((c) => c.presente).map((c) => c.tipo_deficiencia) || []
-                    )
-                  ).map((t) => (
-                    <DisabilityBadge key={t} type={t} size="sm" />
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <AudioReaderButton
-                    textToRead={`${selectedEstablishment.nome}. ${selectedEstablishment.descricao}`}
-                    label="Ouvir"
-                    size="sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onSelectEstablishment(selectedEstablishment)}
-                    className="flex-1 py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1"
-                  >
-                    <span>Ver informações</span>
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            ) : searchedAddress ? (
-              <div className="bg-white rounded-2xl p-5 border border-slate-200 space-y-4 animate-fadeIn">
-                <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-800 grid place-items-center"><MapPin size={22} aria-hidden="true" /></div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">Endereço localizado</h3>
-                  <p className="text-sm text-slate-600 mt-1 leading-relaxed">{searchedAddress.label}</p>
-                </div>
-                <button type="button" disabled={routeStatus === 'locating' || routeStatus === 'routing'} onClick={() => void planRouteTo({ id: 'address', nome: searchedAddress.label, ...searchedAddress })} className="rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">Como chegar</button>
-                <p role="status" className="text-xs text-slate-600">{routeMessage}</p>
-                {suggestedRoute && <p className="text-xs text-amber-900">{formatDistance(suggestedRoute.distancia_metros)} · Trajeto de pedestres não auditado; acessibilidade do percurso não verificada.</p>}
-                <p className="text-xs text-slate-500">O marcador mostra a melhor coordenada disponível nas bases cartográficas consultadas.</p>
-              </div>
-            ) : (
-              <div className="bg-slate-50 rounded-3xl p-8 border border-dashed border-slate-300 text-center text-slate-500 text-sm">
-                <MapPin size={32} className="mx-auto mb-2 text-slate-400" />
-                <p className="font-semibold text-slate-700">Digite uma rua, avenida, bairro ou CEP</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  As sugestões exibem apenas endereços registrados em Cataguases, Minas Gerais.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
       ) : (
-        /* MODO LISTA ACESSÍVEL (OTIMIZADO PARA LEITOR DE TELA) */
-        <div className="space-y-4 mb-12">
-          {visibleNearbyPlaces.map(place => <article key={place.id} className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-bold">{place.nome}</h2><p className="mt-1 text-sm text-slate-600">{place.endereco}</p><p className="mt-1 text-xs">{MAP_CATEGORIES[place.categoria].label} · Google Maps</p><button type="button" className="mt-3 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white" onClick={() => selectPlace(place)}>Consultar acessibilidade e trajeto</button></article>)}
-          {establishments.length === 0 && visibleNearbyPlaces.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
-              <p className="text-base font-bold text-slate-700 mb-2">
-                Nenhum local atende a todos os critérios selecionados simultaneamente.
-              </p>
-              <p className="text-sm text-slate-500 mb-4">
-                Tente desmarcar alguns filtros ou buscar por outro termo.
-              </p>
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-xl text-xs font-bold"
-              >
-                <RotateCcw size={14} />
-                <span>Restaurar todos os filtros</span>
-              </button>
-            </div>
-          ) : (
-            establishments.map((est) => {
-              const supportedTypes = Array.from(
-                new Set(est.criteria?.filter((c) => c.presente).map((c) => c.tipo_deficiencia) || [])
-              );
-              const cardSummary = `${est.nome}, ${est.categoria}, localizado em ${est.endereco}, ${est.cidade}. Nota ${est.nota_media} com ${est.total_avaliacoes} avaliações. ${est.descricao}`;
-
-              return (
-                <article
-                  key={est.id}
-                  className="premium-card rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row gap-6 items-start justify-between"
-                >
-                  <div className="w-full md:w-56 h-44 rounded-2xl overflow-hidden bg-slate-100 shrink-0">
-                    <img
-                      src={est.fotos[0] || '/brand/apoio-na-rede-logo.png'}
-                      alt={`Foto de ${est.nome}`}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md">
-                        {est.categoria.replace('_', ' ')}
-                      </span>
-                      <VerifiedBadge status={est.status} />
-                      <div className="flex items-center gap-1 text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md text-xs font-black">
-                        <Star size={14} className="fill-amber-400 text-amber-500" aria-hidden="true" />
-                        <span>{est.nota_media}</span>
-                      </div>
-                    </div>
-
-                    <h2 className="text-xl font-bold text-slate-900 mb-1">
-                      {est.nome}
-                    </h2>
-
-                    <p className="text-xs text-slate-500 flex items-center gap-1 mb-3">
-                      <MapPin size={14} className="text-blue-600 shrink-0" aria-hidden="true" />
-                      <span>{est.endereco} - {est.bairro ? `${est.bairro}, ` : ''}{est.cidade} ({est.estado})</span>
-                    </p>
-
-                    <p className="text-sm text-slate-600 line-clamp-2 mb-4 leading-relaxed">
-                      {est.descricao}
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mb-4">
-                      <span>{est.total_avaliacoes} {est.total_avaliacoes === 1 ? 'avaliação' : 'avaliações'}</span>
-                      {est.verificado_em && (
-                        <span className="inline-flex items-center gap-1.5">
-                          <CalendarDays size={13} aria-hidden="true" />
-                          Verificado em {formatVerificationDate(est.verificado_em)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Badges de Deficiência Suportadas */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {supportedTypes.map((t) => (
-                        <DisabilityBadge key={t} type={t} size="sm" />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto shrink-0 pt-2 md:pt-0">
-                    <AudioReaderButton textToRead={cardSummary} label="Ouvir resumo" size="sm" />
-                    <button
-                      type="button"
-                      onClick={() => onSelectEstablishment(est)}
-                      className="px-5 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 focus:ring-2 focus:ring-blue-600"
-                      aria-label={`Ver detalhes completos e critérios de acessibilidade de ${est.nome}`}
-                    >
-                      <span>Ver informações</span>
-                      <ChevronRight size={14} aria-hidden="true" />
-                    </button>
-                  </div>
-                </article>
-              );
-            })
-          )}
-        </div>
+        <StreetViewCatalog entries={catalogEntries} center={placesSearchCenter} limit={searchQuery.trim() ? undefined : 5} />
       )}
     </div>
   );

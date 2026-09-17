@@ -14,11 +14,11 @@ No cadastro, Buscar este local no Google Maps vincula identificador, nome, ender
 - `src/data/accessibilityResources.ts`: códigos de recursos e compatibilidade com critérios antigos.
 - `src/services/placesService.ts`: busca textual e locais próximos.
 - `src/services/accessibilityService.ts`: consulta por identificador, local ou remota.
-- `src/services/routeService.ts` e `formatDistance.ts`: rotas, validação e distâncias.
+- `src/services/routeService.ts` e `src/utils/formatDistance.ts`: rotas, validação e distâncias.
 - `src/lib/supabase.ts`: cliente remoto opcional, inicializado sob demanda.
-- `src/components/AccessibilitySummary.tsx`: recursos e três estados.
-- `src/components/PlaceAccessibilityPanel.tsx`: consulta e botão de rota.
-- `src/components/MapLegend.tsx`: legenda interativa.
+- `src/components/accessibility/AccessibilitySummary.tsx`: recursos e três estados.
+- `src/components/establishments/PlaceAccessibilityPanel.tsx`: consulta e botão de rota.
+- `src/components/maps/MapLegend.tsx`: legenda interativa.
 - `database/place_accessibility.sql`: atualização incremental e RPC.
 - `tests/accessibility.test.mjs`: semântica de recursos e validação de rotas.
 - Este documento.

@@ -1,5 +1,5 @@
-import type { Establishment } from '../types';
-import { ACCESSIBILITY_RESOURCES, resourceState } from '../data/accessibilityResources';
+import type { Establishment } from '../../types';
+import { ACCESSIBILITY_RESOURCES, resourceState } from '../../data/accessibilityResources';
 
 const states = {
   sim: { label: 'Sim', symbol: '✓', style: 'bg-emerald-50 text-emerald-800' },

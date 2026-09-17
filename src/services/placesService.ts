@@ -20,6 +20,15 @@ async function library() {
 }
 
 export const PlacesService = {
+  async photos(placeId: string) {
+    const { Place } = await library();
+    const place = new Place({ id: placeId });
+    await place.fetchFields({ fields: ['photos'] });
+    return (place.photos ?? []).map(photo => ({
+      url: photo.getURI({ maxWidth: 800, maxHeight: 500 }),
+      authors: photo.authorAttributions.map(author => ({ nome: author.displayName, url: author.uri })),
+    }));
+  },
   async search(text: string): Promise<NearbyPlace[]> {
     if (text.trim().length < 3) return [];
     const { Place } = await library();

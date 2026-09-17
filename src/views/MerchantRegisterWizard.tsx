@@ -1,4 +1,7 @@
+import { imageFallback } from '../utils/imageFallback';
 import React, { useState } from 'react';
+import { MAP_CATEGORIES } from '../data/mapCategories';
+import { validPhotoUrl, validCoordinates, validateRegistration } from '../utils/registrationValidation';
 import {
   EstablishmentCategory,
   DisabilityType,
@@ -8,8 +11,8 @@ import { ACCESSIBILITY_RESOURCES } from '../data/accessibilityResources';
 import { PlacesService } from '../services/placesService';
 import type { NearbyPlace } from '../types';
 import { StorageService } from '../services/storageService';
-import { GoogleMap } from '../components/GoogleMap';
-import { DISABILITY_INFO } from '../components/DisabilityBadge';
+import { GoogleMap } from '../components/maps/GoogleMap';
+import { DISABILITY_INFO } from '../components/accessibility/DisabilityBadge';
 import {
   Building2,
   MapPin,
@@ -83,6 +86,9 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   const [cep, setCep] = useState('');
   const [latitude, setLatitude] = useState(-21.3924);
   const [longitude, setLongitude] = useState(-42.6896);
+  const [locationConfirmed, setLocationConfirmed] = useState(false);
+  const [manualLatitude, setManualLatitude] = useState('');
+  const [manualLongitude, setManualLongitude] = useState('');
 
   // Step 3: Checklist de Critérios
   const [criteriaState, setCriteriaState] = useState<
@@ -114,6 +120,12 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   };
 
   const handleAddPhoto = () => {
+    if (!validPhotoUrl(newPhotoUrl.trim())) {
+      setFormMessage('Informe uma URL de foto válida, começando com https:// ou http://.');
+      document.getElementById('photo-url')?.focus();
+      return;
+    }
+    setFormMessage('');
     if (newPhotoUrl.trim()) {
       setFotos((prev) => [...prev, newPhotoUrl.trim()]);
       setNewPhotoUrl('');
@@ -126,6 +138,8 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    if (!validateStep(1) || !validateStep(2)) return;
     setIsSubmitting(true);
 
     try {
@@ -164,9 +178,30 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
     } catch (err) {
       console.error(err);
       setFormMessage(err instanceof Error ? err.message : 'Não foi possível salvar o cadastro. Revise os dados e tente novamente.');
-    } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const failField = (step: number, id: string, message: string) => {
+    setCurrentStep(step);
+    setFormMessage(message);
+    window.setTimeout(() => document.getElementById(id)?.focus(), 0);
+    return false;
+  };
+  const validateStep = (step: number) => {
+    if (step === 1) {
+      if (!nome.trim()) return failField(1, 'est-nome', 'Informe o nome do estabelecimento.');
+      if (!descricao.trim()) return failField(1, 'est-desc', 'Informe a descrição do estabelecimento.');
+    }
+    if (step === 2) {
+      if (!endereco.trim()) return failField(2, 'est-end', 'Informe o endereço do estabelecimento.');
+      if (!cidade.trim()) return failField(2, 'est-cidade', 'Informe a cidade.');
+      try { validateRegistration({ nome, descricao, endereco, cidade, estado, latitude, longitude, fotos: [] }); }
+      catch (error) { return failField(2, 'est-estado', (error as Error).message); }
+      if (!locationConfirmed) return failField(2, 'manual-latitude', 'Selecione o ponto no mapa ou informe e confirme as coordenadas.');
+    }
+    setFormMessage('');
+    return true;
   };
 
   const steps = [
@@ -192,7 +227,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
       {/* Indicador de Progresso com ARIA */}
       <div
         role="progressbar"
-        aria-valuenow={(currentStep / 4) * 100}
+        aria-valuenow={currentStep}
         aria-valuemin={1}
         aria-valuemax={4}
         aria-label={`Etapa ${currentStep} de 4: ${steps[currentStep - 1].title}`}
@@ -272,7 +307,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 }}>Buscar este local no Google Maps</button>
                 <p role="status" className="mt-2 text-xs text-slate-600">{linkedPlace ? `Vinculado a ${linkedPlace.nome}.` : placeSearchStatus}</p>
                 <ul className="mt-2 space-y-2">{placeResults.map(place => <li key={place.id}><button type="button" className="w-full rounded-xl border border-slate-200 p-3 text-left text-xs hover:bg-blue-50" onClick={() => {
-                  setLinkedPlace(place); setNome(place.nome); setEndereco(place.endereco); setLatitude(place.latitude); setLongitude(place.longitude); setCategoria(place.categoria); setPlaceResults([]);
+                  setLinkedPlace(place); setNome(place.nome); setEndereco(place.endereco); setLatitude(place.latitude); setLongitude(place.longitude); setLocationConfirmed(true); setCategoria(place.categoria); setPlaceResults([]);
                 }}><strong>{place.nome}</strong><span className="block">{place.endereco}</span></button></li>)}</ul>
                 <p className="mt-2 text-xs text-slate-500">Vincule o local para que suas informações sejam encontradas pela busca do mapa. Neste protótipo, os novos cadastros ficam neste navegador.</p>
               </div>
@@ -287,14 +322,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                   onChange={(e) => setCategoria(e.target.value as EstablishmentCategory)}
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
                 >
-                  <option value="alimentacao">Alimentação (Restaurante, Café, Bar)</option>
-                  <option value="saude">Saúde & Clínicas</option>
-                  <option value="lazer_cultura">Lazer & Cultura (Museu, Teatro, Cinema)</option>
-                  <option value="comercio_loja">Comércio & Lojas</option>
-                  <option value="servico_publico">Serviço Público / Cidadão</option>
-                  <option value="banheiro_adaptado">Sanitário Adaptado Público</option>
-                  <option value="hospedagem">Hotel / Pousada</option>
-                  <option value="transporte_mobilidade">Transporte & Mobilidade</option>
+                  {Object.entries(MAP_CATEGORIES).map(([id, category]) => <option key={id} value={id}>{category.label}</option>)}
                 </select>
               </div>
 
@@ -375,7 +403,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                   type="text"
                   required
                   value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
+                  onChange={(e) => { setEndereco(e.target.value); setLocationConfirmed(false); setLinkedPlace(null); }}
                   placeholder="Ex.: Rua Major Vieira, 120"
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
                 />
@@ -446,6 +474,22 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
               <div className="text-xs text-slate-500 mb-2">
                 Latitude: <strong>{latitude.toFixed(5)}</strong> | Longitude: <strong>{longitude.toFixed(5)}</strong>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <label className="text-xs font-bold">Latitude
+                  <input id="manual-latitude" type="number" step="any" min="-90" max="90" value={manualLatitude} onChange={event => { setManualLatitude(event.target.value); setLocationConfirmed(false); }} className="block w-full min-w-0 rounded-xl border p-3 bg-white" />
+                </label>
+                <label className="text-xs font-bold">Longitude
+                  <input id="manual-longitude" type="number" step="any" min="-180" max="180" value={manualLongitude} onChange={event => { setManualLongitude(event.target.value); setLocationConfirmed(false); }} className="block w-full min-w-0 rounded-xl border p-3 bg-white" />
+                </label>
+              </div>
+              <button type="button" className="mb-3 rounded-xl border px-3 py-2 text-sm" onClick={() => {
+                if (!manualLatitude.trim() || !manualLongitude.trim() || !validCoordinates(Number(manualLatitude), Number(manualLongitude))) {
+                  failField(2, 'manual-latitude', 'Informe latitude entre -90 e 90 e longitude entre -180 e 180.');
+                  return;
+                }
+                setLatitude(Number(manualLatitude)); setLongitude(Number(manualLongitude)); setLocationConfirmed(true); setLinkedPlace(null); setFormMessage('');
+              }}>Confirmar coordenadas</button>
+              <p role="status" className="text-xs mb-3">{locationConfirmed ? 'Localização confirmada.' : 'O centro do mapa é apenas uma referência. Confirme o ponto do estabelecimento.'}</p>
               <GoogleMap
                 center={[latitude, longitude]}
                 zoom={15}
@@ -454,6 +498,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 onPointSelected={(lat, lng) => {
                   setLatitude(lat);
                   setLongitude(lng);
+                  setLocationConfirmed(true);
                 }}
               />
             </div>
@@ -535,13 +580,14 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
               <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
                 Adicionar URL da Foto:
               </label>
-              <div className="flex gap-2 mb-4">
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
                 <input
+                  id="photo-url"
                   type="url"
                   value={newPhotoUrl}
                   onChange={(e) => setNewPhotoUrl(e.target.value)}
                   placeholder="https://exemplo.com/foto-do-local.jpg"
-                  className="flex-1 p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
+                  className="min-w-0 w-full flex-1 p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
                 />
                 <button
                   type="button"
@@ -557,7 +603,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {fotos.map((url, idx) => (
                   <div key={idx} className="relative rounded-2xl overflow-hidden h-32 border border-slate-200 group">
-                    <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img onError={imageFallback} src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => handleRemovePhoto(idx)}
@@ -584,7 +630,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
         {formMessage && <p role="status" aria-live="polite" className="mt-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-950">{formMessage}</p>}
 
         {/* Botões de Navegação entre Etapas */}
-        <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-8 pt-6 border-t border-slate-100">
           {currentStep > 1 ? (
             <button
               type="button"
@@ -600,15 +646,9 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
             <button
               type="button"
               onClick={() => {
-                if (currentStep === 1 && !nome.trim()) {
-                  setFormMessage('Informe o nome do estabelecimento para continuar.');
-                  return;
-                }
-                if (currentStep === 2 && !endereco.trim()) {
-                  setFormMessage('Informe o endereço do estabelecimento para continuar.');
-                  return;
-                }
+                if (!validateStep(currentStep)) return;
                 setCurrentStep((prev) => prev + 1);
+                window.scrollTo({ top: 0, behavior: 'instant' });
               }}
               className="px-6 py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center gap-2"
             >

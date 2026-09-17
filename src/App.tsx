@@ -1,28 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { AccessibilityProvider } from './context/AccessibilityContext';
-import { Navbar } from './components/Navbar';
-import { AccessibilityToolbar } from './components/AccessibilityToolbar';
-import { AccessibilityOnboarding } from './components/AccessibilityOnboarding';
+import { Navbar } from './components/layout/Navbar';
+import { AccessibilityToolbar } from './components/accessibility/AccessibilityToolbar';
+import { AccessibilityOnboarding } from './components/accessibility/AccessibilityOnboarding';
 import { ExplorerView } from './views/ExplorerView';
 import { EstablishmentDetailView } from './views/EstablishmentDetailView';
 import { MerchantRegisterWizard } from './views/MerchantRegisterWizard';
 import { Establishment } from './types';
 import { StorageService } from './services/storageService';
 import { ShieldCheck } from 'lucide-react';
+import { browserStorage } from './lib/browserStorage';
 
 export const MainAppContent: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<'explorer' | 'register'>('explorer');
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
+  const [temporaryStorage, setTemporaryStorage] = useState(browserStorage.isTemporary);
+  const [navigationMessage, setNavigationMessage] = useState('');
+  useEffect(() => {
+    const warn = () => setTemporaryStorage(true);
+    window.addEventListener('storage-unavailable', warn);
+    const restoreLocal = async () => {
+      const id = new URL(window.location.href).searchParams.get('local');
+      if (!id) { setSelectedEstablishment(null); return; }
+      const local = await StorageService.getEstablishmentById(id);
+      setSelectedEstablishment(local);
+      setNavigationMessage(local ? '' : 'Este cadastro não está disponível neste navegador. Os cadastros locais não são sincronizados entre dispositivos.');
+    };
+    void restoreLocal();
+    window.addEventListener('popstate', restoreLocal);
+    return () => { window.removeEventListener('storage-unavailable', warn); window.removeEventListener('popstate', restoreLocal); };
+  }, []);
+  const updateLocalUrl = (id?: string) => {
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set('local', id); else url.searchParams.delete('local');
+    window.history.pushState(null, '', url);
+    setNavigationMessage('');
+  };
   useEffect(() => {
     document.title = 'Apoio na rede — Acessibilidade urbana';
   }, []);
 
   const handleSelectEstablishment = (est: Establishment) => {
+    updateLocalUrl(est.id);
     setSelectedEstablishment(est);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToExplorer = () => {
+    updateLocalUrl();
     setSelectedEstablishment(null);
     setCurrentTab('explorer');
   };
@@ -33,6 +58,7 @@ export const MainAppContent: React.FC = () => {
       <Navbar
         currentTab={currentTab}
         onSelectTab={(tab) => {
+          updateLocalUrl();
           setSelectedEstablishment(null);
           setCurrentTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -41,6 +67,8 @@ export const MainAppContent: React.FC = () => {
 
       {/* Área de Conteúdo Principal */}
       <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+        {temporaryStorage && <p role="status" className="m-4 rounded-xl border p-4">O navegador não conseguiu salvar os dados. Você pode continuar, mas as alterações desta sessão serão perdidas ao fechar ou recarregar a página.</p>}
+        {navigationMessage && <p role="status" className="m-4 rounded-xl border p-4">{navigationMessage}</p>}
         {selectedEstablishment ? (
           <EstablishmentDetailView
             establishment={selectedEstablishment}
@@ -111,6 +139,7 @@ export const MainAppContent: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    updateLocalUrl();
                     setSelectedEstablishment(null);
                     setCurrentTab('register');
                   }}

@@ -103,6 +103,8 @@ export interface AccessibleRoute {
 }
 
 export interface NearbyPlace {
+  foto?: string;
+  fotoAutores?: { nome: string; url: string | null }[];
   id: string;
   place_id?: string;
   fonte?: 'google' | 'osm';

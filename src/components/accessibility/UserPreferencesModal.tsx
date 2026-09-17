@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useAccessibility } from '../context/AccessibilityContext';
-import { DisabilityType } from '../types';
+import { useAccessibility } from '../../context/AccessibilityContext';
+import { DisabilityType } from '../../types';
 import { DISABILITY_INFO } from './DisabilityBadge';
 import { X, Check, HeartHandshake } from 'lucide-react';
 

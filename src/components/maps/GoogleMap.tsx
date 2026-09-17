@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { Navigation } from 'lucide-react';
-import { Establishment, AccessibleRoute, NearbyPlace } from '../types';
-import { DisabilityBadge } from './DisabilityBadge';
-import { VerifiedBadge } from './VerifiedBadge';
-import { MAP_CATEGORIES } from '../data/mapCategories';
-import { AccessibilitySummary } from './AccessibilitySummary';
-import { loadGoogleMaps } from '../lib/googleMaps';
+import { Establishment, AccessibleRoute, NearbyPlace } from '../../types';
+import { DisabilityBadge } from '../accessibility/DisabilityBadge';
+import { VerifiedBadge } from '../establishments/VerifiedBadge';
+import { MAP_CATEGORIES } from '../../data/mapCategories';
+import { AccessibilitySummary } from '../accessibility/AccessibilitySummary';
+import { loadGoogleMaps } from '../../lib/googleMaps';
 const getCategoryIconSvg = (category: string) => {
   const Icon = MAP_CATEGORIES[category as keyof typeof MAP_CATEGORIES]?.icon ?? Navigation;
   return renderToString(<Icon size={18} color="white" />);
@@ -51,6 +51,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const lng = point?.longitude ?? center[1];
   const centerLat = center[0];
   const centerLng = center[1];
+  const resultCoordinates = JSON.stringify([...establishments, ...nearbyPlaces]
+    .filter(item => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))
+    .map(item => [item.latitude, item.longitude]));
   const initialView = useRef({ center: { lat, lng }, zoom });
   const selectRef = useRef(onSelectEstablishment);
   selectRef.current = onSelectEstablishment;
@@ -107,6 +110,19 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   }, [map, interactivePointSelection, onPointSelected]);
 
   useEffect(() => {
+    if (!map || point || activeRoute || interactivePointSelection) return;
+    const coordinates = JSON.parse(resultCoordinates) as [number, number][];
+    if (!coordinates.length) return;
+    const bounds = new google.maps.LatLngBounds();
+    coordinates.forEach(([lat, lng]) => bounds.extend({ lat, lng }));
+    map.fitBounds(bounds, 48);
+    const listener = google.maps.event.addListenerOnce(map, 'idle', () => {
+      if ((map.getZoom() ?? 0) > 16) map.setZoom(16);
+    });
+    return () => listener.remove();
+  }, [map, resultCoordinates, point, activeRoute, interactivePointSelection]);
+
+  useEffect(() => {
     if (!map) return;
     const markers: google.maps.marker.AdvancedMarkerElement[] = [];
     const overlays: (google.maps.Polyline | google.maps.Circle)[] = [];
@@ -117,7 +133,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       const size = selected ? 44 : 36;
       element.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${getCategoryColor(category ?? '')};border:3px solid ${selected ? '#70e2d1' : 'white'};box-shadow:0 3px 10px #0837463d`;
       element.innerHTML = getCategoryIconSvg(category ?? '');
-      const marker = new google.maps.marker.AdvancedMarkerElement({ map, position: { lat: latitude, lng: longitude }, title, content: element, zIndex: selected ? 10 : 1 });
+      const marker = new google.maps.marker.AdvancedMarkerElement({ map, position: { lat: latitude, lng: longitude }, title, content: element, gmpClickable: true, zIndex: selected ? 10 : 1 });
       markers.push(marker);
       if (content) {
         const node = document.createElement('div');

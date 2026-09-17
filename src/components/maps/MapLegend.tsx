@@ -1,5 +1,5 @@
-import { MAP_CATEGORIES } from '../data/mapCategories';
-import type { EstablishmentCategory } from '../types';
+import { MAP_CATEGORIES } from '../../data/mapCategories';
+import type { EstablishmentCategory } from '../../types';
 
 export function MapLegend({ selected, onSelect }: { selected: EstablishmentCategory | 'todas'; onSelect: (category: EstablishmentCategory | 'todas') => void }) {
   return <details className="mt-3 rounded-2xl border border-slate-200 bg-white p-4" open>

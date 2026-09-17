@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AccessibilityCriteria, DisabilityType } from '../types';
+import { AccessibilityCriteria, DisabilityType } from '../../types';
 import { DISABILITY_INFO } from './DisabilityBadge';
 import { CheckCircle2, XCircle, Info, Sparkles } from 'lucide-react';
 

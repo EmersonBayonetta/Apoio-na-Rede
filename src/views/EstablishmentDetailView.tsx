@@ -1,3 +1,5 @@
+import { directionsUrl } from '../utils/directionsUrl';
+import { imageFallback } from '../utils/imageFallback';
 import React, { useState } from 'react';
 import { Establishment, DisabilityType } from '../types';
 import { StorageService } from '../services/storageService';
@@ -16,10 +18,10 @@ import {
   Send,
   CheckCircle,
 } from 'lucide-react';
-import { VerifiedBadge } from '../components/VerifiedBadge';
-import { DisabilityBadge, DISABILITY_INFO } from '../components/DisabilityBadge';
-import { AccessibilityChecklist } from '../components/AccessibilityChecklist';
-import { AudioReaderButton } from '../components/AudioReaderButton';
+import { VerifiedBadge } from '../components/establishments/VerifiedBadge';
+import { DisabilityBadge, DISABILITY_INFO } from '../components/accessibility/DisabilityBadge';
+import { AccessibilityChecklist } from '../components/accessibility/AccessibilityChecklist';
+import { AudioReaderButton } from '../components/accessibility/AudioReaderButton';
 
 interface EstablishmentDetailViewProps {
   establishment: Establishment;
@@ -112,20 +114,22 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           <AudioReaderButton textToRead={fullTextToRead} label="Ouvir Informações do Local" />
           <button
             type="button"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: establishment.nome,
-                  text: `Confira as informações de acessibilidade de ${establishment.nome} no Apoio na Rede`,
-                  url: window.location.href,
-                });
-              } else {
-                navigator.clipboard.writeText(window.location.href).then(() => setActionMessage('Link copiado.'));
+            onClick={async () => {
+              const url = new URL('https://www.google.com/maps/search/');
+              url.searchParams.set('api', '1');
+              url.searchParams.set('query', `${establishment.latitude},${establishment.longitude}`);
+              if (establishment.place_id) url.searchParams.set('query_place_id', establishment.place_id);
+              try {
+                if (navigator.share) await navigator.share({ title: establishment.nome, text: `Localização de ${establishment.nome}`, url: url.href });
+                else if (navigator.clipboard) { await navigator.clipboard.writeText(url.href); setActionMessage('Link da localização copiado. Os recursos cadastrados ficam neste navegador.'); }
+                else setActionMessage(`Copie o link da localização: ${url.href}`);
+              } catch (error) {
+                if ((error as Error).name !== 'AbortError') setActionMessage(`Não foi possível compartilhar. Copie o link da localização: ${url.href}`);
               }
             }}
             className="p-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-2xl transition-colors"
-            title="Compartilhar local"
-            aria-label="Compartilhar local"
+            title="Compartilhar localização"
+            aria-label="Compartilhar localização"
           >
             <Share2 size={18} aria-hidden="true" />
           </button>
@@ -150,7 +154,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
 
           <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full text-amber-900 font-black text-sm">
             <Star size={18} className="fill-amber-400 text-amber-500" aria-hidden="true" />
-            <span>{establishment.nota_media}</span>
+            <span>{establishment.total_avaliacoes > 0 ? establishment.nota_media : 'Sem avaliações'}</span>
             <span className="text-xs text-amber-700 font-semibold">
               ({establishment.total_avaliacoes} {establishment.total_avaliacoes === 1 ? 'avaliação' : 'avaliações'})
             </span>
@@ -168,14 +172,12 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             {establishment.cidade}, {establishment.estado}
           </span>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-              `${establishment.nome} ${establishment.endereco} ${establishment.cidade}`
-            )}`}
+            href={directionsUrl(establishment)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-700 font-bold hover:underline ml-2 text-xs"
           >
-            Abrir rotas no Google Maps ↗
+            Como chegar ↗
           </a>
         </div>
 
@@ -188,7 +190,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
       <section aria-label="Fotos do Estabelecimento" className="mb-8">
         <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm">
           <div className="h-80 sm:h-96 w-full rounded-2xl overflow-hidden bg-slate-100 relative mb-3">
-            <img
+            <img onError={imageFallback}
               src={photos[selectedPhotoIdx]}
               alt={`Foto principal de ${establishment.nome} mostrando entrada e instalações adaptadas`}
               className="w-full h-full object-cover transition-all"
@@ -209,7 +211,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                       : 'border-transparent opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <img onError={imageFallback} src={url} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

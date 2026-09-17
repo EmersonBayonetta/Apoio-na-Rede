@@ -1,6 +1,6 @@
 import React from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { useAccessibility } from '../context/AccessibilityContext';
+import { useAccessibility } from '../../context/AccessibilityContext';
 
 interface AudioReaderButtonProps {
   textToRead: string;
@@ -15,7 +15,8 @@ export const AudioReaderButton: React.FC<AudioReaderButtonProps> = ({
   className = '',
   size = 'md',
 }) => {
-  const { speakText, stopSpeaking, isSpeaking, activeSpeechText } = useAccessibility();
+  const { settings, speakText, stopSpeaking, isSpeaking, activeSpeechText } = useAccessibility();
+  if (!settings.voiceReadingEnabled) return null;
 
   // Verifica se o texto atualmente sendo lido corresponde a este componente
   const isCurrentText = isSpeaking && activeSpeechText.startsWith(textToRead.trim().slice(0, 30));

@@ -1,5 +1,13 @@
 # Apoio na Rede
 
+## Organização do projeto
+
+Os componentes estão agrupados por responsabilidade em `src/components/`:
+`accessibility`, `establishments`, `explore`, `layout` e `maps`. As telas ficam em
+`src/views/`, os estilos em `src/styles/` e as funções utilitárias em `src/utils/`.
+Consulte a [estrutura do projeto](docs/estrutura-projeto.md) para localizar arquivos
+e seguir a mesma organização ao adicionar código.
+
 ## Google Maps
 
 O mapa de exploração e o seletor de coordenadas do cadastro usam a Maps JavaScript API, com marcadores de estabelecimentos, informações de acessibilidade, localização e traçados de rotas.

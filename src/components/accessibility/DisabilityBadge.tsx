@@ -1,5 +1,5 @@
 import React from 'react';
-import { DisabilityType } from '../types';
+import { DisabilityType } from '../../types';
 import { Accessibility, Eye, Ear, Brain, HeartPulse } from 'lucide-react';
 
 interface DisabilityBadgeProps {

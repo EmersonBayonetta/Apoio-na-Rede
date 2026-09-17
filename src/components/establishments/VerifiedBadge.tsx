@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Info, X, Clock, AlertTriangle } from 'lucide-react';
-import { EstablishmentStatus } from '../types';
+import { EstablishmentStatus } from '../../types';
 
 interface VerifiedBadgeProps {
   status: EstablishmentStatus;

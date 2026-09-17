@@ -1,6 +1,6 @@
 import { ArrowRight, Accessibility, MapPin } from 'lucide-react';
-import { MAP_CATEGORIES } from '../data/mapCategories';
-import type { EstablishmentCategory } from '../types';
+import { MAP_CATEGORIES } from '../../data/mapCategories';
+import type { EstablishmentCategory } from '../../types';
 
 const iconColors = ['#ff975c', '#6fc6f1', '#dba0ff', '#a5d76e', '#f1c86b', '#62d4c9', '#ffb45f', '#ff96bf', '#b2a7ff'];
 

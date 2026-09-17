@@ -122,6 +122,11 @@ body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .gm-style :where(.t
 .gm-style-iw { color: #263029; }
 body.font-dyslexic :where(h1, h2, h3, .display-title) { font-family: var(--font-dyslexic) !important; }
 body.theme-high-contrast-dark, body.theme-yellow-black { background: #000 !important; }
+body:is(.theme-high-contrast-dark, .theme-yellow-black) :where(button, input, select, textarea, [class*="bg-"], .premium-button) { background: #000 !important; background-image: none !important; color: inherit !important; }
+body.theme-yellow-black :where(button, input, select, textarea) { color: #ffff00 !important; }
+body.theme-high-contrast-dark :where(button, input, select, textarea) { color: #fff !important; }
+body:is(.theme-high-contrast-dark, .theme-yellow-black) :where(button[aria-pressed="true"], button[aria-checked="true"], [role="tab"][aria-selected="true"]) { outline: 2px solid currentColor; outline-offset: -4px; }
+body:is(.theme-high-contrast-dark, .theme-yellow-black) [role="switch"] > div { background: currentColor !important; }
 body:is(.theme-high-contrast-dark, .theme-yellow-black) :where(.app-header, .mobile-navigation, .premium-surface, .premium-card, .category-tile, .advanced-search-filters, .discovery-banner, .hero-art-label, .search-filter-toggle, .header-preferences) { background: #000 !important; color: inherit !important; border: 1px solid currentColor; }
 body.theme-high-contrast-dark :where(h1, h2, h3, p, label, span, dt, dd, .hero-copy h1 span, .hero-location, .hero-link, .section-kicker) { color: #fff !important; }
 body:is(.theme-high-contrast-dark, .theme-yellow-black) .hero-art { display: none; }
@@ -130,7 +135,8 @@ body:is(.theme-high-contrast-dark, .theme-yellow-black) .hero-art { display: non
   html:is(.font-size-lg, .font-size-xl) .hero-copy > p:not(.hero-location) { max-width: 100%; }
 }
 body:has(.accessibility-panel, [role="dialog"]) div[vw] { z-index: 30 !important; }
-.accessibility-panel { overflow-y: auto; }
+.accessibility-panel { overflow-y: auto; max-height: calc(100dvh - 8rem); overflow-wrap: anywhere; }
+.accessibility-panel [role="switch"] { flex-shrink: 0; }
 
 @media (min-width: 1024px) {
   .explorer-shell { max-width: 1180px; }

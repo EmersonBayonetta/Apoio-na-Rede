@@ -1,3 +1,6 @@
+import { normalizeSearchText } from '../utils/normalizeSearchText';
+import { validateRegistration } from '../utils/registrationValidation';
+import { browserStorage, readStoredArray } from '../lib/browserStorage';
 import {
   Establishment,
   AccessibilityCriteria,
@@ -25,20 +28,20 @@ const STORAGE_KEYS = {
 
 // Inicialização segura dos dados locais
 const initStorage = () => {
-  if (!localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS)) {
-    localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(import.meta.env.DEV ? MOCK_ESTABLISHMENTS : []));
+  if (!browserStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS)) {
+    browserStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(import.meta.env.DEV ? MOCK_ESTABLISHMENTS : []));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.CRITERIA)) {
-    localStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(import.meta.env.DEV ? MOCK_CRITERIA : []));
+  if (!browserStorage.getItem(STORAGE_KEYS.CRITERIA)) {
+    browserStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(import.meta.env.DEV ? MOCK_CRITERIA : []));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.REVIEWS)) {
-    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(import.meta.env.DEV ? MOCK_REVIEWS : []));
+  if (!browserStorage.getItem(STORAGE_KEYS.REVIEWS)) {
+    browserStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(import.meta.env.DEV ? MOCK_REVIEWS : []));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.PROFESSIONALS)) {
-    localStorage.setItem(STORAGE_KEYS.PROFESSIONALS, JSON.stringify(import.meta.env.DEV ? MOCK_PROFESSIONALS : []));
+  if (!browserStorage.getItem(STORAGE_KEYS.PROFESSIONALS)) {
+    browserStorage.setItem(STORAGE_KEYS.PROFESSIONALS, JSON.stringify(import.meta.env.DEV ? MOCK_PROFESSIONALS : []));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.ROUTES)) {
-    localStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(import.meta.env.DEV ? MOCK_ROUTES : []));
+  if (!browserStorage.getItem(STORAGE_KEYS.ROUTES)) {
+    browserStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(import.meta.env.DEV ? MOCK_ROUTES : []));
   }
 };
 
@@ -47,14 +50,11 @@ initStorage();
 export const StorageService = {
   // ESTABLISHMENTS
   getEstablishments: async (filters?: Partial<FilterState>): Promise<Establishment[]> => {
-    const rawEst = localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS);
-    const establishments: Establishment[] = rawEst ? JSON.parse(rawEst) : import.meta.env.DEV ? MOCK_ESTABLISHMENTS : [];
+    const establishments = readStoredArray<Establishment>(STORAGE_KEYS.ESTABLISHMENTS, import.meta.env.DEV ? MOCK_ESTABLISHMENTS : []);
 
-    const rawCrit = localStorage.getItem(STORAGE_KEYS.CRITERIA);
-    const allCriteria: AccessibilityCriteria[] = rawCrit ? JSON.parse(rawCrit) : import.meta.env.DEV ? MOCK_CRITERIA : [];
+    const allCriteria = readStoredArray<AccessibilityCriteria>(STORAGE_KEYS.CRITERIA, import.meta.env.DEV ? MOCK_CRITERIA : []);
 
-    const rawRev = localStorage.getItem(STORAGE_KEYS.REVIEWS);
-    const allReviews: Review[] = rawRev ? JSON.parse(rawRev) : import.meta.env.DEV ? MOCK_REVIEWS : [];
+    const allReviews = readStoredArray<Review>(STORAGE_KEYS.REVIEWS, import.meta.env.DEV ? MOCK_REVIEWS : []);
 
     // Attach criteria and reviews
     const fullEstablishments = establishments.map((est) => ({
@@ -68,12 +68,12 @@ export const StorageService = {
     return fullEstablishments.filter((est) => {
       // Busca textual
       if (filters.searchQuery && filters.searchQuery.trim() !== '') {
-        const q = filters.searchQuery.toLowerCase();
-        const matchesName = est.nome.toLowerCase().includes(q);
-        const matchesCategory = est.categoria.toLowerCase().includes(q);
-        const matchesDesc = est.descricao.toLowerCase().includes(q);
-        const matchesAddr = est.endereco.toLowerCase().includes(q) || (est.bairro && est.bairro.toLowerCase().includes(q)) || est.cidade.toLowerCase().includes(q);
-        const matchesCriteria = est.criteria?.some((c) => c.criterio.toLowerCase().includes(q));
+        const q = normalizeSearchText(filters.searchQuery);
+        const matchesName = normalizeSearchText(est.nome).includes(q);
+        const matchesCategory = normalizeSearchText(est.categoria).includes(q);
+        const matchesDesc = normalizeSearchText(est.descricao).includes(q);
+        const matchesAddr = normalizeSearchText(est.endereco).includes(q) || (est.bairro && normalizeSearchText(est.bairro).includes(q)) || normalizeSearchText(est.cidade).includes(q);
+        const matchesCriteria = est.criteria?.some((c) => normalizeSearchText(c.criterio).includes(q));
 
         if (!matchesName && !matchesCategory && !matchesDesc && !matchesAddr && !matchesCriteria) {
           return false;
@@ -120,15 +120,15 @@ export const StorageService = {
     data: Omit<Establishment, 'id' | 'nota_media' | 'total_avaliacoes' | 'status' | 'criado_em'>,
     criteriaList: Omit<AccessibilityCriteria, 'id' | 'establishment_id'>[]
   ): Promise<Establishment> => {
-    const rawEst = localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS);
-    const establishments: Establishment[] = rawEst ? JSON.parse(rawEst) : [];
+    validateRegistration(data);
+    const establishments = readStoredArray<Establishment>(STORAGE_KEYS.ESTABLISHMENTS, []);
 
-    const newId = `est-${Date.now()}`;
+    const newId = `est-${crypto.randomUUID()}`;
     const newEst: Establishment = {
       ...data,
       id: newId,
       status: 'pendente', // Comerciante cria em status pendente para moderação
-      nota_media: 5.0,
+      nota_media: 0,
       total_avaliacoes: 0,
       criado_em: new Date().toISOString(),
     };
@@ -137,11 +137,10 @@ export const StorageService = {
       throw new Error('Este local já possui cadastro neste navegador.');
     }
     establishments.unshift(newEst);
-    localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(establishments));
+    browserStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(establishments));
 
     // Salva critérios
-    const rawCrit = localStorage.getItem(STORAGE_KEYS.CRITERIA);
-    const allCriteria: AccessibilityCriteria[] = rawCrit ? JSON.parse(rawCrit) : [];
+    const allCriteria = readStoredArray<AccessibilityCriteria>(STORAGE_KEYS.CRITERIA, []);
 
     const newCriteria: AccessibilityCriteria[] = criteriaList.map((crit, idx) => ({
       ...crit,
@@ -150,7 +149,7 @@ export const StorageService = {
     }));
 
     allCriteria.push(...newCriteria);
-    localStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(allCriteria));
+    browserStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(allCriteria));
 
     newEst.criteria = newCriteria;
     newEst.reviews = [];
@@ -166,22 +165,20 @@ export const StorageService = {
     nota: number;
     comentario: string;
   }): Promise<Review> => {
-    const rawRev = localStorage.getItem(STORAGE_KEYS.REVIEWS);
-    const reviews: Review[] = rawRev ? JSON.parse(rawRev) : [];
+    const reviews = readStoredArray<Review>(STORAGE_KEYS.REVIEWS, []);
 
     const newReview: Review = {
       ...reviewData,
-      id: `rev-${Date.now()}`,
+      id: `rev-${crypto.randomUUID()}`,
       data: new Date().toISOString().split('T')[0],
       denunciada: false,
     };
 
     reviews.unshift(newReview);
-    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
+    browserStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
 
     // Recalcular nota média e total no estabelecimento
-    const rawEst = localStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS);
-    const establishments: Establishment[] = rawEst ? JSON.parse(rawEst) : [];
+    const establishments = readStoredArray<Establishment>(STORAGE_KEYS.ESTABLISHMENTS, []);
     const estIndex = establishments.findIndex((e) => e.id === reviewData.establishment_id);
 
     if (estIndex >= 0) {
@@ -190,20 +187,19 @@ export const StorageService = {
       const sum = estReviews.reduce((acc, r) => acc + r.nota, 0);
       establishments[estIndex].total_avaliacoes = total;
       establishments[estIndex].nota_media = Number((sum / total).toFixed(1));
-      localStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(establishments));
+      browserStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(establishments));
     }
 
     return newReview;
   },
 
   reportReview: async (reviewId: string, motivo: string): Promise<void> => {
-    const rawRev = localStorage.getItem(STORAGE_KEYS.REVIEWS);
-    const reviews: Review[] = rawRev ? JSON.parse(rawRev) : [];
+    const reviews = readStoredArray<Review>(STORAGE_KEYS.REVIEWS, []);
     const idx = reviews.findIndex((r) => r.id === reviewId);
     if (idx >= 0) {
       reviews[idx].denunciada = true;
       reviews[idx].motivo_denuncia = motivo;
-      localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
+      browserStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
     }
   },
 
@@ -212,8 +208,7 @@ export const StorageService = {
     especialidade?: string,
     tipoDeficiencia?: DisabilityType
   ): Promise<Professional[]> => {
-    const raw = localStorage.getItem(STORAGE_KEYS.PROFESSIONALS);
-    const list: Professional[] = raw ? JSON.parse(raw) : import.meta.env.DEV ? MOCK_PROFESSIONALS : [];
+    const list = readStoredArray<Professional>(STORAGE_KEYS.PROFESSIONALS, import.meta.env.DEV ? MOCK_PROFESSIONALS : []);
 
     return list.filter((p) => {
       if (especialidade && especialidade !== 'todas') {
@@ -232,8 +227,7 @@ export const StorageService = {
 
   // ROUTES
   getRoutes: async (cidade?: string): Promise<AccessibleRoute[]> => {
-    const raw = localStorage.getItem(STORAGE_KEYS.ROUTES);
-    const list: AccessibleRoute[] = raw ? JSON.parse(raw) : import.meta.env.DEV ? MOCK_ROUTES : [];
+    const list = readStoredArray<AccessibleRoute>(STORAGE_KEYS.ROUTES, import.meta.env.DEV ? MOCK_ROUTES : []);
     if (cidade && cidade !== 'todas') {
       return list.filter((r) => r.cidade.toLowerCase().includes(cidade.toLowerCase()));
     }

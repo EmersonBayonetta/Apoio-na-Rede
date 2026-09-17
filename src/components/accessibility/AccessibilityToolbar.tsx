@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useAccessibility } from '../context/AccessibilityContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAccessibility } from '../../context/AccessibilityContext';
 import {
   Sliders,
   Type,
@@ -13,6 +13,16 @@ import {
 
 export const AccessibilityToolbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    document.querySelector<HTMLElement>('#accessibility-menu button')?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setIsOpen(false); launcherRef.current?.focus(); }
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [isOpen]);
   const {
     settings,
     applySettings,
@@ -57,6 +67,7 @@ export const AccessibilityToolbar: React.FC = () => {
         )}
 
         <button
+          ref={launcherRef}
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           aria-expanded={isOpen}
@@ -93,6 +104,10 @@ export const AccessibilityToolbar: React.FC = () => {
           </div>
 
           <div className="space-y-5 text-sm">
+            <label className="flex items-center gap-3 font-bold">
+              <input type="checkbox" checked={settings.voiceReadingEnabled} onChange={event => applySettings({ voiceReadingEnabled: event.target.checked })} />
+              Leitura em voz alta
+            </label>
             {/* 1. Tamanho do Texto */}
             <div>
               <label className="flex items-center gap-1.5 font-bold text-slate-700 mb-2">
