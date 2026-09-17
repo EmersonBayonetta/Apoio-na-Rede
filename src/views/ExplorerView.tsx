@@ -1,4 +1,5 @@
-import { StreetViewCatalog, type CatalogEntry } from '../components/explore/StreetViewCatalog';
+import { PlaceCatalog, type CatalogEntry } from '../components/explore/PlaceCatalog';
+import { isPlacesQuotaError } from '../utils/placesError';
 import { externalDiscoveryPlaces } from '../utils/discoveryPlaces';
 import { normalizeSearchText } from '../utils/normalizeSearchText';
 import { browserStorage } from '../lib/browserStorage';
@@ -140,6 +141,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
   const [searchedPlaces, setSearchedPlaces] = useState<NearbyPlace[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
   const [placesError, setPlacesError] = useState(false);
+  const [placesQuotaExceeded, setPlacesQuotaExceeded] = useState(false);
   const [placesAttempt, setPlacesAttempt] = useState(0);
 
   // Filtros
@@ -251,11 +253,13 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
         const places = await PlacesService.nearby(placesSearchCenter, selectedCategory);
         if (controller.signal.aborted) return;
         setNearbyPlaces(places.slice(0, 500));
+        setPlacesQuotaExceeded(false);
         
       } catch (error) {
         if (!controller.signal.aborted && (error as Error).name !== 'AbortError') {
           setNearbyPlaces([]);
           setPlacesError(true);
+          setPlacesQuotaExceeded(isPlacesQuotaError(error));
           
         }
       } finally {
@@ -766,7 +770,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
       {/* Cartões do catálogo */}
       {!searchQuery.trim() && <p className="mb-4 text-sm" role="status">{locationNotice}</p>}
       {isLoadingPlaces && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Buscando locais…</p>}
-      {placesError && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Não foi possível carregar locais do Google Maps. <button type="button" className="underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></p>}
+      {placesError && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões próximas voltarão quando a cota for renovada. Os cadastros disponíveis no catálogo continuam acessíveis.' : <>Não foi possível carregar locais do Google Maps. <button type="button" className="underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></>}</p>}
       {loadError ? (
         <section role="alert" className="bg-white border border-rose-200 rounded-2xl px-6 py-10 text-center mb-12">
           <AlertCircle size={28} className="mx-auto text-rose-600 mb-3" aria-hidden="true" />
@@ -800,7 +804,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
           </button>
         </section>
       ) : (
-        <StreetViewCatalog entries={catalogEntries} center={placesSearchCenter} limit={searchQuery.trim() ? undefined : 5} />
+        <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={searchQuery.trim() ? undefined : 5} />
       )}
     </div>
   );
