@@ -1,4 +1,5 @@
 import { useVisibleSearch } from '../hooks/useVisibleSearch';
+import { categoryForActivity } from '../data/categoryDiscovery';
 import { CatalogSkeleton } from '../components/explore/CatalogSkeleton';
 import { PlaceCatalog, type CatalogEntry } from '../components/explore/PlaceCatalog';
 import { isPlacesQuotaError } from '../utils/placesError';
@@ -80,7 +81,7 @@ const CATEGORIES: { id: EstablishmentCategory | 'todas'; label: string }[] = [
 ];
 
 const CATAGUASES_CENTER: [number, number] = [-21.3924, -42.6896];
-const ADDRESS_INDEX_CACHE_KEY = 'apoio_cataguases_urban_index_v3';
+const ADDRESS_INDEX_CACHE_KEY = 'apoio_cataguases_urban_index_v4';
 
 
 const categoryIcons: Record<EstablishmentCategory, React.ElementType> = {
@@ -95,16 +96,20 @@ const categoryIcons: Record<EstablishmentCategory, React.ElementType> = {
   hospedagem: Hotel,
 };
 
-const inferCategory = (tags: Record<string, string>): EstablishmentCategory => {
+const inferCategory = (tags: Record<string, string>): EstablishmentCategory | undefined => {
+  if (tags.amenity === 'toilets' && ['private', 'no', 'customers', 'permit'].includes(tags.access)) return undefined;
+  if (tags.shop === 'chemist') return 'saude';
+  if (['bakery', 'confectionery', 'pastry'].includes(tags.shop)) return 'alimentacao';
   if (tags.shop) return 'comercio_loja';
   if (tags.tourism === 'hotel' || tags.tourism === 'hostel' || tags.tourism === 'guest_house') return 'hospedagem';
   if (tags.amenity === 'toilets') return 'banheiro_adaptado';
   if (['hospital', 'clinic', 'doctors', 'dentist', 'pharmacy'].includes(tags.amenity)) return 'saude';
   if (['restaurant', 'cafe', 'fast_food', 'bar', 'food_court'].includes(tags.amenity)) return 'alimentacao';
   if (['school', 'college', 'university', 'kindergarten', 'library'].includes(tags.amenity)) return 'educacao';
-  if (tags.public_transport || tags.highway === 'bus_stop' || tags.amenity === 'bus_station') return 'transporte_mobilidade';
+  if (tags.public_transport || tags.highway === 'bus_stop' || ['bus_station', 'taxi', 'ferry_terminal'].includes(tags.amenity)) return 'transporte_mobilidade';
   if (tags.leisure || tags.tourism) return 'lazer_cultura';
-  return 'servico_publico';
+  if (['townhall', 'post_office', 'police', 'courthouse', 'fire_station'].includes(tags.amenity)) return 'servico_publico';
+  return categoryForActivity(tags.name ?? '') ?? undefined;
 };
 
 const distanceInMeters = (a: [number, number], b: [number, number]) => {
@@ -125,6 +130,8 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const routeRequestRef = useRef(0);
+  const localRequestRef = useRef(0);
+  const [showAllResults, setShowAllResults] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [cityAddressIndex, setCityAddressIndex] = useState<AddressSuggestion[]>([]);
   const [isLoadingAddressIndex, setIsLoadingAddressIndex] = useState(true);
@@ -154,14 +161,24 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [selectedDisabilities, setSelectedDisabilities] = useState<DisabilityType[]>(accessibilityPreferences);
   const [includeUnknownPlaces, setIncludeUnknownPlaces] = useState(true);
-  const visibleNearbyPlaces = useMemo(() => externalDiscoveryPlaces(searchQuery.trim().length >= 3 ? searchedPlaces : nearbyPlaces,
-    establishments, selectedCategory, onlyVerified, includeUnknownPlaces), [searchQuery, searchedPlaces, nearbyPlaces, establishments, selectedCategory, onlyVerified, includeUnknownPlaces]);
+  const visibleNearbyPlaces = useMemo(() => {
+    const googlePlaces = searchQuery.trim().length >= 3 ? searchedPlaces : nearbyPlaces;
+    const query = normalizeSearchText(searchQuery);
+    const osmPlaces = cityAddressIndex.flatMap(address => address.externalPlace?.fonte === 'osm' ? [address.externalPlace] : [])
+      .filter(place => !query || normalizeSearchText(`${place.nome} ${place.endereco}`).includes(query))
+      .filter(place => !googlePlaces.some(other => normalizeSearchText(other.nome) === normalizeSearchText(place.nome)
+        && distanceInMeters([place.latitude, place.longitude], [other.latitude, other.longitude]) < 100));
+    return externalDiscoveryPlaces([...googlePlaces, ...osmPlaces], establishments, selectedCategory, onlyVerified, includeUnknownPlaces);
+  }, [searchQuery, searchedPlaces, nearbyPlaces, cityAddressIndex, establishments, selectedCategory, onlyVerified, includeUnknownPlaces]);
   const catalogEntries = useMemo<CatalogEntry[]>(() => {
     if (selectedAddressLabel) return searchedAddress ? [{ addressLabel: selectedAddressLabel, place: { id: 'selected-address', nome: selectedAddressLabel, endereco: selectedAddressLabel, categoria: 'servico_publico', ...searchedAddress } }] : [];
     if (selectedPlace) return [{ place: selectedPlace, establishment: establishments.find(est => est.place_id && est.place_id === selectedPlace.place_id) }];
-    return [...establishments.map(establishment => ({ establishment })), ...visibleNearbyPlaces.map(place => ({ place }))];
-  }, [selectedAddressLabel, searchedAddress, selectedPlace, establishments, visibleNearbyPlaces]);
+    return [...establishments.filter(establishment => selectedCategory === 'todas' || establishment.categoria === selectedCategory).map(establishment => ({ establishment })), ...visibleNearbyPlaces.map(place => ({ place }))];
+  }, [selectedAddressLabel, searchedAddress, selectedPlace, establishments, visibleNearbyPlaces, selectedCategory]);
+  useEffect(() => { setShowAllResults(false); }, [searchQuery, selectedCategory, onlyVerified, includeUnknownPlaces, selectedDisabilities]);
   const chooseCategory = (category: EstablishmentCategory | 'todas') => {
+    setShowAllResults(false);
+    setSelectedPlace(null);
     addressSelectionRef.current++;
     setSelectedAddressLabel(''); setAddressFilter(null);
     skipAddressLookupRef.current = false;
@@ -186,6 +203,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
 
 
   const loadData = useCallback(async () => {
+    const requestId = ++localRequestRef.current;
     setIsLoading(true);
     setLoadError(false);
     try {
@@ -197,12 +215,13 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
         selectedDisabilities,
       };
       const list = await StorageService.getEstablishments(filters);
+      if (requestId !== localRequestRef.current) return;
       setEstablishments(list);
     } catch (err) {
       console.error(err);
-      setLoadError(true);
+      if (requestId === localRequestRef.current) setLoadError(true);
     } finally {
-      setIsLoading(false);
+      if (requestId === localRequestRef.current) setIsLoading(false);
     }
   }, [searchQuery, addressFilter, selectedCategory, selectedCity, onlyVerified, selectedDisabilities]);
 
@@ -250,7 +269,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
     const loadNearbyPlaces = async () => {
       setIsLoadingPlaces(true);
       setPlacesError(false);
-      setNearbyPlaces([]);
       
       try {
         const places = await PlacesService.nearby(placesSearchCenter, selectedCategory);
@@ -260,7 +278,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
         
       } catch (error) {
         if (!controller.signal.aborted && (error as Error).name !== 'AbortError') {
-          setNearbyPlaces([]);
           setPlacesError(true);
           setPlacesQuotaExceeded(isPlacesQuotaError(error));
           
@@ -291,7 +308,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
     const controller = new AbortController();
     const loadAddressIndex = async () => {
       setIsLoadingAddressIndex(true);
-      const query = '[out:json][timeout:60];area["boundary"="administrative"]["name"="Cataguases"]->.city;(way(area.city)["highway"]["name"];nwr(area.city)["addr:street"];nwr(area.city)["amenity"]["name"];nwr(area.city)["shop"]["name"];nwr(area.city)["tourism"]["name"];nwr(area.city)["leisure"]["name"];nwr(area.city)["office"]["name"];nwr(area.city)["craft"]["name"];nwr(area.city)["historic"]["name"];nwr(area.city)["natural"]["name"];nwr(area.city)["public_transport"]["name"];nwr(area.city)["place"~"suburb|neighbourhood|square"]["name"];nwr(area.city)["building"]["name"];);out center tags;';
+      const query = '[out:json][timeout:60];area["boundary"="administrative"]["name"="Cataguases"]->.city;(way(area.city)["highway"]["name"];nwr(area.city)["addr:street"];nwr(area.city)["amenity"]["name"];nwr(area.city)["amenity"="toilets"];nwr(area.city)["highway"="bus_stop"];nwr(area.city)["public_transport"="platform"];nwr(area.city)["shop"]["name"];nwr(area.city)["tourism"]["name"];nwr(area.city)["leisure"]["name"];nwr(area.city)["office"]["name"];nwr(area.city)["craft"]["name"];nwr(area.city)["historic"]["name"];nwr(area.city)["natural"]["name"];nwr(area.city)["public_transport"]["name"];nwr(area.city)["place"~"suburb|neighbourhood|square"]["name"];nwr(area.city)["building"]["name"];);out center tags;';
       const endpoints = [
         'https://overpass-api.de/api/interpreter',
         'https://overpass.kumi.systems/api/interpreter',
@@ -319,12 +336,13 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
 
         const addresses = (payload.elements || []).flatMap((element) => {
           const tags = element.tags || {};
-          const isAddress = Boolean(tags['addr:street'] || tags.highway);
-          const title = tags['addr:street'] || tags.name;
+          const category = inferCategory(tags);
+          const isPlace = Boolean(category);
+          const isAddress = !isPlace;
+          const title = isPlace ? tags.name || (tags.amenity === 'toilets' ? 'Banheiro público' : tags.highway === 'bus_stop' || tags.public_transport ? 'Ponto de transporte' : tags['addr:street']) : tags['addr:street'] || tags.name;
           if (!title) return [];
           const latitude = Number(element.lat ?? element.center?.lat);
           const longitude = Number(element.lon ?? element.center?.lon);
-          const category = inferCategory(tags);
           const typeLabel = tags.shop ? 'Loja ou comércio'
             : tags.amenity ? 'Serviço ou equipamento urbano'
             : tags.tourism ? 'Turismo'
@@ -337,6 +355,10 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
             : tags.building ? 'Edifício'
             : 'Logradouro';
           return [{
+            externalPlace: isPlace && category && Number.isFinite(latitude) && Number.isFinite(longitude) ? {
+              id: `osm-${element.type}-${element.id}`, fonte: 'osm', nome: title, categoria: category, latitude, longitude,
+              endereco: [tags['addr:street'], tags['addr:housenumber'], tags['addr:suburb'], 'Cataguases - MG'].filter(Boolean).join(', '),
+            } satisfies NearbyPlace : undefined,
             cep: tags['addr:postcode'] || '',
             logradouro: title,
             complemento: tags['addr:housenumber'] || '',
@@ -351,6 +373,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
           } satisfies AddressSuggestion];
         });
         const unique = addresses.filter((address, index, items) => {
+          if (address.externalPlace) return items.findIndex(candidate => candidate.externalPlace?.id === address.externalPlace?.id) === index;
           const key = `${address.kind}|${address.logradouro}|${address.complemento}|${address.bairro}|${address.cep}`.toLowerCase();
           return items.findIndex((candidate) => `${candidate.kind}|${candidate.logradouro}|${candidate.complemento}|${candidate.bairro}|${candidate.cep}`.toLowerCase() === key) === index;
         }).sort((a, b) => a.logradouro.localeCompare(b.logradouro, 'pt-BR'));
@@ -763,7 +786,8 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
             <span>Carregando estabelecimentos...</span>
           ) : (
             <span>
-              {searchQuery.trim() ? 'Resultados da busca' : 'Até 5 sugestões próximas'}
+              {searchQuery.trim() ? 'Resultados da busca' : showAllResults ? 'Todos os locais encontrados' : 'Até 5 sugestões próximas'}
+              {selectedCategory !== 'todas' ? ` · ${MAP_CATEGORIES[selectedCategory].label}` : ''}
               {searchQuery ? ` para "${searchQuery}"` : ''}
             </span>
           )}
@@ -775,7 +799,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
       {!searchQuery.trim() && <p className="mb-4 text-sm" role="status">{locationNotice}</p>}
       {isLoadingPlaces && !isLoading && catalogEntries.length > 0 && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Buscando locais…</p>}
       {placesError && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões próximas voltarão quando a cota for renovada. Os cadastros disponíveis no catálogo continuam acessíveis.' : <>Não foi possível carregar locais do Google Maps. <button type="button" className="underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></>}</p>}
-      {loadError ? (
+      {loadError && catalogEntries.length === 0 ? (
         <section role="alert" className="bg-white border border-rose-200 rounded-2xl px-6 py-10 text-center mb-12">
           <AlertCircle size={28} className="mx-auto text-rose-600 mb-3" aria-hidden="true" />
           <h2 className="text-lg font-bold text-slate-900 mb-1">Não foi possível carregar os locais</h2>
@@ -784,9 +808,9 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
             Tentar novamente
           </button>
         </section>
-      ) : isLoading || (isLoadingPlaces && catalogEntries.length === 0) ? (
+      ) : (isLoading || isLoadingPlaces) && catalogEntries.length === 0 ? (
         <CatalogSkeleton />
-      ) : establishments.length === 0 && visibleNearbyPlaces.length === 0 && !selectedAddressLabel && !selectedPlace ? (
+      ) : catalogEntries.length === 0 ? (
         <section className="bg-white rounded-2xl px-6 py-12 text-center border border-slate-200 mb-12">
           <Search size={28} className="mx-auto mb-3 text-slate-400" aria-hidden="true" />
           <h2 className="text-lg font-bold text-slate-900 mb-1">Nenhum local encontrado</h2>
@@ -797,7 +821,17 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
           </button>
         </section>
       ) : (
-        <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={searchQuery.trim() ? undefined : 5} />
+        <>
+          <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={showAllResults ? undefined : 5} />
+          {(catalogEntries.length > 5 || showAllResults) && <button
+            type="button"
+            className="premium-button rounded-xl px-5 py-3 mb-12 font-bold"
+            onClick={() => {
+              setShowAllResults(previous => !previous);
+              document.getElementById('results-section')?.scrollIntoView({ block: 'start', behavior: 'instant' });
+            }}
+          >{showAllResults ? 'Voltar às 5 sugestões' : `Ver todos os ${catalogEntries.length} locais${selectedCategory !== 'todas' ? ` de ${MAP_CATEGORIES[selectedCategory].label}` : ''}`}</button>}
+        </>
       )}
     </div>
   );

@@ -15,6 +15,7 @@ export function PlaceResultCard({ place, establishment, addressLabel }: { place?
   return <article className="premium-card rounded-2xl overflow-hidden" aria-label={addressLabel ? 'Endereço selecionado' : name}>
     <HybridMapPreview latitude={destination?.latitude} longitude={destination?.longitude} name={name} />
     <p className="px-5 pt-2 text-xs text-slate-500">Vista aérea e localização do estabelecimento.</p>
+    {place?.fonte === 'osm' && <p className="px-5 pt-1 text-xs text-slate-500">Dados do local: <a className="underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© colaboradores do OpenStreetMap</a>.</p>}
     <div className="p-5 space-y-4">
       <div><h2 className="text-lg font-bold">{name}</h2>{address !== name && <p className="mt-1 text-sm text-slate-600">{address}</p>}</div>
       <div className="flex flex-wrap gap-3">
