@@ -172,3 +172,86 @@ body:has(.accessibility-panel, [role="dialog"]) div[vw] { z-index: 30 !important
   .explorer-shell article { padding: 20px; }
   .place-discovery-grid { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: #36544e transparent; }.place-discovery-card { flex: 0 0 200px; }.place-card-visual { height: 100px; }.place-card-body { padding: 13px; }.discovery-places { margin-bottom: 24px; }.section-heading > a { font-size: 0.625rem; }
 }
+/* Color preference is independent of the accessibility contrast overrides. */
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) {
+  --ds-background: #ffffff;
+  --ds-surface: #ffffff;
+  --ds-raised: #eef3f2;
+  --ds-border: #cbd5d2;
+  --ds-text: #182824;
+  --ds-muted: #52635e;
+  --ds-accent: #087e70;
+  --ds-accent-ink: #ffffff;
+  color-scheme: light;
+  background: var(--ds-background);
+  color: var(--ds-text);
+}
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) :is(.app-header, .mobile-navigation, .hero-art-label) {
+  background: #fffffffa;
+  border-color: var(--ds-border);
+}
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) :is(#main-search-input, .category-tile) {
+  background: var(--ds-raised);
+  color: var(--ds-text);
+  border-color: var(--ds-border);
+}
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .category-tile[aria-pressed=true] { background: #d8f3ec; border-color: var(--ds-accent); }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .category-tile svg { color: var(--ds-accent); }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .mobile-navigation button { color: var(--ds-muted); }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .mobile-navigation button[aria-current] { color: var(--ds-accent); }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) input::placeholder { color: var(--ds-muted); }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) footer.bg-blue-950 { background: var(--ds-raised); color: var(--ds-muted); }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) footer :is(h3, button:hover, a:hover) { color: var(--ds-text); }
+.brand-logo { background: transparent; }
+.brand-logo .brand-logo-light { display: none; }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .brand-logo-dark { display: none; }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .brand-logo-light { display: block; }
+html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) :where(.hover\:bg-slate-50, .hover\:bg-slate-100, .hover\:bg-blue-50):hover { background: var(--ds-raised); }
+.theme-toggle { flex-shrink: 0; min-width: 44px; min-height: 44px; }
+.theme-toggle:focus-visible { outline: 3px solid var(--ds-accent); outline-offset: 3px; }
+/* Finishing details: brief motion, clearer focus and comfortable mobile spacing. */
+.explorer-hero, .category-section { margin-bottom: 40px; }
+.discovery-banner { isolation: isolate; }
+.discovery-banner { box-shadow: inset 0 1px 0 #ffffff55, 0 12px 32px #087e7014; background-image: linear-gradient(115deg, #87e8d8, #26cbb4 52%, #0aa28f); }
+.discovery-banner::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 15% 0, #ffffff35, transparent 65%); }
+.discovery-banner > div { position: relative; }
+.explorer-shell .premium-card { transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease; }
+#main-search-input:focus { outline: 2px solid var(--ds-accent); outline-offset: 3px; border-color: var(--ds-accent); box-shadow: 0 0 0 7px color-mix(in srgb, var(--ds-accent) 12%, transparent); }
+#address-suggestions { max-height: var(--suggestion-height, 320px); overscroll-behavior: contain; }
+.search-controls > .relative { min-width: 0; }
+.catalog-skeleton { background: var(--ds-raised); }
+@keyframes content-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes skeleton-breathe { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: no-preference) {
+  body:not(.reduced-sensory) .explorer-shell :is(.hero-copy, .section-heading, article.premium-card) { animation: content-arrive 260ms ease-out both; }
+  body:not(.reduced-sensory) .catalog-skeleton { animation: skeleton-breathe 1.6s ease-in-out infinite; }
+}
+@media (hover: hover) and (pointer: fine) {
+  body:not(.reduced-sensory) .explorer-shell .premium-card:hover { transform: translateY(-3px); border-color: var(--ds-accent); box-shadow: 0 14px 32px #0002; }
+}
+@media (hover: none) {
+  .category-tile:hover, .place-discovery-card:hover { transform: none; }
+  .explorer-shell :is(button, a):active { opacity: .8; }
+}
+@media (max-width: 600px) {
+  .explorer-hero { margin-bottom: 32px; }
+  .hero-copy > p:not(.hero-location) { font-size: .875rem; line-height: 1.75; }
+  .hero-location, .section-kicker, .banner-kicker { font-size: .625rem; }
+  .hero-link, .section-heading button, .section-heading > a { font-size: .8125rem; }
+  #main-search-input { font-size: max(16px, 1rem); }
+  .explorer-search > p { font-size: .75rem; line-height: 1.7; }
+  .explorer-search.premium-surface, .category-section { margin-bottom: 32px; }
+  .discovery-banner { margin-bottom: 36px; padding: 24px; }
+  .discovery-banner p, .discovery-banner a { font-size: .75rem; line-height: 1.65; }
+  .discovery-banner .banner-art { position: absolute; opacity: .65; }
+  .discovery-banner > div:first-child { max-width: 80%; }
+  .category-tile { flex-basis: 88px; min-height: 104px; }
+  .category-tile span { font-size: .75rem; }
+  .mobile-navigation button { font-size: .6875rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .explorer-shell *, .explorer-shell *::before { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .explorer-shell .premium-card:hover, .category-tile:hover { transform: none; }
+}
+body.reduced-sensory .explorer-shell *, body.reduced-sensory .explorer-shell *::before { animation: none !important; transition: none !important; }
+body.reduced-sensory .explorer-shell .premium-card:hover, body.reduced-sensory .category-tile:hover { transform: none; }

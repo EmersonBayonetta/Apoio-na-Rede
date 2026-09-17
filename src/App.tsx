@@ -150,12 +150,12 @@ export const MainAppContent: React.FC = () => {
               </li>
               <li>
                 <a
-                  href="https://www.gov.br/mdh/pt-br/assuntos/pessoa-com-deficiencia"
+                  href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"
                 >
-                  Direitos da Pessoa com Deficiência (Gov.br) ↗
+                  Direitos da Pessoa com Deficiência (Lei Brasileira de Inclusão) ↗
                 </a>
               </li>
             </ul>

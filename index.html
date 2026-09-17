@@ -6,6 +6,11 @@
     <link rel="icon" type="image/png" href="/brand/favicon.png" />
     <link rel="apple-touch-icon" href="/brand/favicon.png" />
     <meta name="theme-color" content="#101111" />
+    <script>
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem('apoio_color_theme') === 'light' ? 'light' : 'dark';
+      } catch { document.documentElement.dataset.theme = 'dark'; }
+    </script>
     <title>Apoio na rede — Acessibilidade urbana</title>
     <meta name="description" content="Pesquise locais de Cataguases e consulte informações comunitárias sobre acessibilidade." />
     <meta property="og:type" content="website" />

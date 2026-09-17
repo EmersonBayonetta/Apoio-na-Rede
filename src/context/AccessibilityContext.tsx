@@ -1,5 +1,5 @@
 import { browserStorage, readStoredArray } from '../lib/browserStorage';
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { AccessibilitySettings, DisabilityType } from '../types';
 
 const SETTINGS_KEY = 'acessacidade_accessibility_settings';
@@ -19,6 +19,7 @@ interface AccessibilityContextType {
   stopSpeaking: () => void;
   isSpeaking: boolean;
   activeSpeechText: string;
+  speechError: string;
 }
 
 const DEFAULT_SETTINGS: AccessibilitySettings = {
@@ -52,6 +53,8 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [activeSpeechText, setActiveSpeechText] = useState('');
+  const [speechError, setSpeechError] = useState('');
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Persistir e aplicar classes globais no DOM
   useEffect(() => {
@@ -118,38 +121,64 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   // Síntese de Voz (TTS)
   const speakText = (text: string) => {
     if (!settings.voiceReadingEnabled) return;
-    if (!('speechSynthesis' in window)) {
-      alert('Seu navegador não suporta leitura em voz alta.');
+    setSpeechError('');
+    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+      setSpeechError('Este navegador não oferece leitura em voz alta. Tente outro navegador.');
       return;
     }
 
-    window.speechSynthesis.cancel();
+    stopSpeaking();
     const cleanText = text.replace(/<[^>]*>/g, '').trim();
-    if (!cleanText) return;
+    if (!cleanText) {
+      setSpeechError('Não há texto disponível para leitura nesta página.');
+      return;
+    }
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'pt-BR';
     utterance.rate = 1.0;
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(item => item.lang.toLowerCase().replace('_', '-') === 'pt-br')
+      ?? voices.find(item => item.lang.toLowerCase().startsWith('pt'));
+    if (voice) utterance.voice = voice;
+    utteranceRef.current = utterance;
+    setIsSpeaking(true);
+    setActiveSpeechText(cleanText);
 
     utterance.onstart = () => {
+      if (utteranceRef.current !== utterance) return;
       setIsSpeaking(true);
       setActiveSpeechText(cleanText);
     };
 
     utterance.onend = () => {
+      if (utteranceRef.current !== utterance) return;
+      utteranceRef.current = null;
       setIsSpeaking(false);
       setActiveSpeechText('');
     };
 
-    utterance.onerror = () => {
+    utterance.onerror = (event) => {
+      if (utteranceRef.current !== utterance) return;
+      utteranceRef.current = null;
       setIsSpeaking(false);
       setActiveSpeechText('');
+      if (event.error !== 'canceled' && event.error !== 'interrupted') {
+        setSpeechError('Não foi possível reproduzir a leitura. Verifique a voz em português nas configurações do dispositivo e tente novamente.');
+      }
     };
 
-    window.speechSynthesis.speak(utterance);
+    try {
+      window.speechSynthesis.speak(utterance);
+      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+    } catch {
+      stopSpeaking();
+      setSpeechError('Não foi possível iniciar a leitura neste navegador. Tente novamente.');
+    }
   };
 
   const stopSpeaking = () => {
+    utteranceRef.current = null;
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
@@ -159,7 +188,10 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (!settings.voiceReadingEnabled) stopSpeaking();
-    return () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); };
+    return () => {
+      utteranceRef.current = null;
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    };
   }, [settings.voiceReadingEnabled]);
 
   return (
@@ -178,6 +210,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         stopSpeaking,
         isSpeaking,
         activeSpeechText,
+        speechError,
       }}
     >
       {children}

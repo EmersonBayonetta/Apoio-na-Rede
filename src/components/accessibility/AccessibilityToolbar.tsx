@@ -32,6 +32,8 @@ export const AccessibilityToolbar: React.FC = () => {
     toggleReducedSensory,
     stopSpeaking,
     isSpeaking,
+    speakText,
+    speechError,
   } = useAccessibility();
 
   const resetAll = () => {
@@ -51,6 +53,11 @@ export const AccessibilityToolbar: React.FC = () => {
     <>
       {/* Botão Flutuante de Acessibilidade */}
       <div className="accessibility-launcher fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+        {speechError && (
+          <p role="alert" className="max-w-xs rounded-xl bg-white text-slate-900 border border-slate-300 p-3 text-sm shadow-md">
+            {speechError}
+          </p>
+        )}
         {isSpeaking && (
           <div className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded-xl shadow-md text-sm font-semibold">
             <Volume2 size={18} aria-hidden="true" />
@@ -108,6 +115,19 @@ export const AccessibilityToolbar: React.FC = () => {
               <input type="checkbox" checked={settings.voiceReadingEnabled} onChange={event => applySettings({ voiceReadingEnabled: event.target.checked })} />
               Leitura em voz alta
             </label>
+            {settings.voiceReadingEnabled && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (isSpeaking) stopSpeaking();
+                  else speakText(document.getElementById('main-content')?.innerText ?? '');
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-700 text-white px-4 py-2 font-bold"
+              >
+                <Volume2 size={18} aria-hidden="true" />
+                {isSpeaking ? 'Parar leitura' : 'Ouvir página'}
+              </button>
+            )}
             {/* 1. Tamanho do Texto */}
             <div>
               <label className="flex items-center gap-1.5 font-bold text-slate-700 mb-2">

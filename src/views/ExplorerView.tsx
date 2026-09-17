@@ -1,3 +1,5 @@
+import { useVisibleSearch } from '../hooks/useVisibleSearch';
+import { CatalogSkeleton } from '../components/explore/CatalogSkeleton';
 import { PlaceCatalog, type CatalogEntry } from '../components/explore/PlaceCatalog';
 import { isPlacesQuotaError } from '../utils/placesError';
 import { externalDiscoveryPlaces } from '../utils/discoveryPlaces';
@@ -116,6 +118,7 @@ const distanceInMeters = (a: [number, number], b: [number, number]) => {
 };
 
 export const ExplorerView: React.FC<ExplorerViewProps> = () => {
+  const searchInputRef = useVisibleSearch();
   const { accessibilityPreferences } = useAccessibility();
   const [showFilters, setShowFilters] = useState(false);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
@@ -612,6 +615,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
             <input
               type="text"
               id="main-search-input"
+              ref={searchInputRef}
               value={searchQuery}
               onChange={(e) => { addressSelectionRef.current++; skipAddressLookupRef.current = false; setSelectedAddressLabel(''); setAddressFilter(null); routeRequestRef.current++; setSearchQuery(e.target.value); setSearchedAddress(null); setSelectedPlace(null); setSearchedPlaces([]); }}
               onKeyDown={handleAddressKeyDown}
@@ -769,7 +773,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
 
       {/* Cartões do catálogo */}
       {!searchQuery.trim() && <p className="mb-4 text-sm" role="status">{locationNotice}</p>}
-      {isLoadingPlaces && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Buscando locais…</p>}
+      {isLoadingPlaces && !isLoading && catalogEntries.length > 0 && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Buscando locais…</p>}
       {placesError && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões próximas voltarão quando a cota for renovada. Os cadastros disponíveis no catálogo continuam acessíveis.' : <>Não foi possível carregar locais do Google Maps. <button type="button" className="underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></>}</p>}
       {loadError ? (
         <section role="alert" className="bg-white border border-rose-200 rounded-2xl px-6 py-10 text-center mb-12">
@@ -780,19 +784,8 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
             Tentar novamente
           </button>
         </section>
-      ) : isLoading ? (
-        <section aria-label="Carregando resultados" aria-busy="true" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-          <div className="lg:col-span-2 h-[560px] rounded-2xl bg-slate-200 animate-pulse" />
-          <div className="space-y-4">
-            <div className="h-4 w-36 bg-slate-200 rounded animate-pulse" />
-            <div className="h-72 bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
-              <div className="h-36 bg-slate-200 rounded-xl animate-pulse" />
-              <div className="h-5 w-2/3 bg-slate-200 rounded animate-pulse" />
-              <div className="h-3 w-full bg-slate-100 rounded animate-pulse" />
-              <div className="h-3 w-4/5 bg-slate-100 rounded animate-pulse" />
-            </div>
-          </div>
-        </section>
+      ) : isLoading || (isLoadingPlaces && catalogEntries.length === 0) ? (
+        <CatalogSkeleton />
       ) : establishments.length === 0 && visibleNearbyPlaces.length === 0 && !selectedAddressLabel && !selectedPlace ? (
         <section className="bg-white rounded-2xl px-6 py-12 text-center border border-slate-200 mb-12">
           <Search size={28} className="mx-auto mb-3 text-slate-400" aria-hidden="true" />
