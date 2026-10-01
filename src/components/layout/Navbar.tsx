@@ -4,8 +4,8 @@ import { browserStorage } from '../../lib/browserStorage';
 import { UserPreferencesModal } from '../accessibility/UserPreferencesModal';
 
 interface NavbarProps {
-  currentTab: 'explorer' | 'register';
-  onSelectTab: (tab: 'explorer' | 'register') => void;
+  currentTab: 'explorer' | 'register' | 'routes' | 'professionals';
+  onSelectTab: (tab: 'explorer' | 'register' | 'routes' | 'professionals') => void;
 }
 
 export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
@@ -17,8 +17,8 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
     browserStorage.setItem('apoio_color_theme', theme);
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#ffffff' : '#101111');
   }, [theme]);
-  const navigate = (target: 'home' | 'search' | 'catalog' | 'register') => {
-    onSelectTab(target === 'register' ? 'register' : 'explorer');
+  const navigate = (target: 'home' | 'search' | 'catalog' | 'register' | 'routes' | 'professionals') => {
+    onSelectTab(target === 'register' || target === 'routes' || target === 'professionals' ? target : 'explorer');
     if (target === 'search' || target === 'catalog') {
       window.setTimeout(() => {
         const element = document.getElementById(target === 'search' ? 'main-search-input' : 'results-section');
@@ -38,6 +38,8 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
         <nav className="desktop-navigation" aria-label="Navegação principal">
           <button type="button" aria-current={currentTab === 'explorer' ? 'page' : undefined} onClick={() => navigate('home')}><Home size={17} aria-hidden="true" />Explorar</button>
           <button type="button" onClick={() => navigate('catalog')}><MapPin size={17} aria-hidden="true" />Catálogo</button>
+          <button type="button" aria-current={currentTab === 'routes' ? 'page' : undefined} onClick={() => navigate('routes')}><MapPin size={17} aria-hidden="true" />Rotas acessíveis</button>
+          <button type="button" aria-current={currentTab === 'professionals' ? 'page' : undefined} onClick={() => navigate('professionals')}><Search size={17} aria-hidden="true" />Profissionais</button>
           <button type="button" aria-current={currentTab === 'register' ? 'page' : undefined} onClick={() => navigate('register')}><PlusCircle size={17} aria-hidden="true" />Cadastrar Local</button>
         </nav>
         <button
@@ -56,6 +58,8 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
       <button type="button" aria-current={currentTab === 'explorer' ? 'page' : undefined} onClick={() => navigate('home')}><Home size={22} aria-hidden="true" /><span>Início</span></button>
       <button type="button" onClick={() => navigate('search')}><Search size={22} aria-hidden="true" /><span>Buscar</span></button>
       <button type="button" onClick={() => navigate('catalog')}><MapPin size={22} aria-hidden="true" /><span>Catálogo</span></button>
+      <button type="button" aria-current={currentTab === 'routes' ? 'page' : undefined} onClick={() => navigate('routes')}><MapPin size={22} aria-hidden="true" /><span>Rotas</span></button>
+      <button type="button" aria-current={currentTab === 'professionals' ? 'page' : undefined} onClick={() => navigate('professionals')}><Search size={22} aria-hidden="true" /><span>Saúde</span></button>
       <button type="button" aria-current={currentTab === 'register' ? 'page' : undefined} onClick={() => navigate('register')}><PlusCircle size={22} aria-hidden="true" /><span>Cadastrar</span></button>
       <button type="button" aria-label="Preferências de acessibilidade" onClick={() => setIsPrefModalOpen(true)}><SlidersHorizontal size={22} aria-hidden="true" /><span>Ajustes</span></button>
     </nav>

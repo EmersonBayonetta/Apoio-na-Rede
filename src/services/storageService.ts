@@ -233,4 +233,20 @@ export const StorageService = {
     }
     return list;
   },
+
+  saveRoute: async (route: Omit<AccessibleRoute, 'id'>): Promise<AccessibleRoute> => {
+    const list = readStoredArray<AccessibleRoute>(STORAGE_KEYS.ROUTES, import.meta.env.DEV ? MOCK_ROUTES : []);
+    const saved = { ...route, id: `route-${crypto.randomUUID()}` };
+    list.unshift(saved);
+    browserStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(list));
+    return saved;
+  },
+
+  saveProfessional: async (professional: Omit<Professional, 'id'>): Promise<Professional> => {
+    const list = readStoredArray<Professional>(STORAGE_KEYS.PROFESSIONALS, import.meta.env.DEV ? MOCK_PROFESSIONALS : []);
+    const saved = { ...professional, id: `professional-${crypto.randomUUID()}` };
+    list.unshift(saved);
+    browserStorage.setItem(STORAGE_KEYS.PROFESSIONALS, JSON.stringify(list));
+    return saved;
+  },
 };

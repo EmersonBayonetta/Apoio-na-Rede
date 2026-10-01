@@ -10,9 +10,10 @@ import { Establishment } from './types';
 import { StorageService } from './services/storageService';
 import { ShieldCheck } from 'lucide-react';
 import { browserStorage } from './lib/browserStorage';
+import { CommunityDirectoryView } from './views/CommunityDirectoryView';
 
 export const MainAppContent: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'explorer' | 'register'>('explorer');
+  const [currentTab, setCurrentTab] = useState<'explorer' | 'register' | 'routes' | 'professionals'>('explorer');
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   const [temporaryStorage, setTemporaryStorage] = useState(browserStorage.isTemporary);
   const [navigationMessage, setNavigationMessage] = useState('');
@@ -90,6 +91,8 @@ export const MainAppContent: React.FC = () => {
                 }}
               />
             )}
+            {currentTab === 'routes' && <CommunityDirectoryView section="routes" />}
+            {currentTab === 'professionals' && <CommunityDirectoryView section="professionals" />}
           </>
         )}
       </main>
