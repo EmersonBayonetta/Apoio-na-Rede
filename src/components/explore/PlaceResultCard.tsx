@@ -26,7 +26,7 @@ export function PlaceResultCard({ place, establishment, addressLabel, onOpenPlac
       {establishment && <AccessibilityIcons establishment={establishment} />}
       <div className="flex flex-wrap gap-3">
         {establishment && onOpenPlace && <button type="button" onClick={() => onOpenPlace(establishment)} className="inline-flex min-h-11 items-center rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white">Ver acessibilidade e rota</button>}
-        <a href={destination ? directionsUrl(destination) : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(name)}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-900"><Navigation size={16} aria-hidden="true" />Abrir no Google Maps<span className="sr-only"> (abre em nova aba)</span></a>
+        <a href={destination ? directionsUrl(destination) : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(name)}&travelmode=walking`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-900"><Navigation size={16} aria-hidden="true" />Abrir no Google Maps<span className="sr-only"> (abre em nova aba)</span></a>
       </div>
     </div>
   </article>;

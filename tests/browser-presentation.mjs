@@ -60,7 +60,9 @@ try {
  }
  // Result cards link to walking directions too
  await open('/');
- assert.ok(await evaluate(`[...document.querySelectorAll('main article a[href*="google.com/maps/dir"]')].every(a=>new URL(a.href).searchParams.get('travelmode')==='walking')`));
+ const directionLinks = await evaluate(`[...document.querySelectorAll('main article a[href*="google.com/maps/dir"]')].map(a=>new URL(a.href).searchParams.get('travelmode'))`);
+ assert.ok(directionLinks.length > 0, 'cards with direction links are listed');
+ assert.ok(directionLinks.every(mode => mode === 'walking'));
 
  // PRES-13, PRES-14, PRES-15: five destinations, distinct icons, readable labels
  await viewport(360, 780); await open('/');
@@ -143,7 +145,7 @@ try {
  const card = { id: 'est-card', nome: 'Café da Praça', categoria: 'alimentacao', endereco: 'Praça Rui Barbosa, 10', cidade: 'Cataguases', estado: 'MG', latitude: -21.3924, longitude: -42.6896, descricao: 'Café de teste', fotos: [], status: 'pendente', nota_media: 0, total_avaliacoes: 0 };
  await evaluate(`localStorage.setItem('acessacidade_establishments', ${JSON.stringify(JSON.stringify([card]))})`);
  await open('/');
- await evaluate(`[...document.querySelectorAll('main article')].find(a=>a.querySelector('h2')?.textContent==='Café da Praça').querySelector('button').click()`); await pause(800);
+ await evaluate(`[...[...document.querySelectorAll('main article')].find(a=>a.querySelector('h2')?.textContent==='Café da Praça').querySelectorAll('button')].find(b=>b.textContent.trim()==='Ver acessibilidade e rota').click()`); await pause(800);
  assert.equal(await evaluate(`new URL(location.href).searchParams.get('local')`), 'est-card');
  assert.equal(await evaluate(`document.querySelector('main h1').textContent.trim()`), 'Café da Praça');
  assert.equal(await evaluate(`Boolean(document.querySelector('section[aria-labelledby="walking-route-title"]'))`), true);

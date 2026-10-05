@@ -22,6 +22,9 @@ test('walking summary shows distance and whole minutes', () => {
   assert.equal(formatWalkingSummary(1234, 900), '1,2 km · 15 min');
   assert.equal(formatWalkingSummary(350, 290), '350 m · 5 min');
   assert.equal(formatWalkingSummary(40, 10), '40 m · 1 min');
+  assert.equal(formatWalkingSummary(1000, 61), '1 km · 1 min');
+  assert.equal(formatWalkingSummary(800, 149), '800 m · 2 min');
+  assert.equal(formatWalkingSummary(800, 151), '800 m · 3 min');
 });
 
 import { tabFromUrl, urlForTab } from '../src/utils/appTabs.ts';

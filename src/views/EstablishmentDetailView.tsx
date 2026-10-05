@@ -109,7 +109,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           aria-label="Voltar para a lista e mapa de estabelecimentos"
         >
           <ArrowLeft size={18} aria-hidden="true" />
-          <span>Voltar ao Catálogo</span>
+          <span>Voltar ao Explorar</span>
         </button>
 
         <div className="flex items-center gap-2">

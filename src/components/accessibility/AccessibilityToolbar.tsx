@@ -103,7 +103,7 @@ export const AccessibilityToolbar: React.FC = () => {
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
             <div className="flex items-center gap-2 text-blue-800 font-extrabold">
               <Sliders size={20} aria-hidden="true" />
-              <h2 className="text-base font-bold text-slate-900">Ajustes de Acessibilidade</h2>
+              <h2 className="text-base font-bold text-slate-900">Opções de exibição e leitura</h2>
             </div>
             <button
               type="button"

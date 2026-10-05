@@ -55,7 +55,7 @@ try {
  await evaluate(`document.querySelector('.accessibility-launcher button').click();`);await pause(100);await evaluate(`document.querySelector('#accessibility-menu input[type="checkbox"]').click()`);await pause(100);
  await check('Voz pode ser reativada',`JSON.parse(localStorage.getItem('acessacidade_accessibility_settings')).voiceReadingEnabled===true&&document.querySelectorAll('[aria-label^="Ouvir em voz alta"]').length>0`);
  await evaluate(`document.querySelector('[aria-label="Fechar menu de acessibilidade"]').click()`);
- await click('Voltar ao Catálogo');await pause(300);await check('Voltar retorna ao Explorar',`!new URL(location.href).searchParams.has('local')&&document.querySelector('main h1').textContent.startsWith('Saiba se um lugar')`);
+ await click('Voltar ao Explorar');await pause(300);await check('Voltar retorna ao Explorar',`!new URL(location.href).searchParams.has('local')&&document.querySelector('main h1').textContent.startsWith('Saiba se um lugar')`);
  const injection=await send('Page.addScriptToEvaluateOnNewDocument',{source:`Storage.prototype.setItem=function(){throw new DOMException('Unavailable','QuotaExceededError')}`});
  await send('Page.reload');await pause(1200);await check('Falha de armazenamento não derruba aplicação',`document.querySelector('#root').childElementCount>0&&document.body.innerText.includes('não conseguiu salvar')`);
  await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});

@@ -6,7 +6,7 @@ O Apoio na Rede reúne os recursos de acessibilidade dos locais de Cataguases (M
 
 ## Como funciona
 
-1. **Diga do que você precisa.** Em "Minhas necessidades", marque cada recurso como indispensável, desejável ou não necessário. Não é preciso informar diagnóstico, e a escolha fica salva só no seu navegador.
+1. **Diga do que você precisa.** Em "Minhas necessidades", marque cada recurso como "Indispensável", "Desejável" ou "Não preciso". Não é preciso informar diagnóstico, e a escolha fica salva só no seu navegador.
 2. **Encontre o local.** Busque por nome, endereço ou categoria. Cada card mostra quantos dos seus requisitos o local atende, e um filtro opcional oculta locais que não atendem um requisito indispensável.
 3. **Veja como chegar.** Na página do local, "Calcular rota a pé" mostra distância e tempo a partir da sua localização. "Abrir no Google Maps" abre o trajeto a pé.
 

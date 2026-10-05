@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: inline (decisions in the spec's Assumptions table)
-**Status**: Done (awaiting Verifier)
+**Status**: Done (Verifier round 1 FAIL fixed, awaiting round 2)
 
 ---
 
@@ -198,3 +198,11 @@ Phase 2:  T5 → T6 → T7 → T8 → T9 → T10 → T13 → T11 → T12
 | T1–T4 | utils | unit | unit | ✅ |
 | T5–T11 | components/views/CSS | e2e | e2e | ✅ |
 | T12 | docs | none | none | ✅ |
+
+## Verifier round 1 fixes
+
+- Rounding pinned (`formatWalkingSummary` 61 s, 149 s, 151 s).
+- PRES-12: the audited launcher overlap does not reproduce on the current or pre-feature build, so the two spacing rules had no effect and were removed; the browser check stays as a guard.
+- Orphaned banner CSS removed; two weak browser assertions tightened.
+- Copy aligned: panel titled "Opções de exibição e leitura", place page says "Voltar ao Explorar", README uses the UI level names.
+- Card fallback directions URL uses walking mode.
