@@ -23,3 +23,17 @@ test('walking summary shows distance and whole minutes', () => {
   assert.equal(formatWalkingSummary(350, 290), '350 m · 5 min');
   assert.equal(formatWalkingSummary(40, 10), '40 m · 1 min');
 });
+
+import { tabFromUrl, urlForTab } from '../src/utils/appTabs.ts';
+test('aba parameter maps to each tab and unknown values open explorer', () => {
+  assert.equal(tabFromUrl('?aba=rotas'), 'routes');
+  assert.equal(tabFromUrl('?aba=profissionais'), 'professionals');
+  assert.equal(tabFromUrl('?aba=cadastro'), 'register');
+  assert.equal(tabFromUrl('?aba=xyz'), 'explorer');
+  assert.equal(tabFromUrl(''), 'explorer');
+});
+test('tab url sets aba, clears it for explorer and leaves the place view', () => {
+  assert.equal(urlForTab('routes', 'https://app.test/?local=est-1&x=1'), 'https://app.test/?x=1&aba=rotas');
+  assert.equal(urlForTab('explorer', 'https://app.test/?aba=rotas'), 'https://app.test/');
+  assert.equal(urlForTab('register', 'https://app.test/'), 'https://app.test/?aba=cadastro');
+});

@@ -85,6 +85,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: unit tests for each tab, unknown value, and preserving `local`; quick gate passes.
 **Tests**: unit · **Gate**: quick
 **Commit**: `feat(navigation): map app tabs to the url`
+**Status**: ✅ Done. 51 unit tests pass; phase 1 build gate passes.
 
 ### T5: Value proposition on Explorar
 **What**: New h1 and subtitle; "Como funciona" with 3 steps; banner text without "Trace sua rota"; on ≤600 px, hide hero art and compact spacing so the search fits the first screen. Create `tests/browser-presentation.mjs`.
