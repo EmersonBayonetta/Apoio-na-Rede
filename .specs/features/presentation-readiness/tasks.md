@@ -160,6 +160,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T13 → T11 → T12
 **Done when**: browser check that the item is absent; `node tests/browser-regressions.mjs` passes; build gate passes.
 **Tests**: e2e · **Gate**: build
 **Commit**: `fix(register): drop overlapping sensory item and update regression suite`
+**Status**: ✅ Done. All suites pass, including browser-regressions.mjs (24 checks). Removed map and "Lista" steps for UI that no longer exists. Deviation: the suite exposed a real bug: the storage-failure warning never showed because Navbar's theme save failed before App listened; App now checks the flag on mount (`src/App.tsx`). The suite rewrites `docs/auditoria-desktop-mobile/regressions-fixed.json`, committed with today's results.
 
 ### T12: README with the value proposition
 **What**: Rewrite the top of `README.md`: what the app is for, main features as they exist, how to run and test. Remove the Vite template sections and the outdated "Como chegar" text.

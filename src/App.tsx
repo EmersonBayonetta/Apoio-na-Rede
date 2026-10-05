@@ -21,6 +21,8 @@ export const MainAppContent: React.FC = () => {
   useEffect(() => {
     const warn = () => setTemporaryStorage(true);
     window.addEventListener('storage-unavailable', warn);
+    // Child effects (e.g. the theme save in Navbar) run first and may have failed already.
+    if (browserStorage.isTemporary()) warn();
     const restoreLocal = async () => {
       setCurrentTab(tabFromUrl(window.location.search));
       const id = new URL(window.location.href).searchParams.get('local');

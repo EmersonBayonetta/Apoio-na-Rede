@@ -36,12 +36,11 @@ try {
  await fill('#photo-url','invalid-photo-url');await click('Adicionar');await check('URL inválida rejeitada',`!document.querySelector('img[src="invalid-photo-url"]')&&document.activeElement.id==='photo-url'`);
  await fill('#photo-url','https://example.com/missing.png');await click('Adicionar');await pause(150);
  await check('Imagem quebrada recebe fallback',`!!document.querySelector('section img[src="/brand/apoio-na-rede-logo.png"]')`);
- await click('Enviar cadastro');await pause(1800);await click('Lista');
- await check('Sem nota fictícia',`document.body.innerText.includes('Sem avaliações')&&JSON.parse(localStorage.getItem('acessacidade_establishments'))[0].nota_media===0`);
+ await click('Enviar cadastro');await pause(1800);
  await check('Coordenadas escolhidas persistidas',`JSON.parse(localStorage.getItem('acessacidade_establishments'))[0].latitude===-21.4`);
- await fill('#main-search-input','cafe de regressao');await check('Busca sem acento encontra registro',`document.querySelector('#results-section').innerText.includes('Mostrando 1')`);
- await click('Mapa');await pause(150);await check('Navegação mobile abre mapa',`!!document.querySelector('#explorer-map')`);
- await click('Lista');await click('Ver informações');await check('Detalhes têm URL específica',`new URL(location.href).searchParams.has('local')`);
+ await fill('#main-search-input','cafe de regressao');await pause(400);await check('Busca sem acento encontra registro',`[...document.querySelectorAll('main article h2')].some(h=>h.textContent==='Café de Regressão')`);
+ await click('Ver acessibilidade e rota');await pause(300);await check('Detalhes têm URL específica',`new URL(location.href).searchParams.has('local')`);
+ await check('Sem nota fictícia',`document.body.innerText.includes('Sem avaliações')&&JSON.parse(localStorage.getItem('acessacidade_establishments'))[0].nota_media===0`);
  await send('Page.reload');await pause(1200);await check('Recarregar preserva detalhes',`!!document.querySelector('#review-comment')`);
  await evaluate(`window.__shared=null;Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__shared=data}});document.querySelector('[aria-label="Compartilhar localização"]').click()`);await pause(100);
  await check('Compartilhamento identifica destino',`new URL(window.__shared.url).searchParams.get('query')==='-21.4,-42.7'`);
@@ -56,9 +55,9 @@ try {
  await evaluate(`document.querySelector('.accessibility-launcher button').click();`);await pause(100);await evaluate(`document.querySelector('#accessibility-menu input[type="checkbox"]').click()`);await pause(100);
  await check('Voz pode ser reativada',`JSON.parse(localStorage.getItem('acessacidade_accessibility_settings')).voiceReadingEnabled===true&&document.querySelectorAll('[aria-label^="Ouvir em voz alta"]').length>0`);
  await evaluate(`document.querySelector('[aria-label="Fechar menu de acessibilidade"]').click()`);
- await click('Voltar ao Catálogo');await click('Lista');await click('Mapa & Catálogo');await pause(150);await check('Navegação desktop abre mapa',`!!document.querySelector('#explorer-map')`);
+ await click('Voltar ao Catálogo');await pause(300);await check('Voltar retorna ao Explorar',`!new URL(location.href).searchParams.has('local')&&document.querySelector('main h1').textContent.startsWith('Saiba se um lugar')`);
  const injection=await send('Page.addScriptToEvaluateOnNewDocument',{source:`Storage.prototype.setItem=function(){throw new DOMException('Unavailable','QuotaExceededError')}`});
  await send('Page.reload');await pause(1200);await check('Falha de armazenamento não derruba aplicação',`document.querySelector('#root').childElementCount>0&&document.body.innerText.includes('não conseguiu salvar')`);
  await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});
- fs.mkdirSync('docs/auditoria-desktop-mobile',{recursive:true});fs.writeFileSync('docs/auditoria-desktop-mobile/regressions-fixed.json',JSON.stringify({date:'2026-09-13',environment:'Chrome emulado; APIs externas bloqueadas',passed:results},null,2));
+ fs.mkdirSync('docs/auditoria-desktop-mobile',{recursive:true});fs.writeFileSync('docs/auditoria-desktop-mobile/regressions-fixed.json',JSON.stringify({date:new Date().toISOString().slice(0,10),environment:'Chrome emulado; APIs externas bloqueadas',passed:results},null,2));
 } finally {ws.close();}

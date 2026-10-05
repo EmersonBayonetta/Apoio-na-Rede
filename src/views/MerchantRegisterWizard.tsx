@@ -54,7 +54,6 @@ const DEFAULT_CRITERIA_TEMPLATES: {
 
   // Intelectual / Neurodivergência
   { tipo: 'intelectual', criterio: 'Linguagem simples, sinalização pictográfica e fotos reais no cardápio', defaultChecked: true },
-  { tipo: 'intelectual', criterio: 'Espaço com baixo ruído sonoro e iluminação suave (horário/sala silenciosa)', defaultChecked: false },
   { tipo: 'intelectual', criterio: 'Equipe treinada para acolhimento de pessoas autistas e neurodivergentes', defaultChecked: false },
 
   // Invisível / Doenças Crônicas

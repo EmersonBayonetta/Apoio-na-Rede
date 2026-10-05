@@ -181,9 +181,9 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 | PRES-21 | P2: Telas vazias | Tasks | Implementing |
 | PRES-22 | P2: Telas vazias | Tasks | Implementing |
 | PRES-23 | P2: Telas vazias | Tasks | Implementing |
-| PRES-24 | P2: Limpeza | Tasks | In Tasks |
+| PRES-24 | P2: Limpeza | Tasks | Implementing |
 | PRES-25 | P2: Limpeza | Tasks | Implementing |
-| PRES-26 | P2: Limpeza | Tasks | In Tasks |
+| PRES-26 | P2: Limpeza | Tasks | Implementing |
 | PRES-27 | P1: Abrir a página do local | Tasks | Implementing |
 
 **Coverage:** 27 total, 27 mapped to tasks, 0 unmapped.

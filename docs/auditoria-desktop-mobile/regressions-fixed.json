@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-13",
+  "date": "2026-10-05",
   "environment": "Chrome emulado; APIs externas bloqueadas",
   "passed": [
     "Educação disponível",
@@ -12,11 +12,10 @@
     "Fotos cabem em 320 px",
     "URL inválida rejeitada",
     "Imagem quebrada recebe fallback",
-    "Sem nota fictícia",
     "Coordenadas escolhidas persistidas",
     "Busca sem acento encontra registro",
-    "Navegação mobile abre mapa",
     "Detalhes têm URL específica",
+    "Sem nota fictícia",
     "Recarregar preserva detalhes",
     "Compartilhamento identifica destino",
     "Avaliação ainda funciona",
@@ -25,7 +24,7 @@
     "Escape fecha painel e restaura foco",
     "Preferência sem voz oculta leitura",
     "Voz pode ser reativada",
-    "Navegação desktop abre mapa",
+    "Voltar retorna ao Explorar",
     "Falha de armazenamento não derruba aplicação"
   ]
 }

@@ -130,6 +130,8 @@ try {
  await fillField('#est-nome','Sala Tranquila'); await fillField('#est-desc','Local de teste'); await clickButton('Próxima Etapa'); await pause(200);
  await fillField('#est-end','Rua Teste, 2'); await fillField('#est-cidade','Cataguases'); await fillField('#est-estado','MG'); await clickButton('Próxima Etapa'); await pause(200);
  await fillField('#manual-latitude','-21.4'); await fillField('#manual-longitude','-42.7'); await clickButton('Confirmar coordenadas'); await pause(200); await clickButton('Próxima Etapa'); await pause(200);
+ // PRES-24 (presentation-readiness): the old combined noise and lighting item is gone
+ assert.equal(await evaluate(`[...document.querySelectorAll('label[for^="crit-"]')].some(l=>l.textContent.includes('Espaço com baixo ruído sonoro'))`), false);
  const restSelect = await evaluate(`[...document.querySelectorAll('label[for^="crit-"]')].find(l=>l.textContent.includes('Área de descanso ou espaço tranquilo para pausas')).htmlFor`);
  await fillField(`#${restSelect}`,'sim'); await clickButton('Próxima Etapa'); await pause(200);
  await clickButton('Enviar cadastro'); await pause(1800);
