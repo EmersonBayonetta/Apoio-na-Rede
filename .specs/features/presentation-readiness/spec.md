@@ -146,10 +146,10 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| PRES-01 | P1: Proposta de valor | Tasks | In Tasks |
-| PRES-02 | P1: Proposta de valor | Tasks | In Tasks |
-| PRES-03 | P1: Proposta de valor | Tasks | In Tasks |
-| PRES-04 | P1: Proposta de valor | Tasks | In Tasks |
+| PRES-01 | P1: Proposta de valor | Tasks | Implementing |
+| PRES-02 | P1: Proposta de valor | Tasks | Implementing |
+| PRES-03 | P1: Proposta de valor | Tasks | Implementing |
+| PRES-04 | P1: Proposta de valor | Tasks | Implementing |
 | PRES-05 | P1: Proposta de valor | Tasks | In Tasks |
 | PRES-06 | P1: Rota a pé | Tasks | In Tasks |
 | PRES-07 | P1: Rota a pé | Tasks | In Tasks |

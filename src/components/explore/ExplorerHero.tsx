@@ -4,10 +4,10 @@ export function ExplorerHero() {
   return <header className="explorer-hero">
     <div className="hero-copy">
       <p className="hero-location"><MapPin size={14} aria-hidden="true" /> CATAGUASES, MINAS GERAIS</p>
-      <h1>Novos lugares.<br /><span>Mais possibilidades.</span></h1>
+      <h1>Saiba se um lugar é acessível <span>para você</span> antes de sair.</h1>
       <div className="hero-rule" />
-      <p>Encontre seu próximo destino.<br />Conheça os recursos de acessibilidade antes de sair.</p>
-      <a href="#search-filter-section" className="hero-link">Explore a cidade <ArrowUpRight size={18} aria-hidden="true" /></a>
+      <p>Veja rampas, banheiros adaptados, Libras e outros recursos dos locais de Cataguases. Compare com o que você precisa e calcule a rota a pé.</p>
+      <a href="#search-filter-section" className="hero-link">Encontrar um lugar <ArrowUpRight size={18} aria-hidden="true" /></a>
     </div>
     <div className="hero-art" aria-hidden="true">
       <div className="city-disc">

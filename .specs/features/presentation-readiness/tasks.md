@@ -94,6 +94,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: browser checks for h1 text, 3 steps, search input bottom ≤ 780 px at 360×780, and no "Trace sua rota" on Explorar; full gate passes.
 **Tests**: e2e · **Gate**: full
 **Commit**: `feat(explore): state the value proposition on the first screen`
+**Status**: ✅ Done. Browser checks pass. Also raised 7–10 px hero and banner text to readable sizes.
 
 ### T6: Walking route on the place page
 **What**: `WalkingRoute` component: "Calcular rota a pé" button → geolocation → `fetchWalkingRoute` → summary + OSM note; errors in `role="alert"`; "Abrir no Google Maps" link always present. Used on `EstablishmentDetailView`.

@@ -255,3 +255,25 @@ html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-b
 }
 body.reduced-sensory .explorer-shell *, body.reduced-sensory .explorer-shell *::before { animation: none !important; transition: none !important; }
 body.reduced-sensory .explorer-shell .premium-card:hover, body.reduced-sensory .category-tile:hover { transform: none; }
+
+/* Value proposition: readable sizes and the "Como funciona" steps. */
+.hero-location { font-size: 0.75rem; }
+.hero-copy > p:not(.hero-location) { font-size: 1rem; max-width: 34rem; }
+.hero-link { font-size: 0.9375rem; min-height: 44px; }
+.how-it-works { display: block; }
+.how-it-works .banner-kicker { font-size: 0.75rem; }
+.how-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 16px; list-style: none; counter-reset: step; }
+.how-steps li { display: grid; gap: 6px; padding: 16px; border-radius: 16px; background: #ffffff59; counter-increment: step; }
+.how-steps strong { font-size: 1.0625rem; }
+.how-steps strong::before { content: counter(step) ". "; }
+.how-steps span { font-size: 0.875rem; line-height: 1.5; }
+@media (max-width: 600px) {
+  .explorer-hero { min-height: 0; padding-top: 0; margin-bottom: 12px; }
+  .hero-art { display: none; }
+  .hero-location { margin-bottom: 12px; }
+  .hero-rule { display: none; }
+  .hero-copy h1 { font-size: 1.75rem; line-height: 1.15; }
+  .hero-copy > p:not(.hero-location) { font-size: 0.9375rem; line-height: 1.5; max-width: 100%; margin-top: 10px; }
+  .hero-link { margin-top: 4px; }
+  .how-steps { grid-template-columns: 1fr; gap: 10px; }
+}
