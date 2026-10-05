@@ -1,4 +1,5 @@
-import type { AccessibleRoute, Professional } from '../types';
+import type { AccessibleRoute, DisabilityType, Professional } from '../types';
+import { normalizeSearchText } from './normalizeSearchText.ts';
 import { validUf } from './registrationValidation.ts';
 
 const digits = (value = '') => value.replace(/\D/g, '');
@@ -36,4 +37,14 @@ export function validateRoute(data: { origin: string; destination: string; city:
     trecho_descricao: description, tem_rampa: data.ramp, tem_piso_tatil: data.tactile, tem_semaforo_sonoro: data.signal,
     nivel_seguranca: 'Relato da comunidade — não verificado', coordenadas: [], distancia_metros: 0, auditada: false,
   };
+}
+
+const matches = (fields: string[], query: string) => normalizeSearchText(fields.join(' ')).includes(normalizeSearchText(query));
+
+export function filterProfessionals(list: Professional[], query: string, need: DisabilityType | ''): Professional[] {
+  return list.filter(p => matches([p.nome, p.especialidade, p.cidade, p.estado], query) && (!need || p.atende_por_tipo.includes(need)));
+}
+
+export function filterRoutes(list: AccessibleRoute[], query: string): AccessibleRoute[] {
+  return list.filter(r => matches([r.titulo, r.cidade, r.ponto_origem, r.ponto_destino], query));
 }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateProfessional, validateRoute, whatsappUrl } from '../src/utils/communityDirectory.ts';
+import { filterProfessionals, filterRoutes, validateProfessional, validateRoute, whatsappUrl } from '../src/utils/communityDirectory.ts';
 
 const professional = { nome: 'Ana', especialidade: 'Fisioterapia', cidade: 'Cataguases', estado: 'MG', endereco: '', telefone: '', whatsapp: '', registro_profissional: '', descricao: '', atende_por_tipo: [] };
 const route = { origin: 'Praça Rui Barbosa', destination: 'Estação', city: 'Cataguases', description: 'Calçada regular', ramp: true, tactile: false, signal: false };
@@ -54,4 +54,26 @@ test('valid route is saved trimmed with title from origin and destination', () =
     trecho_descricao: 'Calçada regular', tem_rampa: true, tem_piso_tatil: true, tem_semaforo_sonoro: false,
     nivel_seguranca: 'Relato da comunidade — não verificado', coordenadas: [], distancia_metros: 0, auditada: false,
   });
+});
+
+const physio = { id: 'p1', nome: 'Clínica Movimento', especialidade: 'Fisioterapia', cidade: 'São Paulo', estado: 'SP', atende_por_tipo: ['mobilidade'], descricao: '' };
+const dentist = { id: 'p2', nome: 'Odonto Inclusiva', especialidade: 'Odontologia', cidade: 'Cataguases', estado: 'MG', atende_por_tipo: ['visual', 'auditiva'], descricao: '' };
+const station = { id: 'r1', titulo: 'Praça → Estação', cidade: 'São João', ponto_origem: 'Praça', ponto_destino: 'Estação Ferroviária' };
+const school = { id: 'r2', titulo: 'Escola → Hospital', cidade: 'Cataguases', ponto_origem: 'Escola', ponto_destino: 'Hospital' };
+test('professional search ignores accents, case and repeated spaces', () => {
+  assert.deepEqual(filterProfessionals([physio, dentist], '  FISIOTERAPIA   sao ', ''), [physio]);
+  assert.deepEqual(filterProfessionals([physio, dentist], 'clinica', ''), [physio]);
+});
+test('route search ignores accents, case and repeated spaces', () => {
+  assert.deepEqual(filterRoutes([station, school], 'estacao  FERROVIARIA'), [station]);
+  assert.deepEqual(filterRoutes([station, school], 'sao joao'), [station]);
+});
+test('need filter lists only professionals serving that need', () => {
+  assert.deepEqual(filterProfessionals([physio, dentist], '', 'auditiva'), [dentist]);
+  assert.deepEqual(filterProfessionals([physio, dentist], 'fisioterapia', 'auditiva'), []);
+});
+test('blank search lists every item subject to the need filter', () => {
+  assert.deepEqual(filterProfessionals([physio, dentist], '   ', ''), [physio, dentist]);
+  assert.deepEqual(filterProfessionals([physio, dentist], '   ', 'mobilidade'), [physio]);
+  assert.deepEqual(filterRoutes([station, school], '   '), [station, school]);
 });

@@ -126,9 +126,9 @@ As telas de Rotas acessíveis e Profissionais (`CommunityDirectoryView`) aceitam
 | COMM-11 | P1: Cadastro de trecho | Execute | Implementing |
 | COMM-12 | P1: Cadastro de trecho | Execute | Implementing |
 | COMM-13 | P1: Cadastro de trecho | Execute | Pending |
-| COMM-14 | P2: Busca sem acentos | Execute | Pending |
-| COMM-15 | P2: Busca sem acentos | Execute | Pending |
-| COMM-16 | P2: Busca sem acentos | Execute | Pending |
+| COMM-14 | P2: Busca sem acentos | Execute | Implementing |
+| COMM-15 | P2: Busca sem acentos | Execute | Implementing |
+| COMM-16 | P2: Busca sem acentos | Execute | Implementing |
 
 **Coverage:** 16 total, 16 mapped to Execute, 0 unmapped.
 
