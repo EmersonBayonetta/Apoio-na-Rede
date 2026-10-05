@@ -158,33 +158,33 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| PRES-01 | P1: Proposta de valor | Tasks | Implementing |
-| PRES-02 | P1: Proposta de valor | Tasks | Implementing |
-| PRES-03 | P1: Proposta de valor | Tasks | Implementing |
-| PRES-04 | P1: Proposta de valor | Tasks | Implementing |
-| PRES-05 | P1: Proposta de valor | Tasks | Implementing |
-| PRES-06 | P1: Rota a pé | Tasks | Implementing |
-| PRES-07 | P1: Rota a pé | Tasks | Implementing |
-| PRES-08 | P1: Rota a pé | Tasks | Implementing |
-| PRES-09 | P1: Rota a pé | Tasks | Implementing |
-| PRES-10 | P1: Acessibilidade | Tasks | Implementing |
-| PRES-11 | P1: Acessibilidade | Tasks | Implementing |
-| PRES-12 | P1: Acessibilidade | Tasks | Implementing |
-| PRES-13 | P1: Navegação | Tasks | Implementing |
-| PRES-14 | P1: Navegação | Tasks | Implementing |
-| PRES-15 | P1: Navegação | Tasks | Implementing |
-| PRES-16 | P1: Navegação | Tasks | Implementing |
-| PRES-17 | P1: Navegação | Tasks | Implementing |
-| PRES-18 | P1: Navegação | Tasks | Implementing |
-| PRES-19 | P1: Navegação | Tasks | Implementing |
-| PRES-20 | P1: Navegação | Tasks | Implementing |
-| PRES-21 | P2: Telas vazias | Tasks | Implementing |
-| PRES-22 | P2: Telas vazias | Tasks | Implementing |
-| PRES-23 | P2: Telas vazias | Tasks | Implementing |
-| PRES-24 | P2: Limpeza | Tasks | Implementing |
-| PRES-25 | P2: Limpeza | Tasks | Implementing |
-| PRES-26 | P2: Limpeza | Tasks | Implementing |
-| PRES-27 | P1: Abrir a página do local | Tasks | Implementing |
+| PRES-01 | P1: Proposta de valor | Tasks | Verified |
+| PRES-02 | P1: Proposta de valor | Tasks | Verified |
+| PRES-03 | P1: Proposta de valor | Tasks | Verified |
+| PRES-04 | P1: Proposta de valor | Tasks | Verified |
+| PRES-05 | P1: Proposta de valor | Tasks | Verified |
+| PRES-06 | P1: Rota a pé | Tasks | Verified |
+| PRES-07 | P1: Rota a pé | Tasks | Verified |
+| PRES-08 | P1: Rota a pé | Tasks | Verified |
+| PRES-09 | P1: Rota a pé | Tasks | Verified |
+| PRES-10 | P1: Acessibilidade | Tasks | Verified |
+| PRES-11 | P1: Acessibilidade | Tasks | Verified |
+| PRES-12 | P1: Acessibilidade | Tasks | Verified |
+| PRES-13 | P1: Navegação | Tasks | Verified |
+| PRES-14 | P1: Navegação | Tasks | Verified |
+| PRES-15 | P1: Navegação | Tasks | Verified |
+| PRES-16 | P1: Navegação | Tasks | Verified |
+| PRES-17 | P1: Navegação | Tasks | Verified |
+| PRES-18 | P1: Navegação | Tasks | Verified |
+| PRES-19 | P1: Navegação | Tasks | Verified |
+| PRES-20 | P1: Navegação | Tasks | Verified |
+| PRES-21 | P2: Telas vazias | Tasks | Verified |
+| PRES-22 | P2: Telas vazias | Tasks | Verified |
+| PRES-23 | P2: Telas vazias | Tasks | Verified |
+| PRES-24 | P2: Limpeza | Tasks | Verified |
+| PRES-25 | P2: Limpeza | Tasks | Verified |
+| PRES-26 | P2: Limpeza | Tasks | Verified |
+| PRES-27 | P1: Abrir a página do local | Tasks | Verified |
 
 **Coverage:** 27 total, 27 mapped to tasks, 0 unmapped.
 

@@ -107,7 +107,7 @@ try {
  const smallTargets = `(()=>{const inline=e=>{const p=e.closest('p');return p&&p.textContent.trim()!==e.textContent.trim()};
   return [...document.querySelectorAll('a,button')].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden'&&!inline(e)).filter(e=>{const r=e.getBoundingClientRect();return r.width<24||r.height<24}).map(e=>(e.textContent.trim()||e.getAttribute('aria-label'))+' '+Math.round(e.getBoundingClientRect().width)+'x'+Math.round(e.getBoundingClientRect().height))})()`;
  const launcherOverlaps = `(()=>{window.scrollTo(0,document.documentElement.scrollHeight);const l=document.querySelector('[aria-controls="accessibility-menu"]').getBoundingClientRect();
-  return [...document.querySelectorAll('a,button')].filter(e=>!e.closest('.accessibility-launcher')&&e.getClientRects().length).filter(e=>{const r=e.getBoundingClientRect();return r.left<l.right&&r.right>l.left&&r.top<l.bottom&&r.bottom>l.top}).map(e=>e.textContent.trim())})()`;
+  return [...document.querySelectorAll('a,button,input,select,p,li,h2,h3')].filter(e=>!e.closest('.accessibility-launcher')&&e.getClientRects().length&&e.textContent.trim()).filter(e=>{const r=e.getBoundingClientRect();return r.left<l.right&&r.right>l.left&&r.top<l.bottom&&r.bottom>l.top}).map(e=>e.textContent.trim())})()`;
  for (const [width, height] of [[360, 780], [1280, 900]]) {
   await viewport(width, height);
   for (const path of ['/', '/?aba=rotas', '/?aba=profissionais']) {

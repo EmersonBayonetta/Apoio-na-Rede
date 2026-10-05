@@ -106,7 +106,6 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           type="button"
           onClick={onBack}
           className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold rounded-2xl shadow-xs transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600"
-          aria-label="Voltar para a lista e mapa de estabelecimentos"
         >
           <ArrowLeft size={18} aria-hidden="true" />
           <span>Voltar ao Explorar</span>

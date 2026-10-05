@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: inline (decisions in the spec's Assumptions table)
-**Status**: Done (Verifier round 1 FAIL fixed, awaiting round 2)
+**Status**: Done (Verifier PASS, round 2)
 
 ---
 
@@ -202,7 +202,8 @@ Phase 2:  T5 → T6 → T7 → T8 → T9 → T10 → T13 → T11 → T12
 ## Verifier round 1 fixes
 
 - Rounding pinned (`formatWalkingSummary` 61 s, 149 s, 151 s).
-- PRES-12: the audited launcher overlap does not reproduce on the current or pre-feature build, so the two spacing rules had no effect and were removed; the browser check stays as a guard.
+- PRES-12: removing the two spacing rules was wrong. Round 2 found the launcher then covers the last footer line. The rules are restored, and the browser check now also covers text, so it fails without them.
 - Orphaned banner CSS removed; two weak browser assertions tightened.
 - Copy aligned: panel titled "Opções de exibição e leitura", place page says "Voltar ao Explorar", README uses the UI level names.
 - Card fallback directions URL uses walking mode.
+- After round 2: the back button on the place page lost its `aria-label`, so its accessible name equals the visible "Voltar ao Explorar" (WCAG 2.5.3).
