@@ -17,7 +17,7 @@ const checkedLevels = () => evaluate(`Object.fromEntries([...${section}.querySel
 const storedRequirements = () => evaluate(`JSON.parse(localStorage.getItem('apoio_requirements_v1'))`);
 const openSettings = async () => { await clickButton('Ajustes'); await pause(300); };
 const reload = async () => { await send('Page.reload'); await pause(1500); };
-const place = (id, nome) => ({ id, nome, categoria: 'alimentacao', endereco: 'Rua Teste, 1', cidade: 'Cataguases', estado: 'MG', latitude: -21.3924, longitude: -42.6896, descricao: 'Local de teste', fotos: [], status: 'pendente', nota_media: 0, total_avaliacoes: 0 });
+const place = (id, nome) => ({ id, nome, categoria: 'educacao', endereco: 'Rua Teste, 1', cidade: 'Cataguases', estado: 'MG', latitude: -21.3924, longitude: -42.6896, descricao: 'Local de teste', fotos: [], status: 'pendente', nota_media: 0, total_avaliacoes: 0 });
 const criterion = (establishment_id, recurso, presente) => ({ id: `${establishment_id}-${recurso}`, establishment_id, tipo_deficiencia: 'mobilidade', criterio: recurso, recurso, presente });
 const seed = (requirements) => evaluate(`localStorage.setItem('acessacidade_establishments', ${JSON.stringify(JSON.stringify([place('est-a', 'Café Acessível'), place('est-b', 'Bar Degrau')]))});
  localStorage.setItem('acessacidade_criteria', ${JSON.stringify(JSON.stringify([...['rampa', 'elevador', 'corrimao', 'libras'].map(id => criterion('est-a', id, true)), criterion('est-a', 'banheiro_pcd', null), criterion('est-b', 'rampa', false)]))});
@@ -29,6 +29,8 @@ const profile = { rampa: 'indispensavel', elevador: 'desejavel', corrimao: 'dese
 
 try {
  await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable'); await send('Network.setBlockedURLs',{urls:['https://*']});
+ // OpenStreetMap returns one school without a record; external requests stay blocked.
+ await send('Page.addScriptToEvaluateOnNewDocument',{source:`const originalFetch=window.fetch;window.fetch=(url,options)=>String(url).includes('overpass')?Promise.resolve({ok:true,json:async()=>({elements:[{type:'node',id:1,lat:-21.38,lon:-42.70,tags:{name:'Escola Municipal',amenity:'school'}}]})}):originalFetch(url,options);`});
  await send('Emulation.setDeviceMetricsOverride',{width:1280,height:900,deviceScaleFactor:1,mobile:false});
  await send('Page.navigate',{url:'http://127.0.0.1:4176/'});await pause(2500);
  await evaluate(`localStorage.clear();localStorage.setItem('apoio_accessibility_onboarding_v1','completed')`);
@@ -81,6 +83,13 @@ try {
  await seed({}); await openPlace('est-a');
  assert.equal(await evaluate(`Boolean(${match})`), false);
  assert.equal(await evaluate(`document.querySelector('main h1')?.textContent.includes('Café Acessível') ?? false`), true);
+ // COMP-13, COMP-14, COMP-15: badges on result cards
+ const openEducation = async () => { await send('Page.navigate',{url:'http://127.0.0.1:4176/'}); await pause(2200); await evaluate(`[...document.querySelectorAll('.category-tile')].find(e=>e.textContent.includes('Educação')).click()`); await pause(900); };
+ const badges = () => evaluate(`Object.fromEntries([...document.querySelectorAll('main article')].map(a=>[a.querySelector('h2').textContent,a.querySelector('.requirements-badge')?.textContent ?? null]))`);
+ await seed(profile); await openEducation();
+ assert.deepEqual(await badges(), { 'Café Acessível': 'Atende 4 de 5 requisitos', 'Bar Degrau': 'Atende 0 de 5 requisitos· Indispensável não atendido', 'Escola Municipal': 'Sem informações para seus requisitos' });
+ await seed({}); await openEducation();
+ assert.deepEqual(await badges(), { 'Café Acessível': null, 'Bar Degrau': null, 'Escola Municipal': null });
  console.log('needs compatibility browser checks passed');
 } finally {
  ws.close();

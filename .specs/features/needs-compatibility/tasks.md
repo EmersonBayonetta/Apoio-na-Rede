@@ -196,14 +196,15 @@ T3 → T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] A seeded registered place shows the badge with the right count
-- [ ] A place with an unmet essential shows "Indispensável não atendido"
-- [ ] With an empty profile, there is no badge
-- [ ] Gate passes (full)
+- [x] A seeded registered place shows the badge with the right count
+- [x] A place with an unmet essential shows "Indispensável não atendido"
+- [x] With an empty profile, there is no badge
+- [x] Gate passes (full)
 
 **Tests**: e2e
 **Gate**: full
 **Commit**: `feat(compatibility): show requirement badge on result cards`
+**Status**: ✅ Done. Browser test mocks the OpenStreetMap response for the unregistered place, like `tests/browser-osm-categories.mjs`.
 
 ---
 
