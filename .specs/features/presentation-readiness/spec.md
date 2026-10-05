@@ -135,6 +135,18 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 
 ---
 
+### P1: Abrir a página do local pelos resultados ⭐ MVP
+
+**User Story**: Como pessoa que encontrou um local cadastrado, quero abrir a página dele para ver a compatibilidade, a rota a pé e as avaliações.
+
+**Why added during Execute**: a suíte de regressão mostrou que nenhum card leva à página do local; ela só abria por URL.
+
+**Acceptance Criteria**:
+
+1. WHEN um card de resultado tem um local cadastrado THEN the system SHALL exibir o botão "Ver acessibilidade e rota", que abre a página do local. <!-- PRES-27 -->
+
+---
+
 ## Edge Cases
 
 - IF a pessoa abre `?aba=` com valor desconhecido THEN the system SHALL abrir Explorar.
@@ -172,8 +184,9 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 | PRES-24 | P2: Limpeza | Tasks | In Tasks |
 | PRES-25 | P2: Limpeza | Tasks | Implementing |
 | PRES-26 | P2: Limpeza | Tasks | In Tasks |
+| PRES-27 | P1: Abrir a página do local | Tasks | Implementing |
 
-**Coverage:** 26 total, 26 mapped to tasks, 0 unmapped.
+**Coverage:** 27 total, 27 mapped to tasks, 0 unmapped.
 
 ---
 

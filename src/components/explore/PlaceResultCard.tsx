@@ -6,7 +6,7 @@ import { AccessibilityIcons } from '../accessibility/AccessibilityIcons';
 import { useAccessibility } from '../../context/AccessibilityContext';
 import { compareRequirements, compatibilityLabel } from '../../utils/needsCompatibility';
 
-export function PlaceResultCard({ place, establishment, addressLabel }: { place?: NearbyPlace; establishment?: Establishment; addressLabel?: string }) {
+export function PlaceResultCard({ place, establishment, addressLabel, onOpenPlace }: { place?: NearbyPlace; establishment?: Establishment; addressLabel?: string; onOpenPlace?: (establishment: Establishment) => void }) {
   const name = establishment?.nome ?? place?.nome ?? addressLabel ?? '';
   const address = establishment?.endereco ?? place?.endereco ?? addressLabel;
   const destination = establishment ?? place;
@@ -25,7 +25,8 @@ export function PlaceResultCard({ place, establishment, addressLabel }: { place?
       </p>}
       {establishment && <AccessibilityIcons establishment={establishment} />}
       <div className="flex flex-wrap gap-3">
-        <a href={destination ? directionsUrl(destination) : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(name)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white"><Navigation size={16} aria-hidden="true" />Como chegar</a>
+        {establishment && onOpenPlace && <button type="button" onClick={() => onOpenPlace(establishment)} className="inline-flex min-h-11 items-center rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white">Ver acessibilidade e rota</button>}
+        <a href={destination ? directionsUrl(destination) : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(name)}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-900"><Navigation size={16} aria-hidden="true" />Abrir no Google Maps<span className="sr-only"> (abre em nova aba)</span></a>
       </div>
     </div>
   </article>;

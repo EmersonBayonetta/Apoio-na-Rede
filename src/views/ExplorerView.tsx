@@ -123,7 +123,7 @@ const distanceInMeters = (a: [number, number], b: [number, number]) => {
   return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 };
 
-export const ExplorerView: React.FC<ExplorerViewProps> = () => {
+export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishment }) => {
   const searchInputRef = useVisibleSearch();
   const { accessibilityPreferences, requirements } = useAccessibility();
   const hasEssentials = Object.values(requirements).includes('indispensavel');
@@ -842,7 +842,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
         </section>
       ) : (
         <>
-          <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={showAllResults ? undefined : 5} />
+          <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={showAllResults ? undefined : 5} onOpenPlace={onSelectEstablishment} />
           {(catalogEntries.length > 5 || showAllResults) && <button
             type="button"
             className="premium-button rounded-xl px-5 py-3 mb-12 font-bold"

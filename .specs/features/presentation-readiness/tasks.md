@@ -44,7 +44,7 @@ T1 → T2 → T3 → T4
 ### Phase 2: Interface
 
 ```
-T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
+T5 → T6 → T7 → T8 → T9 → T10 → T13 → T11 → T12
 ```
 
 ---
@@ -143,10 +143,20 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Commit**: `fix(ux): explain empty screens and offer the next step`
 **Status**: ✅ Done. Browser checks pass. The inline Google error line now only shows when other results are listed, so there is one retry button.
 
+### T13: Open the place page from result cards (added during Execute)
+**What**: Cards with a registered place get a "Ver acessibilidade e rota" button that calls `onSelectEstablishment`, which `ExplorerView` received but ignored.
+**Where**: `src/components/explore/PlaceResultCard.tsx` (+ pass-through in `PlaceCatalog.tsx` and `ExplorerView.tsx`)
+**Depends on**: T10 · **Requirement**: PRES-27
+**Done when**: browser check opens the place page from a seeded card and the URL has `local`; full gate passes.
+**Tests**: e2e · **Gate**: full
+**Commit**: `fix(explore): open the place page from result cards`
+**Status**: ✅ Done. Browser check passes. The card's external link is now secondary and reads "Abrir no Google Maps", matching the place page.
+**Note**: runs before T11, whose regression suite needs it; T11 now depends on T13.
+
 ### T11: Data cleanup and regression suite
 **What**: Remove the overlapping default criterion from the wizard; update `tests/browser-regressions.mjs` to the current UI.
 **Where**: `src/views/MerchantRegisterWizard.tsx`, `tests/browser-regressions.mjs`
-**Depends on**: T10 · **Requirement**: PRES-24, PRES-26
+**Depends on**: T13 · **Requirement**: PRES-24, PRES-26
 **Done when**: browser check that the item is absent; `node tests/browser-regressions.mjs` passes; build gate passes.
 **Tests**: e2e · **Gate**: build
 **Commit**: `fix(register): drop overlapping sensory item and update regression suite`
@@ -165,7 +175,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 
 ```
 Phase 1:  T1 → T2 → T3 → T4
-Phase 2:  T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
+Phase 2:  T5 → T6 → T7 → T8 → T9 → T10 → T13 → T11 → T12
 ```
 
 12 tasks pack into 2 batches (Phase 1 = 4 tasks, Phase 2 = 8). Sub-agents are offered; inline execution is the alternative.
