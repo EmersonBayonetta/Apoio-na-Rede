@@ -1,4 +1,4 @@
-import { Accessibility, ArrowUpDown, DoorOpen, Fence, Footprints, Hand, ParkingSquare, Toilet, TrendingUp } from 'lucide-react';
+import { Accessibility, ArrowUpDown, Clock3, DoorOpen, Fence, Footprints, Hand, ParkingSquare, Sofa, SunDim, Toilet, TrendingUp } from 'lucide-react';
 import type { Establishment } from '../../types';
 import { ACCESSIBILITY_RESOURCES, resourceState } from '../../data/accessibilityResources';
 
@@ -12,6 +12,9 @@ const resourceIcons = {
   vaga_pcd: ParkingSquare,
   piso_tatil: Footprints,
   cadeira_rodas: Accessibility,
+  area_descanso: Sofa,
+  iluminacao_ajustavel: SunDim,
+  horario_tranquilo: Clock3,
 };
 
 export function AccessibilityIcons({ establishment }: { establishment: Establishment }) {

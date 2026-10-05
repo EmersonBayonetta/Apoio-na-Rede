@@ -7,7 +7,7 @@ import {
   DisabilityType,
   AccessibilityCriteria,
 } from '../types';
-import { ACCESSIBILITY_RESOURCES } from '../data/accessibilityResources';
+import { ACCESSIBILITY_RESOURCES, registrationCriteriaTemplates } from '../data/accessibilityResources';
 import { PlacesService } from '../services/placesService';
 import type { NearbyPlace } from '../types';
 import { StorageService } from '../services/storageService';
@@ -94,7 +94,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   const [criteriaState, setCriteriaState] = useState<
     { tipo: DisabilityType; criterio: string; presente: boolean | null; observacao: string }[]
   >(() =>
-    [...DEFAULT_CRITERIA_TEMPLATES, ...ACCESSIBILITY_RESOURCES.filter(resource => !DEFAULT_CRITERIA_TEMPLATES.some(item => item.criterio === resource.legacy)).map(resource => ({ tipo: 'mobilidade' as const, criterio: resource.legacy, defaultChecked: false }))].map((item) => ({
+    registrationCriteriaTemplates(DEFAULT_CRITERIA_TEMPLATES).map((item) => ({
       tipo: item.tipo,
       criterio: item.criterio,
       presente: null,
