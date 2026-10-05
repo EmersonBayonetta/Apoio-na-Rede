@@ -1,4 +1,4 @@
-import { directionsUrl } from '../utils/directionsUrl';
+import { WalkingRoute } from '../components/establishments/WalkingRoute';
 import { imageFallback } from '../utils/imageFallback';
 import React, { useState } from 'react';
 import { Establishment, DisabilityType } from '../types';
@@ -172,19 +172,12 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             {establishment.endereco} - {establishment.bairro ? `${establishment.bairro}, ` : ''}
             {establishment.cidade}, {establishment.estado}
           </span>
-          <a
-            href={directionsUrl(establishment)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-700 font-bold hover:underline ml-2 text-xs"
-          >
-            Como chegar ↗
-          </a>
         </div>
 
         <p className="text-base text-slate-700 leading-relaxed max-w-3xl">
           {establishment.descricao}
         </p>
+        <WalkingRoute destination={establishment} />
       </header>
 
       {/* Galeria de Fotos Acessível */}

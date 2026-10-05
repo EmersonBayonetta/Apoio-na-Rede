@@ -103,6 +103,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: browser checks with geolocation override and mocked routing response show the summary and note; denied geolocation and a failing service each show the alert and keep the link; full gate passes.
 **Tests**: e2e · **Gate**: full
 **Commit**: `feat(routes): calculate walking route on the place page`
+**Status**: ✅ Done. Browser checks pass with simulated geolocation and routing. The small inline "Como chegar ↗" link on the place page was replaced by the route section.
 
 ### T7: Five-destination navigation with URL tabs
 **What**: Navbar with Explorar, Rotas, Profissionais, Cadastrar, Minhas necessidades; distinct icons; mobile labels ≥ 12 px; App syncs tab with `?aba=` (push on change, read on load and popstate).
