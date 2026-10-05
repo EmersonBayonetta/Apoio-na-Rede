@@ -95,17 +95,18 @@ T3 → T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] Invalid JSON, unknown ids and unknown levels parse to "Não preciso"
-- [ ] Each requirement is classified from `resourceState`, and `desconhecido` is never counted as met or unmet
-- [ ] The label is exactly "Atende X de N requisitos"
-- [ ] The unmet essential list holds labels; an empty profile gives no comparison
-- [ ] `hasUnmetEssential` is true only for an essential with `nao`; it is false for unknown or for places without criteria
-- [ ] Edge case: conflicting reports count as no information
-- [ ] Gate passes: `npm test`
+- [x] Invalid JSON, unknown ids and unknown levels parse to "Não preciso"
+- [x] Each requirement is classified from `resourceState`, and `desconhecido` is never counted as met or unmet
+- [x] The label is exactly "Atende X de N requisitos"
+- [x] The unmet essential list holds labels; an empty profile gives no comparison
+- [x] `hasUnmetEssential` is true only for an essential with `nao`; it is false for unknown or for places without criteria
+- [x] Edge case: conflicting reports count as no information
+- [x] Gate passes: `npm test`
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(compatibility): compare places with requirement profile`
+**Status**: ✅ Done. 46 tests pass (+9).
 
 ---
 
