@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: inline (decisions in the spec's Assumptions table)
-**Status**: In Progress
+**Status**: Done (awaiting Verifier)
 
 ---
 
@@ -169,6 +169,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T13 → T11 → T12
 **Done when**: README lists only existing features; reviewed by the Verifier.
 **Tests**: none · **Gate**: build
 **Commit**: `docs: lead the readme with the value proposition`
+**Status**: ✅ Done. README rewritten; Vite template sections removed.
 
 ---
 
