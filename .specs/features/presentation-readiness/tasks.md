@@ -76,6 +76,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: unit tests for m/km and minute rounding (minimum 1 min); quick gate passes.
 **Tests**: unit · **Gate**: quick
 **Commit**: `feat(routes): format walking route summary`
+**Status**: ✅ Done. 49 unit tests pass.
 
 ### T4: Tab ↔ URL mapping
 **What**: `tabFromUrl(search)` and `urlForTab(tab, url)` for `aba=rotas|profissionais|cadastro`; unknown → explorer; `local` keeps priority.

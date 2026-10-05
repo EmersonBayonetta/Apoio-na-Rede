@@ -16,3 +16,10 @@ test('toll-free numbers starting with 0 get no whatsapp link', () => {
   assert.equal(whatsappUrl('(32) 98765-4321'), 'https://wa.me/5532987654321');
   assert.equal(whatsappUrl('+55 32 98765-4321'), 'https://wa.me/5532987654321');
 });
+
+import { formatWalkingSummary } from '../src/utils/formatDistance.ts';
+test('walking summary shows distance and whole minutes', () => {
+  assert.equal(formatWalkingSummary(1234, 900), '1,2 km · 15 min');
+  assert.equal(formatWalkingSummary(350, 290), '350 m · 5 min');
+  assert.equal(formatWalkingSummary(40, 10), '40 m · 1 min');
+});
