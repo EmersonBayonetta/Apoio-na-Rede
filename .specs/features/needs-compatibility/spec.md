@@ -1,4 +1,4 @@
-Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |# Compatibilidade com Minhas Necessidades Specification
+# Compatibilidade com Minhas Necessidades Specification
 
 ## Problem Statement
 
@@ -35,6 +35,9 @@ Hoje a pessoa vê a lista de recursos de cada local (Sim, Não, Não verificado)
 | Tipo dos recursos sensoriais no cadastro | `intelectual` (rótulo "Intelectual / sensorial") | Hoje o cadastro marca recursos extras como `mobilidade`, o que estaria errado | n |
 | Local sem cadastro (só Google/OSM) | Todos os requisitos contam como sem informação | Não há critérios para comparar | n |
 | Filtro e mapa | O filtro afeta só a lista de resultados | Menor mudança; o mapa continua mostrando todos os pinos | n |
+| Grupos vazios (COMP-10) | Um grupo sem itens não aparece | Evita títulos sem conteúdo | n |
+| Popup do mapa (COMP-10) | Conferido por leitura de código; os testes usam a página do local | O Google Maps não carrega no ambiente de teste | n |
+| Nota nos cards (COMP-12) | A nota aparece uma vez acima da lista de resultados, não em cada card | Repetir a nota em cada card polui a lista | n |
 
 **Open questions:** none - all resolved or logged above.
 

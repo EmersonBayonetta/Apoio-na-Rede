@@ -781,6 +781,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
         <input type="checkbox" checked={includeUnknownPlaces} disabled={onlyVerified} onChange={event => setIncludeUnknownPlaces(event.target.checked)} />
         <span>Incluir lugares sem informações de acessibilidade. Seus recursos precisam ser consultados; a exibição não confirma que atendem às suas preferências.</span>
       </label>
+      {Object.keys(requirements).length > 0 && <p className="requirements-note mb-4 text-xs text-slate-500">Comparação com as informações cadastradas. Não é uma certificação de acessibilidade.</p>}
       {hasEssentials && <label className="mb-4 flex items-start gap-2 text-sm">
         <input type="checkbox" checked={hideUnmetEssentials} onChange={event => setHideUnmetEssentials(event.target.checked)} />
         <span>Ocultar locais com requisito indispensável não atendido</span>

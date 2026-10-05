@@ -16,6 +16,8 @@ const chooseLevel = (resource, level) => evaluate(`[...${section}.querySelectorA
 const checkedLevels = () => evaluate(`Object.fromEntries([...${section}.querySelectorAll('fieldset')].map(f=>[f.querySelector('legend').textContent,[...f.querySelectorAll('label')].find(l=>l.querySelector('input').checked)?.textContent.trim()]))`);
 const storedRequirements = () => evaluate(`JSON.parse(localStorage.getItem('apoio_requirements_v1'))`);
 const openSettings = async () => { await clickButton('Ajustes'); await pause(300); };
+const fillField = (selector, value) => evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});const proto=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event(e.tagName==='SELECT'?'change':'input',{bubbles:true}));})()`);
+const note = 'Comparação com as informações cadastradas. Não é uma certificação de acessibilidade.';
 const reload = async () => { await send('Page.reload'); await pause(1500); };
 const place = (id, nome) => ({ id, nome, categoria: 'educacao', endereco: 'Rua Teste, 1', cidade: 'Cataguases', estado: 'MG', latitude: -21.3924, longitude: -42.6896, descricao: 'Local de teste', fotos: [], status: 'pendente', nota_media: 0, total_avaliacoes: 0 });
 const criterion = (establishment_id, recurso, presente) => ({ id: `${establishment_id}-${recurso}`, establishment_id, tipo_deficiencia: 'mobilidade', criterio: recurso, recurso, presente });
@@ -44,6 +46,18 @@ try {
  assert.equal(await evaluate(`[...${section}.querySelectorAll('fieldset')].every(f=>[...f.querySelectorAll('label')].map(l=>l.textContent.trim()).join('|')==='Indispensável|Desejável|Não preciso')`), true);
  assert.equal(await evaluate(`[...${section}.querySelectorAll('input')].every(input=>input.type==='radio'&&input.name.startsWith('requirement-'))`), true);
  assert.equal(await evaluate(`${section}.querySelector('[role="checkbox"]')`), null);
+
+ // COMP-04: invalid stored values are read as "Não preciso"
+ await clickButton('Cancelar'); await pause(200);
+ for (const stored of ['{broken', '["rampa"]', JSON.stringify({ rampa: 'sempre', teleporte: 'indispensavel', elevador: 'desejavel' })]) {
+  await evaluate(`localStorage.setItem('apoio_requirements_v1', ${JSON.stringify(stored)})`); await reload(); await openSettings();
+  const levels = await checkedLevels();
+  assert.equal(levels['Rampa'], 'Não preciso', stored);
+  assert.equal(Object.values(levels).filter(level => level === 'Não preciso').length, stored.includes('elevador') ? 11 : 12, stored);
+  if (stored.includes('elevador')) assert.equal(levels['Elevador'], 'Desejável');
+  await clickButton('Cancelar'); await pause(200);
+ }
+ await evaluate(`localStorage.removeItem('apoio_requirements_v1')`); await reload(); await openSettings();
 
  // COMP-02: saved levels survive a reload
  await chooseLevel('Banheiro PCD', 'Indispensável');
@@ -90,6 +104,12 @@ try {
  assert.deepEqual(await badges(), { 'Café Acessível': 'Atende 4 de 5 requisitos', 'Bar Degrau': 'Atende 0 de 5 requisitos· Indispensável não atendido', 'Escola Municipal': 'Sem informações para seus requisitos' });
  await seed({}); await openEducation();
  assert.deepEqual(await badges(), { 'Café Acessível': null, 'Bar Degrau': null, 'Escola Municipal': null });
+ // COMP-12: the note accompanies the badges on the result list
+ assert.equal(await evaluate(`document.querySelector('main .requirements-note')`), null);
+ await seed(profile); await openEducation();
+ assert.equal(await evaluate(`document.querySelector('main .requirements-note')?.textContent`), note);
+ await seed({}); await openEducation();
+
  // COMP-16, COMP-17, COMP-18: filter for unmet essentials
  const essentialFilter = `[...document.querySelectorAll('main label')].find(l=>l.textContent.trim()==='Ocultar locais com requisito indispensável não atendido')?.querySelector('input')`;
  const cardNames = () => evaluate(`[...document.querySelectorAll('main article h2')].map(h=>h.textContent).sort()`);
@@ -103,6 +123,20 @@ try {
  assert.deepEqual(await cardNames(), ['Café Acessível', 'Escola Municipal']);
  await evaluate(`${essentialFilter}.click()`); await pause(400);
  assert.deepEqual(await cardNames(), ['Bar Degrau', 'Café Acessível', 'Escola Municipal']);
+ // COMP-20: the registration form saves sensory resources under the intellectual type
+ await evaluate(`localStorage.removeItem('acessacidade_establishments');localStorage.removeItem('acessacidade_criteria')`);
+ await send('Page.navigate',{url:'http://127.0.0.1:4176/'}); await pause(2000);
+ await clickButton('Cadastrar Local'); await pause(300);
+ await fillField('#est-nome','Sala Tranquila'); await fillField('#est-desc','Local de teste'); await clickButton('Próxima Etapa'); await pause(200);
+ await fillField('#est-end','Rua Teste, 2'); await fillField('#est-cidade','Cataguases'); await fillField('#est-estado','MG'); await clickButton('Próxima Etapa'); await pause(200);
+ await fillField('#manual-latitude','-21.4'); await fillField('#manual-longitude','-42.7'); await clickButton('Confirmar coordenadas'); await pause(200); await clickButton('Próxima Etapa'); await pause(200);
+ const restSelect = await evaluate(`[...document.querySelectorAll('label[for^="crit-"]')].find(l=>l.textContent.includes('Área de descanso ou espaço tranquilo para pausas')).htmlFor`);
+ await fillField(`#${restSelect}`,'sim'); await clickButton('Próxima Etapa'); await pause(200);
+ await clickButton('Enviar cadastro'); await pause(1800);
+ const saved = await evaluate(`JSON.parse(localStorage.getItem('acessacidade_criteria')).find(c=>c.criterio==='Área de descanso ou espaço tranquilo para pausas')`);
+ assert.equal(saved.tipo_deficiencia, 'intelectual');
+ assert.equal(saved.recurso, 'area_descanso');
+ assert.equal(saved.presente, true);
  console.log('needs compatibility browser checks passed');
 } finally {
  ws.close();
