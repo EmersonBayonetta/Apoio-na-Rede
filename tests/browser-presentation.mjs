@@ -62,6 +62,31 @@ try {
  await open('/');
  assert.ok(await evaluate(`[...document.querySelectorAll('main article a[href*="google.com/maps/dir"]')].every(a=>new URL(a.href).searchParams.get('travelmode')==='walking')`));
 
+ // PRES-13, PRES-14, PRES-15: five destinations, distinct icons, readable labels
+ await viewport(360, 780); await open('/');
+ const mobileNav = `[...document.querySelectorAll('nav.mobile-navigation button')]`;
+ assert.deepEqual(await evaluate(`${mobileNav}.map(b=>b.textContent.trim())`), ['Explorar', 'Rotas', 'Profissionais', 'Cadastrar', 'Minhas necessidades']);
+ assert.equal(await evaluate(`new Set(${mobileNav}.map(b=>b.querySelector('svg').getAttribute('class'))).size`), 5);
+ assert.ok(await evaluate(`${mobileNav}.every(b=>parseFloat(getComputedStyle(b.querySelector('span')).fontSize)>=12)`));
+ await viewport(1280, 900); await open('/');
+ assert.deepEqual(await evaluate(`[...document.querySelectorAll('nav.desktop-navigation button')].map(b=>b.textContent.trim())`), ['Explorar', 'Rotas acessíveis', 'Profissionais', 'Cadastrar local', 'Minhas necessidades']);
+
+ // PRES-16, PRES-17, PRES-18: tabs in the url, reload and back
+ const heading = () => evaluate(`document.querySelector('main h1')?.textContent`);
+ await evaluate(`[...document.querySelectorAll('nav.desktop-navigation button')].find(b=>b.textContent.trim()==='Rotas acessíveis').click()`); await pause(500);
+ assert.equal(await evaluate('location.search'), '?aba=rotas');
+ assert.equal(await heading(), 'Trechos e rotas acessíveis');
+ await send('Page.reload'); await pause(1800);
+ assert.equal(await heading(), 'Trechos e rotas acessíveis');
+ await evaluate('history.back()'); await pause(800);
+ assert.equal(await evaluate('location.search'), '');
+ assert.equal(await heading(), 'Saiba se um lugar é acessível para você antes de sair.');
+ for (const [aba, expected] of [['profissionais', 'Profissionais preparados para atender'], ['cadastro', 'Informe os recursos de acessibilidade'], ['xyz', 'Saiba se um lugar é acessível para você antes de sair.']]) {
+  await open(`/?aba=${aba}`); assert.equal(await heading(), expected, aba);
+ }
+ await open('/?aba=rotas&local=est-r');
+ assert.equal(await heading(), 'Biblioteca Municipal');
+
  console.log('presentation browser checks passed');
 } finally {
  if (injection) await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});

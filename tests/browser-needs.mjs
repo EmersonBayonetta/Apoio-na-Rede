@@ -15,7 +15,7 @@ const section = `document.querySelector('[role="dialog"] section[aria-labelledby
 const chooseLevel = (resource, level) => evaluate(`[...${section}.querySelectorAll('fieldset')].find(f=>f.querySelector('legend').textContent===${JSON.stringify(resource)}).querySelectorAll('label').forEach(l=>{if(l.textContent.trim()===${JSON.stringify(level)})l.querySelector('input').click()})`);
 const checkedLevels = () => evaluate(`Object.fromEntries([...${section}.querySelectorAll('fieldset')].map(f=>[f.querySelector('legend').textContent,[...f.querySelectorAll('label')].find(l=>l.querySelector('input').checked)?.textContent.trim()]))`);
 const storedRequirements = () => evaluate(`JSON.parse(localStorage.getItem('apoio_requirements_v1'))`);
-const openSettings = async () => { await clickButton('Ajustes'); await pause(300); };
+const openSettings = async () => { await clickButton('Minhas necessidades'); await pause(300); };
 const fillField = (selector, value) => evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});const proto=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event(e.tagName==='SELECT'?'change':'input',{bubbles:true}));})()`);
 const note = 'Comparação com as informações cadastradas. Não é uma certificação de acessibilidade.';
 const reload = async () => { await send('Page.reload'); await pause(1500); };
@@ -126,7 +126,7 @@ try {
  // COMP-20: the registration form saves sensory resources under the intellectual type
  await evaluate(`localStorage.removeItem('acessacidade_establishments');localStorage.removeItem('acessacidade_criteria')`);
  await send('Page.navigate',{url:'http://127.0.0.1:4176/'}); await pause(2000);
- await clickButton('Cadastrar Local'); await pause(300);
+ await clickButton('Cadastrar local'); await pause(300);
  await fillField('#est-nome','Sala Tranquila'); await fillField('#est-desc','Local de teste'); await clickButton('Próxima Etapa'); await pause(200);
  await fillField('#est-end','Rua Teste, 2'); await fillField('#est-cidade','Cataguases'); await fillField('#est-estado','MG'); await clickButton('Próxima Etapa'); await pause(200);
  await fillField('#manual-latitude','-21.4'); await fillField('#manual-longitude','-42.7'); await clickButton('Confirmar coordenadas'); await pause(200); await clickButton('Próxima Etapa'); await pause(200);

@@ -112,6 +112,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: browser checks for 5 items on both widths, unique icons, label font size, URL after click, reload on `?aba=rotas`, Back returns to Explorar, unknown `aba` opens Explorar; full gate passes.
 **Tests**: e2e · **Gate**: full
 **Commit**: `feat(navigation): five destinations with shareable tab links`
+**Status**: ✅ Done. All three browser suites pass. browser-needs.mjs now opens "Minhas necessidades" and "Cadastrar local" (renamed buttons).
 
 > Navbar and App are one task: the URL sync is untestable without the new buttons.
 

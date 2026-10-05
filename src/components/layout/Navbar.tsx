@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Home, Search, MapPin, PlusCircle, SlidersHorizontal, Sun, Moon } from 'lucide-react';
+import { Compass, HeartHandshake, PlusCircle, Route, Stethoscope, Sun, Moon, type LucideIcon } from 'lucide-react';
 import { browserStorage } from '../../lib/browserStorage';
 import { UserPreferencesModal } from '../accessibility/UserPreferencesModal';
+import type { AppTab } from '../../utils/appTabs';
 
 interface NavbarProps {
-  currentTab: 'explorer' | 'register' | 'routes' | 'professionals';
-  onSelectTab: (tab: 'explorer' | 'register' | 'routes' | 'professionals') => void;
+  currentTab: AppTab;
+  onSelectTab: (tab: AppTab) => void;
 }
+
+const DESTINATIONS: { tab: AppTab; label: string; desktopLabel: string; icon: LucideIcon }[] = [
+  { tab: 'explorer', label: 'Explorar', desktopLabel: 'Explorar', icon: Compass },
+  { tab: 'routes', label: 'Rotas', desktopLabel: 'Rotas acessíveis', icon: Route },
+  { tab: 'professionals', label: 'Profissionais', desktopLabel: 'Profissionais', icon: Stethoscope },
+  { tab: 'register', label: 'Cadastrar', desktopLabel: 'Cadastrar local', icon: PlusCircle },
+];
 
 export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
   const [isPrefModalOpen, setIsPrefModalOpen] = useState(false);
@@ -17,31 +25,23 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
     browserStorage.setItem('apoio_color_theme', theme);
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#ffffff' : '#101111');
   }, [theme]);
-  const navigate = (target: 'home' | 'search' | 'catalog' | 'register' | 'routes' | 'professionals') => {
-    onSelectTab(target === 'register' || target === 'routes' || target === 'professionals' ? target : 'explorer');
-    if (target === 'search' || target === 'catalog') {
-      window.setTimeout(() => {
-        const element = document.getElementById(target === 'search' ? 'main-search-input' : 'results-section');
-        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element?.focus({ preventScroll: true });
-      }, 100);
-    }
+  const destinationButton = (destination: typeof DESTINATIONS[number], mobile: boolean) => {
+    const Icon = destination.icon;
+    return <button key={destination.tab} type="button" aria-current={currentTab === destination.tab ? 'page' : undefined} onClick={() => onSelectTab(destination.tab)}>
+      <Icon size={mobile ? 22 : 17} aria-hidden="true" />{mobile ? <span>{destination.label}</span> : destination.desktopLabel}
+    </button>;
   };
   return <>
     <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
     <header className="app-header">
       <div className="header-inner">
-        <button type="button" onClick={() => navigate('home')} className="brand-logo" aria-label="Apoio na rede - Página inicial">
+        <button type="button" onClick={() => onSelectTab('explorer')} className="brand-logo" aria-label="Apoio na rede - Página inicial">
           <img className="brand-logo-dark" src="/brand/apoio-na-rede-logo-white.png" alt="" />
           <img className="brand-logo-light" src="/brand/apoio-na-rede-logo.png" alt="" />
         </button>
         <nav className="desktop-navigation" aria-label="Navegação principal">
-          <button type="button" aria-current={currentTab === 'explorer' ? 'page' : undefined} onClick={() => navigate('home')}><Home size={17} aria-hidden="true" />Explorar</button>
-          <button type="button" onClick={() => navigate('catalog')}><MapPin size={17} aria-hidden="true" />Catálogo</button>
-          <button type="button" aria-current={currentTab === 'routes' ? 'page' : undefined} onClick={() => navigate('routes')}><MapPin size={17} aria-hidden="true" />Rotas acessíveis</button>
-          <button type="button" aria-current={currentTab === 'professionals' ? 'page' : undefined} onClick={() => navigate('professionals')}><Search size={17} aria-hidden="true" />Profissionais</button>
-          <button type="button" aria-current={currentTab === 'register' ? 'page' : undefined} onClick={() => navigate('register')}><PlusCircle size={17} aria-hidden="true" />Cadastrar Local</button>
-          <button type="button" aria-haspopup="dialog" onClick={() => setIsPrefModalOpen(true)}><SlidersHorizontal size={17} aria-hidden="true" />Ajustes</button>
+          {DESTINATIONS.map(destination => destinationButton(destination, false))}
+          <button type="button" aria-haspopup="dialog" onClick={() => setIsPrefModalOpen(true)}><HeartHandshake size={17} aria-hidden="true" />Minhas necessidades</button>
         </nav>
         <button
           type="button"
@@ -56,13 +56,8 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
       </div>
     </header>
     <nav className="mobile-navigation" aria-label="Navegação do celular">
-      <button type="button" aria-current={currentTab === 'explorer' ? 'page' : undefined} onClick={() => navigate('home')}><Home size={22} aria-hidden="true" /><span>Início</span></button>
-      <button type="button" onClick={() => navigate('search')}><Search size={22} aria-hidden="true" /><span>Buscar</span></button>
-      <button type="button" onClick={() => navigate('catalog')}><MapPin size={22} aria-hidden="true" /><span>Catálogo</span></button>
-      <button type="button" aria-current={currentTab === 'routes' ? 'page' : undefined} onClick={() => navigate('routes')}><MapPin size={22} aria-hidden="true" /><span>Rotas</span></button>
-      <button type="button" aria-current={currentTab === 'professionals' ? 'page' : undefined} onClick={() => navigate('professionals')}><Search size={22} aria-hidden="true" /><span>Saúde</span></button>
-      <button type="button" aria-current={currentTab === 'register' ? 'page' : undefined} onClick={() => navigate('register')}><PlusCircle size={22} aria-hidden="true" /><span>Cadastrar</span></button>
-      <button type="button" aria-label="Preferências de acessibilidade" onClick={() => setIsPrefModalOpen(true)}><SlidersHorizontal size={22} aria-hidden="true" /><span>Ajustes</span></button>
+      {DESTINATIONS.map(destination => destinationButton(destination, true))}
+      <button type="button" aria-haspopup="dialog" onClick={() => setIsPrefModalOpen(true)}><HeartHandshake size={22} aria-hidden="true" /><span>Minhas necessidades</span></button>
     </nav>
     <UserPreferencesModal isOpen={isPrefModalOpen} onClose={() => setIsPrefModalOpen(false)} />
   </>;

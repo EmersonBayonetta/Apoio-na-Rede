@@ -11,9 +11,10 @@ import { StorageService } from './services/storageService';
 import { ShieldCheck } from 'lucide-react';
 import { browserStorage } from './lib/browserStorage';
 import { CommunityDirectoryView } from './views/CommunityDirectoryView';
+import { tabFromUrl, urlForTab, type AppTab } from './utils/appTabs';
 
 export const MainAppContent: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'explorer' | 'register' | 'routes' | 'professionals'>('explorer');
+  const [currentTab, setCurrentTab] = useState<AppTab>(() => tabFromUrl(window.location.search));
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   const [temporaryStorage, setTemporaryStorage] = useState(browserStorage.isTemporary);
   const [navigationMessage, setNavigationMessage] = useState('');
@@ -21,6 +22,7 @@ export const MainAppContent: React.FC = () => {
     const warn = () => setTemporaryStorage(true);
     window.addEventListener('storage-unavailable', warn);
     const restoreLocal = async () => {
+      setCurrentTab(tabFromUrl(window.location.search));
       const id = new URL(window.location.href).searchParams.get('local');
       if (!id) { setSelectedEstablishment(null); return; }
       const local = await StorageService.getEstablishmentById(id);
@@ -47,11 +49,14 @@ export const MainAppContent: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleBackToExplorer = () => {
-    updateLocalUrl();
+  const selectTab = (tab: AppTab) => {
+    if (window.location.href !== urlForTab(tab, window.location.href)) window.history.pushState(null, '', urlForTab(tab, window.location.href));
+    setNavigationMessage('');
     setSelectedEstablishment(null);
-    setCurrentTab('explorer');
+    setCurrentTab(tab);
   };
+
+  const handleBackToExplorer = () => selectTab('explorer');
 
   return (
     <div className="min-h-screen flex flex-col text-slate-900">
@@ -59,9 +64,7 @@ export const MainAppContent: React.FC = () => {
       <Navbar
         currentTab={currentTab}
         onSelectTab={(tab) => {
-          updateLocalUrl();
-          setSelectedEstablishment(null);
-          setCurrentTab(tab);
+          selectTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
@@ -86,9 +89,7 @@ export const MainAppContent: React.FC = () => {
             )}
             {currentTab === 'register' && (
               <MerchantRegisterWizard
-                onSuccess={() => {
-                  setCurrentTab('explorer');
-                }}
+                onSuccess={() => selectTab('explorer')}
               />
             )}
             {currentTab === 'routes' && <CommunityDirectoryView section="routes" />}
@@ -141,11 +142,7 @@ export const MainAppContent: React.FC = () => {
               <li>
                 <button
                   type="button"
-                  onClick={() => {
-                    updateLocalUrl();
-                    setSelectedEstablishment(null);
-                    setCurrentTab('register');
-                  }}
+                  onClick={() => selectTab('register')}
                   className="hover:text-white transition-colors"
                 >
                   Cadastre seu Estabelecimento
