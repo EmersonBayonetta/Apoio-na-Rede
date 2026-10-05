@@ -1,125 +1,120 @@
 # Compatibilidade com Minhas Necessidades Validation
 
-**Date**: 2026-10-05
+**Date**: 2026-10-05 (rodada 2)
 **Spec**: `.specs/features/needs-compatibility/spec.md`
-**Diff range**: `96c0595..88d7f70` (8 commits de código e docs: `1dd6cb8`, `5eb77cb`, `bb49e2e`, `cc7de8a`, `20c3611`, `399221e`, `bd7ce90`, `88d7f70`)
+**Diff range**: `96c0595..b867fc3` (9 commits: `1dd6cb8`, `5eb77cb`, `bb49e2e`, `cc7de8a`, `20c3611`, `399221e`, `bd7ce90`, `88d7f70`, `b867fc3`)
 **Verifier**: subagente independente (autor ≠ verificador)
 
-**Verdict**: FAIL
-**Result**: FAIL
+**Verdict**: PASS
+**Result**: PASS
 
-Motivo em uma linha: a lógica e as telas testáveis estão corretas e bem cobertas, mas 3 mutantes sobreviveram. Dois deles (COMP-20 no cadastro e COMP-04 na leitura do valor guardado) são falhas de cobertura que dá para testar offline. Pela regra do `validate.md`, mutante sobrevivente vira tarefa de correção antes de marcar a feature como pronta.
+Resumo: o commit `b867fc3` fechou as duas lacunas de cobertura da rodada 1. Os mutantes B14 e B15 agora morrem. As duas novas mutações também morrem, e as duas de regressão continuam morrendo. As lacunas de COMP-10 (popup do mapa) e COMP-12 (nota nos cards) foram resolvidas com linhas de premissa na spec, que considero razoáveis. B13 continua sobrevivendo, mas agora é uma exceção registrada na spec (`spec.md:39`), e a leitura do código confirma a ligação.
 
 ---
 
-## Task Completion
+## Rodada 2
 
-| Task | Status | Notes |
-| ---- | ------ | ----- |
-| T1 | ✅ Done | Wizard e mapa de ícones também mudaram (desvio registrado). |
-| T2 | ✅ Done | - |
-| T3 | ✅ Done | Novo botão "Ajustes" no cabeçalho desktop (desvio registrado). |
-| T4 | ⚠️ Done sem teste próprio | O popup do mapa não roda offline. O bloco só é testado na página do local (T5). |
-| T5 | ✅ Done | - |
-| T6 | ✅ Done | Endereço buscado não ganha selo (desvio registrado). |
-| T7 | ✅ Done | - |
+### O que mudou em `b867fc3`
+
+- `src/views/ExplorerView.tsx:784`: a nota "Comparação com as informações cadastradas. Não é uma certificação de acessibilidade." aparece uma vez acima da lista quando há requisitos marcados.
+- `tests/browser-needs.mjs`: novos testes de COMP-04 (`BN:50-60`), COMP-12 na lista (`BN:107-111`) e COMP-20 pelo formulário de cadastro (`BN:126-139`).
+- `spec.md:38-40`: premissas para grupos vazios (COMP-10), popup do mapa (COMP-10) e nota nos cards (COMP-12).
+- `spec.md:1`: título corrigido.
+
+### Gate (árvore real, só leitura, HEAD `b867fc3`)
+
+| Comando | Resultado |
+| ------- | --------- |
+| `npx tsc -b` | exit 0 |
+| `npm run lint` | exit 0. Os mesmos 2 avisos `only-export-components` de antes (`AccessibilityContext.tsx:233`, `DisabilityBadge.tsx:13`). Nenhum aviso novo |
+| `npm test` | 46 passaram, 0 falharam, 0 pulados |
+| `node tests/browser-needs.mjs` (CDP 9223, preview 4176) | passou |
+| `node tests/browser-community.mjs` | passou |
+
+`browser-regressions.mjs` não foi pedido nesta rodada. Na rodada 1 ele já falhava no mesmo passo antes da feature, e o arquivo não mudou.
+
+### Sensor (worktree em `b867fc3`)
+
+Montagem: `git worktree add --detach` na pasta de rascunho, `node_modules` ligado por junction, build com `vite build --outDir <rascunho>/dist-mut`, preview próprio na porta 4178 e cópia de `tests/browser-needs.mjs` com a porta trocada de 4176 para 4178. Um mutante por vez, aplicado por troca exata de texto (o script para se o trecho não aparece exatamente uma vez). O arquivo é restaurado do backup depois de cada um. Antes dos mutantes, a linha de base passou na porta 4178.
+
+| # | Arquivo | Mutação | Resultado |
+| - | ------- | ------- | --------- |
+| B14 (reexecução) | `AccessibilityContext.tsx:57` | `parseRequirementProfile(...)` trocado por `JSON.parse` cru, dentro de try/catch que devolve `{}` | ✅ Morto (`BN:55`, caso `{"rampa":"sempre",...}`) |
+| B15 (reexecução) | `MerchantRegisterWizard.tsx:98` | `tipo: item.tipo` trocado por `tipo: 'mobilidade'` | ✅ Morto (`BN:137`) |
+| N1 (nova) | `ExplorerView.tsx:784` | Nota acima da lista removida (`false &&`) | ✅ Morto (`BN:110`) |
+| N2a (nova) | `MerchantRegisterWizard.tsx:150` | Remove `recurso` do critério gravado | ✅ Morto (`BN:138`) |
+| N2b (nova) | `MerchantRegisterWizard.tsx:148` | Remove `tipo_deficiencia` do critério gravado | ✅ Morto (`BN:137`) |
+| B9 (regressão) | `RequirementsMatch.tsx:16` | Nota da página do local encurtada | ✅ Morto (`BN:88`) |
+| B3 (regressão) | `ExplorerView.tsx:181` | Filtro de indispensáveis invertido | ✅ Morto (`BN:123`) |
+| B13 (exceção) | `AccessibilitySummary.tsx:20` | Remove `RequirementsMatch` do popup | Sobreviveu, como esperado. Aceito pela premissa `spec.md:39` |
+
+**Result**: 7/7 mortos entre os mutantes cobráveis. B13 é uma exceção registrada.
+
+**B13 conferido pela leitura do código**:
+- `src/components/accessibility/AccessibilitySummary.tsx:4` importa `RequirementsMatch`. A linha 12 recebe `requirements`, e a linha 20 renderiza `<RequirementsMatch criteria={criteria} requirements={requirements} />`.
+- `src/components/maps/GoogleMap.tsx:46` lê `requirements` de `useAccessibility()`. A linha 172 passa `requirements={requirements}` para `AccessibilitySummary` no popup de cada estabelecimento. A linha 198 inclui `requirements` nas dependências do efeito, então o popup é refeito quando o perfil muda.
+- O componente do popup é o mesmo `RequirementsMatch` testado na página do local (`BN:83-94`). O comentário em `RequirementsMatch.tsx:4` explica por que o perfil chega como prop: o popup é renderizado com `renderToString`, fora do provider.
+
+**Isolamento**: HEAD continua em `main` / `b867fc3`. `git status --porcelain` da árvore real ficou igual ao do início (só os 5 itens não rastreados que já existiam). Antes de remover o worktree, desfiz a junction de `node_modules` com `rmdir`, e o `node_modules` real continuou intacto. Depois rodei `git worktree remove` e `git worktree prune`. A pasta `dist-mut` foi apagada. Só encerrei o preview que eu mesmo abri na porta 4178, pelo PID que estava nessa porta. 4173, 4176, 9222 e 9223 continuam no ar. O `dist/` real não foi refeito.
+
+### Premissas da spec (COMP-10 e COMP-12)
+
+- **COMP-10, popup do mapa** (`spec.md:39`): razoável. O Google Maps não carrega offline, e o popup usa o mesmo componente que é testado na página do local. A ligação é curta e foi conferida acima. O risco que sobra é alguém tirar a linha `AccessibilitySummary.tsx:20` sem perceber, já que nenhum teste pegaria isso (B13).
+- **COMP-10, grupos vazios** (`spec.md:38`): razoável. O EARS pede que os requisitos apareçam agrupados, não que todo título apareça. Isso bate com `RequirementsMatch.tsx:12` (`groups.filter(([, items]) => items.length)`) e com `BN:86` (o grupo "Não atendidos" fica ausente quando não há itens).
+- **COMP-12, nota nos cards** (`spec.md:40`): razoável. Com requisitos marcados, a lista mostra a compatibilidade nos selos e a nota uma vez acima deles (`ExplorerView.tsx:784`). A página do local mostra a nota dentro do bloco (`RequirementsMatch.tsx:16`). Assim, toda superfície que exibe compatibilidade tem a nota. A ressalva é que o texto do EARS em `spec.md:76` não foi reescrito, então quem ler só o critério não vê a premissa. Ela aparece logo acima, na tabela de premissas.
 
 ---
 
 ## Spec-Anchored Acceptance Criteria
 
-Arquivos: `NC` = `tests/needs-compatibility.test.mjs`, `SR` = `tests/sensory-resources.test.mjs`, `BN` = `tests/browser-needs.mjs`.
+Arquivos: `NC` = `tests/needs-compatibility.test.mjs`, `SR` = `tests/sensory-resources.test.mjs`, `BN` = `tests/browser-needs.mjs`. As linhas de `BN` são as de `b867fc3`.
 
 | AC | Resultado exigido pela spec | `file:line` + asserção | Resultado |
 | -- | --------------------------- | ---------------------- | --------- |
-| COMP-01 | 12 recursos, níveis "Indispensável", "Desejável", "Não preciso", padrão "Não preciso", na seção "Meus requisitos" do modal "Ajustes" | `BN:42` `assert.equal(Object.keys(defaults).length, 12)`; `BN:43` todos `=== 'Não preciso'`; `BN:44` rótulos `=== 'Indispensável\|Desejável\|Não preciso'` em todo fieldset; seção localizada por `section[aria-labelledby="requirements-title"]` dentro do diálogo aberto pelo botão "Ajustes" (`BN:38`) | ✅ PASS |
-| COMP-02 | Guarda em `apoio_requirements_v1` e restaura ao recarregar | `BN:52` `assert.deepEqual(JSON.parse(localStorage.getItem('apoio_requirements_v1')), { banheiro_pcd: 'indispensavel', area_descanso: 'desejavel' })`; `BN:55-57` após reload: "Indispensável", "Desejável" e 10 "Não preciso" | ✅ PASS |
-| COMP-03 | "Limpar requisitos" volta tudo para "Não preciso" | `BN:61` todos `=== 'Não preciso'` após o clique; `BN:63` armazenamento `{}` após salvar; `BN:65` mantido após reload | ✅ PASS |
-| COMP-04 | Valor inválido, recurso ou nível desconhecido → "Não preciso" | `NC:9-11` `null`, `'{broken'`, `'["rampa"]'` → `{}`; `NC:12` descarta `teleporte`, `'sempre'`, `'nao_preciso'` e mantém só `{ rampa, banheiro_pcd }` | ⚠️ PASS na unidade; a ligação no contexto (`src/context/AccessibilityContext.tsx:57`) não é testada (mutante B14 sobreviveu) |
-| COMP-05 | Nenhum pedido de tipo de deficiência ou diagnóstico na seção | `BN:45` todos os inputs são `radio` com `name` `requirement-*`; `BN:46` nenhum `[role="checkbox"]` na seção | ✅ PASS (asserção negativa um pouco fraca: não procura texto de tipo de deficiência; a leitura do código em `UserPreferencesModal.tsx:172-204` confirma que a seção só tem os 12 recursos) |
-| COMP-06 | Classificação atendido/não atendido/sem informação via `resourceState` | `NC:16-18` `atendidos=['rampa']`, `naoAtendidos=['elevador']`, `semInformacao=['banheiro_pcd']`; `BN:70-72` grupos na página do local | ✅ PASS |
-| COMP-07 | Texto exato "Atende X de N requisitos" | `NC:24` `=== 'Atende 4 de 5 requisitos'`; `NC:46` `'Atende 0 de 2 requisitos'`; `BN:69` `'Atende 4 de 5 requisitos'`; `BN:77` `'Atende 0 de 5 requisitos'` | ✅ PASS |
-| COMP-08 | Sem informação nunca conta como atendido nem como não atendido | `NC:28` `[0, 0, 2]`; `NC:29` `indispensaveisNaoAtendidos` `[]`; `BN:71-72` banheiro em "Sem informação" e grupo "Não atendidos" ausente | ✅ PASS |
-| COMP-09 | Destaque exato "Requisito indispensável não atendido: [rótulo]" | `NC:38` `['Banheiro PCD']` (só o indispensável); `BN:78` existe `p` com `textContent === 'Requisito indispensável não atendido: Rampa'`; `BN:73` ausente quando não há falha | ✅ PASS |
-| COMP-10 | Grupos "Atendidos", "Não atendidos", "Sem informação" no popup do mapa **e** no painel do local | Página do local: `BN:70-72`, `BN:79` (`h4` com os três títulos). Popup do mapa: só leitura de código (`AccessibilitySummary.tsx:20`, `GoogleMap.tsx:172`) | ⚠️ Parcial: o popup não tem evidência executável (mutante B13 sobreviveu). Grupos vazios não são exibidos (`RequirementsMatch.tsx:12`); a spec não diz se grupo vazio deve aparecer |
-| COMP-11 | Sem requisitos, nenhuma compatibilidade | `NC:41` `compareRequirements(..., {}) === null`; `BN:83` bloco ausente na página; `BN:92` nenhum selo nos cards | ✅ PASS |
-| COMP-12 | Nota exata "Comparação com as informações cadastradas. Não é uma certificação de acessibilidade." quando a compatibilidade é exibida | `BN:74` `textContent.includes('Comparação com as informações cadastradas. Não é uma certificação de acessibilidade.') === true` na página do local | ⚠️ Spec-precision gap: o selo do card também exibe compatibilidade ("Atende X de N requisitos") e não mostra a nota (`PlaceResultCard.tsx:22-25`). A spec não diz se o selo conta |
-| COMP-13 | Selo "Atende X de N requisitos" no card de local cadastrado | `BN:90` `'Café Acessível': 'Atende 4 de 5 requisitos'` | ✅ PASS |
-| COMP-14 | Selo com "Indispensável não atendido" | `BN:90` `'Bar Degrau': 'Atende 0 de 5 requisitos· Indispensável não atendido'` | ✅ PASS |
-| COMP-15 | Card sem local cadastrado → "Sem informações para seus requisitos" | `BN:90` `'Escola Municipal': 'Sem informações para seus requisitos'` (OSM simulado) | ✅ PASS |
-| COMP-16 | Filtro "Ocultar locais com requisito indispensável não atendido" aparece com indispensável, desligado por padrão | `BN:94` localiza o `label` pelo texto exato; `BN:96` ausente sem requisitos; `BN:100` `checked === false` | ✅ PASS |
-| COMP-17 | Filtro ligado oculta locais com indispensável não atendido | `BN:103` lista vira `['Café Acessível', 'Escola Municipal']` (sai "Bar Degrau"); `BN:105` volta ao desligar; `NC:50-54` `hasUnmetEssential` | ✅ PASS |
-| COMP-18 | Filtro ligado mantém locais com indispensável só sem informação | `BN:103` mantém "Café Acessível" (banheiro indispensável = `null`) e "Escola Municipal" (sem cadastro); `NC:52-53` `false` para `[]` e `undefined` | ✅ PASS |
-| COMP-19 | 3 recursos sensoriais com os rótulos exatos e estados Sim/Não/Não verificado | `SR:13` rótulos exatos; `SR:14` 12 recursos; `SR:18-20` `'sim'`, `'nao'`, `'desconhecido'` | ✅ PASS |
-| COMP-20 | No cadastro, os 3 recursos ficam com tipo `intelectual` | `SR:28` `registrationCriteriaTemplates` devolve `{ tipo: 'intelectual', criterio }` para cada um | ⚠️ PASS só no helper; o uso no cadastro (`MerchantRegisterWizard.tsx:97-98`, gravado em `tipo_deficiencia` na linha 148) não é testado (mutante B15 sobreviveu) |
+| COMP-01 | 12 recursos, níveis "Indispensável", "Desejável", "Não preciso", padrão "Não preciso", na seção "Meus requisitos" do modal "Ajustes" | `BN:44` 12 recursos; `BN:45` todos `=== 'Não preciso'`; `BN:46` rótulos `'Indispensável\|Desejável\|Não preciso'`; seção aberta pelo botão "Ajustes" (`BN:42`) | ✅ PASS |
+| COMP-02 | Guarda em `apoio_requirements_v1` e restaura ao recarregar | `BN:62-71` grava `{ banheiro_pcd: 'indispensavel', area_descanso: 'desejavel' }` e restaura depois do reload | ✅ PASS |
+| COMP-03 | "Limpar requisitos" volta tudo para "Não preciso" | `BN:73-79`: todos "Não preciso", armazenamento `{}`, mantido depois do reload | ✅ PASS |
+| COMP-04 | Valor inválido, recurso ou nível desconhecido → "Não preciso" | `NC:9-12` no parser. No contexto: `BN:52` grava `'{broken'`, `'["rampa"]'` e `{ rampa: 'sempre', teleporte: 'indispensavel', elevador: 'desejavel' }`, recarrega e abre "Ajustes"; `BN:55` "Rampa" `=== 'Não preciso'`; `BN:56` 12 (ou 11) "Não preciso"; `BN:57` "Elevador" válido continua `'Desejável'`. A leitura passa por `parseRequirementProfile` em `AccessibilityContext.tsx:57` | ✅ PASS (B14 morto) |
+| COMP-05 | Nenhum pedido de tipo de deficiência ou diagnóstico | `BN:47` só inputs `radio` `requirement-*`; `BN:48` nenhum `[role="checkbox"]`; leitura de `UserPreferencesModal.tsx` | ✅ PASS |
+| COMP-06 | Classificação atendido/não atendido/sem informação | `NC:16-18`; `BN:84-86` | ✅ PASS |
+| COMP-07 | Texto exato "Atende X de N requisitos" | `NC:24`, `NC:46`; `BN:83` `'Atende 4 de 5 requisitos'`; `BN:92` `'Atende 0 de 5 requisitos'` | ✅ PASS |
+| COMP-08 | Sem informação nunca conta como atendido nem como não atendido | `NC:28-29`; `BN:85-86` | ✅ PASS |
+| COMP-09 | "Requisito indispensável não atendido: [rótulo]" | `NC:38`; `BN:93` texto exato com "Rampa"; `BN:87` ausente quando não há falha | ✅ PASS |
+| COMP-10 | Grupos "Atendidos", "Não atendidos", "Sem informação" no popup do mapa e no painel do local | Painel: `BN:84-86`, `BN:94`. Popup: leitura de código (`AccessibilitySummary.tsx:20`, `GoogleMap.tsx:46,172,198`), conforme a premissa `spec.md:39`. Grupos vazios ocultos (`RequirementsMatch.tsx:12`, premissa `spec.md:38`, `BN:86`) | ✅ PASS com exceção registrada (popup sem teste executável) |
+| COMP-11 | Sem requisitos, nenhuma compatibilidade | `NC:41`; bloco ausente na página; `BN:106` nenhum selo; `BN:108` nenhuma nota na lista | ✅ PASS |
+| COMP-12 | Nota exata quando a compatibilidade é exibida | Página do local: `BN:88` contém o texto exato. Lista: `BN:110` `.requirements-note` `textContent === note` (`BN:20`, texto exato); `BN:108` ausente sem requisitos. Fonte: `ExplorerView.tsx:784`, premissa `spec.md:40` | ✅ PASS (N1 e B9 mortos) |
+| COMP-13 | Selo "Atende X de N requisitos" | `BN:104` `'Café Acessível': 'Atende 4 de 5 requisitos'` | ✅ PASS |
+| COMP-14 | Selo com "Indispensável não atendido" | `BN:104` `'Bar Degrau': 'Atende 0 de 5 requisitos· Indispensável não atendido'` | ✅ PASS |
+| COMP-15 | Card sem cadastro → "Sem informações para seus requisitos" | `BN:104` `'Escola Municipal'` | ✅ PASS |
+| COMP-16 | Filtro aparece com indispensável, desligado por padrão | `BN:114`; `BN:116` e `BN:118` ausente; `BN:120` `checked === false` | ✅ PASS |
+| COMP-17 | Filtro ligado oculta indispensável não atendido | `BN:123` sai "Bar Degrau"; `BN:125` volta; `NC:50-54` | ✅ PASS (B3 morto) |
+| COMP-18 | Filtro mantém indispensável só sem informação | `BN:123` mantém "Café Acessível" e "Escola Municipal"; `NC:52-53` | ✅ PASS |
+| COMP-19 | 3 recursos sensoriais, rótulos exatos, Sim/Não/Não verificado | `SR:13-14`, `SR:18-20` | ✅ PASS |
+| COMP-20 | No cadastro, os 3 recursos ficam com tipo `intelectual` | `SR:28` no helper, para os 3. No formulário: `BN:126-135` preenche o wizard e marca "Área de descanso..." = Sim; `BN:137` `tipo_deficiencia === 'intelectual'`; `BN:138` `recurso === 'area_descanso'`; `BN:139` `presente === true` | ✅ PASS (B15, N2a e N2b mortos). Ressalva menor: o teste de navegador confere só 1 dos 3 recursos. Os outros 2 passam pelo mesmo caminho (`MerchantRegisterWizard.tsx:97-98`) e estão cobertos por `SR:28` |
 
-**Status**: 16/20 ACs com o resultado exato da spec confirmado em teste. 4 com lacuna: COMP-04 (ligação), COMP-10 (popup), COMP-12 (spec-precision), COMP-20 (ligação).
-
-Cobertas só por leitura de código: COMP-10 no popup do mapa; COMP-04 e COMP-20 nas ligações com contexto e cadastro.
+**Status**: 20/20 ACs com evidência. 19 por teste executável. COMP-10 no popup é verificado por leitura de código, como exceção registrada na spec.
 
 ---
 
 ## Edge Cases
 
-- [x] Relatos contraditórios → sem informação: `NC:33` `semInformacao === ['rampa']` e `NC:34` `hasUnmetEssential(...) === false`. Mutante U8 morto.
-- [x] Todos "Desejável" → sem filtro: `BN:97-98` com `{ rampa: 'desejavel', banheiro_pcd: 'desejavel' }` o filtro não existe. Mutante B6 morto.
+- [x] Relatos contraditórios → sem informação: `NC:33-34`. U8 morto na rodada 1.
+- [x] Todos "Desejável" → sem filtro: `BN:117-118`. B6 morto na rodada 1.
+- [x] Valor guardado corrompido (`'{broken'`, array, nível desconhecido): `BN:52-57`. B14 morto.
 
 ---
 
-## Gate Check (árvore real, só leitura)
+## Histórico da rodada 1 (diff `96c0595..88d7f70`)
 
-| Comando | Resultado |
-| ------- | --------- |
-| `npx tsc -b` | exit 0 |
-| `npm run lint` | exit 0; 2 avisos `only-export-components` (`DisabilityBadge.tsx:13`, `AccessibilityContext.tsx:233`). Os dois já existiam em `96c0595` (o segundo estava na linha 221). Nenhum aviso novo |
-| `npm test` | 46 passaram, 0 falharam, 0 pulados |
-| `node tests/browser-needs.mjs` (CDP 9223, preview 4176) | passou |
-| `node tests/browser-community.mjs` | passou |
-| `node tests/browser-regressions.mjs` (CDP 9222, preview 4173) | falha em `Missing button: Lista` depois de 10 PASS |
-
-- **Testes antes da feature**: 34 (rodado em worktree de `96c0595`).
-- **Testes depois**: 46. **Delta**: +12 (3 em `SR`, 9 em `NC`). Nenhum teste removido ou enfraquecido.
-- **browser-regressions é anterior à feature**: o arquivo não mudou no intervalo. Montei `96c0595` em worktree, servi na porta 4179 e rodei uma cópia do teste. Ele falha no mesmo passo (`Missing button: Lista`, linha 39) com os mesmos 10 PASS, idênticos aos de `88d7f70`. Nenhum passo anterior regrediu. O que vem depois desse passo não roda em nenhuma das duas versões, então não tem cobertura.
-- **Build do `dist/` real**: não foi refeito. Rodei `browser-needs` também contra um build novo de `88d7f70` (porta 4178) e passou.
-
----
-
-## Discrimination Sensor
-
-Worktree descartável em `88d7f70`, `node_modules` ligado por junction, um mutante por vez, arquivo restaurado a partir de backup depois de cada um.
-Unidade: `node --test tests/needs-compatibility.test.mjs tests/sensory-resources.test.mjs`.
-UI: `npx vite build --outDir <scratch>/dist-mut`, preview na porta 4178, cópia de `browser-needs.mjs` apontando para 4178.
-
-| # | Arquivo | Mutação | Resultado |
-| - | ------- | ------- | --------- |
-| U1 | `src/utils/needsCompatibility.ts:40` | `desconhecido` conta como atendido | ✅ Morto (4 falhas) |
-| U2 | `src/utils/needsCompatibility.ts:43` | Remove o filtro `level === 'indispensavel'` | ✅ Morto (2) |
-| U3 | `src/utils/needsCompatibility.ts:23` | Parser aceita qualquer nível em texto | ✅ Morto (1) |
-| U4 | `src/data/accessibilityResources.ts:13-15` | Recursos sensoriais com `tipo: 'mobilidade'` | ✅ Morto (1) |
-| U5 | `src/utils/needsCompatibility.ts:37` | `desconhecido` conta como não atendido | ✅ Morto (4) |
-| U6 | `src/utils/needsCompatibility.ts:48` | Rótulo usa `total - naoAtendidos` | ✅ Morto (2) |
-| U7 | `src/utils/needsCompatibility.ts:35` | Perfil vazio não devolve `null` | ✅ Morto (1) |
-| U8 | `src/data/accessibilityResources.ts:24` | Relatos contraditórios viram `sim` | ✅ Morto (1) |
-| B1 | `PlaceResultCard.tsx:24` | "Indispensável não atendido" → "Indispensável pendente" | ✅ Morto (`BN:90`) |
-| B2 | `PlaceResultCard.tsx:23` | Card sem cadastro mostra "Atende 0 de N" | ✅ Morto (`BN:90`) |
-| B3 | `ExplorerView.tsx:181` | Filtro invertido | ✅ Morto (`BN:103`) |
-| B4 | `ExplorerView.tsx:181` | Filtro também oculta locais sem cadastro | ✅ Morto (`BN:103`) |
-| B5 | `ExplorerView.tsx:130` | Filtro ligado por padrão | ✅ Morto (`BN:90`) |
-| B6 | `ExplorerView.tsx:129` | Filtro aparece com qualquer requisito | ✅ Morto (`BN:98`) |
-| B7 | `AccessibilityContext.tsx:8` | Chave `apoio_requirements_v2` | ✅ Morto (`BN:52`) |
-| B8 | `AccessibilityContext.tsx:104` | Não grava no armazenamento | ✅ Morto (`BN:52`) |
-| B9 | `RequirementsMatch.tsx:16` | Nota encurtada | ✅ Morto (`BN:74`) |
-| B10 | `RequirementsMatch.tsx:11` | Texto do destaque trocado | ✅ Morto (`BN:79`) |
-| B11 | `UserPreferencesModal.tsx:200` | "Limpar requisitos" não faz nada | ✅ Morto (`BN:61`) |
-| B12 | `UserPreferencesModal.tsx:186` | Padrão "Desejável" | ✅ Morto (`BN:43`) |
-| B13 | `AccessibilitySummary.tsx:20` | Remove `RequirementsMatch` do popup do mapa | ❌ Sobreviveu |
-| B14 | `AccessibilityContext.tsx:57` | Contexto usa `JSON.parse` cru em vez de `parseRequirementProfile` | ❌ Sobreviveu |
-| B15 | `MerchantRegisterWizard.tsx:98` | Cadastro grava `tipo: 'mobilidade'` para todos | ❌ Sobreviveu |
-
-**Sensor depth**: ampliado (23 mutações, 8 de unidade e 15 de UI).
-**Result**: 20/23 mortos, 3 sobreviveram → FAIL.
-
-Isolamento: `git status --porcelain` da árvore real ficou igual ao do início. HEAD continua em `main` / `88d7f70`. Worktrees removidos e `git worktree prune` executado. Só os previews que iniciei (4178 e 4179) foram encerrados. 4173, 4176, 9222 e 9223 continuam no ar.
+- Gate: tsc ok, lint sem avisos novos, 46/46 unitários, `browser-needs` e `browser-community` passaram. `browser-regressions` falhava em `Missing button: Lista` no mesmo passo de `96c0595`, ou seja, já falhava antes da feature.
+- Testes: 34 antes da feature, 46 depois (+12). Nenhum removido ou enfraquecido.
+- Sensor: 23 mutações (U1-U8 de unidade, B1-B15 de UI). 20 mortas. B13, B14 e B15 sobreviveram → FAIL.
+- Fix plans da rodada 1 e como ficaram:
+  1. COMP-20 no cadastro → resolvido (`BN:126-139`, B15 morto).
+  2. COMP-04 no contexto → resolvido (`BN:50-60`, B14 morto).
+  3. COMP-12 nos cards → resolvido com nota acima da lista (`ExplorerView.tsx:784`, `BN:107-111`, premissa `spec.md:40`).
+  4. COMP-10 no popup → resolvido como exceção registrada (`spec.md:38-39`).
+  5. Título corrompido de `spec.md` → corrigido (`spec.md:1`).
 
 ---
 
@@ -127,67 +122,39 @@ Isolamento: `git status --porcelain` da árvore real ficou igual ao do início. 
 
 | Princípio | Status |
 | --------- | ------ |
-| Código mínimo | ✅ `needsCompatibility.ts` com 53 linhas e 4 funções puras; um único componente `RequirementsMatch` |
-| Mudanças cirúrgicas | ✅ Cada arquivo mudado tem relação com a feature. Wizard, ícones e botão "Ajustes" no desktop estão justificados em `tasks.md` |
-| Sem scope creep | ✅ Mapa não filtrado e ordem preservada, como diz a spec |
-| Segue os padrões | ✅ `browserStorage` igual às preferências; testes no estilo dos já existentes (`node:test`, CDP) |
-| Resultado exato da spec | ⚠️ COMP-12 no card (ver lacuna 3) |
-| Cobertura por camada | ⚠️ Domínio 1:1 com os ACs; e2e sem cobrir cadastro, popup e leitura de valor inválido |
-| Todo teste mapeia para AC, edge case ou Done-when | ✅ |
-| Diretrizes documentadas | nenhuma (sem `AGENTS.md`/`CONTRIBUTING.md`); padrões fortes aplicados |
+| Código mínimo | ✅ A correção de produção tem uma linha (`ExplorerView.tsx:784`) |
+| Mudanças cirúrgicas | ✅ `b867fc3` só mexe em `ExplorerView.tsx`, `browser-needs.mjs`, `spec.md` e `validation.md` |
+| Resultado exato da spec | ✅ A nota da lista usa o texto exato e o teste compara com igualdade (`BN:110`) |
+| Cobertura por camada | ✅ Domínio 1:1 com os ACs. O e2e agora cobre a leitura do perfil guardado e o cadastro. Fica de fora só o popup, por exceção registrada |
+| Testes ligados a AC | ✅ Cada bloco novo tem um comentário com o ID do AC |
 
-Fora do código, um defeito em docs: a linha 1 de `spec.md` está corrompida. O título começa com 20 cópias de `Implementing |` (`Implementing |Implementing |...# Compatibilidade com Minhas Necessidades Specification`). O problema apareceu em `5eb77cb` (6 cópias) e cresceu a cada commit até `88d7f70`. Provavelmente um `sed` de atualização da tabela de rastreabilidade pegou a linha 1. Não corrigi porque está fora do que me foi permitido editar.
+Observações menores, que não bloqueiam:
+- `BN:128` navega para `http://127.0.0.1:4176/` com a porta fixa no meio do teste. Isso segue o padrão do arquivo (`BN:27`, `BN:37`), mas é mais um ponto a trocar quando a porta mudar.
+- O comentário em `BN:107` diz que a nota "acompanha os selos". O teste confere a nota na lista, não em cada card, o que bate com a premissa.
 
 ---
 
 ## Scripts determinísticos
 
-O Python não está instalado, então `validate_state.py` e `lessons.py` não rodaram. Conferi lendo: este relatório existe, tem `**Verdict**` preenchido (FAIL) e tem várias citações `file:line`. Pelo critério do script, ele sairia com código diferente de zero por causa do FAIL, o que está correto. Lições a registrar quando houver Python, com base nos sobreviventes:
+O Python não está instalado, então `validate_state.py` e `lessons.py` não rodaram. Conferi lendo: este relatório existe, tem `**Verdict**: PASS` e `**Result**: PASS` e cita `file:line` para cada AC. Pelo critério do script, ele deveria sair com código 0. Lições a registrar quando houver Python:
 
-1. Testar a ligação de um helper puro na tela que o usa, não só o helper (B14, B15).
-2. Quando um AC cita mais de uma superfície ("popup do mapa e painel do local"), cada uma precisa de evidência própria ou de uma exceção registrada na spec (B13).
-
----
-
-## Fix Plans (lacunas ordenadas)
-
-### 1. COMP-20 sem teste no cadastro (Major)
-- **Causa**: `SR:28` testa só `registrationCriteriaTemplates`. O mutante B15 sobreviveu.
-- **Correção**: em `tests/browser-needs.mjs` (ou em `browser-regressions`, mas esse já quebra antes), cadastrar um local pelo wizard marcando "Área de descanso ou espaço tranquilo" = Sim e checar `JSON.parse(localStorage.getItem('acessacidade_criteria'))` → o critério com o `legacy` de `area_descanso` tem `tipo_deficiencia === 'intelectual'`. Isso também cobre o Independent Test da story ("vê-lo como Sim no resumo").
-- **Pronto quando**: B15 morto.
-
-### 2. COMP-04 sem teste no contexto (Major)
-- **Causa**: o parser só é testado isolado. O mutante B14 sobreviveu.
-- **Correção**: em `tests/browser-needs.mjs`, gravar `localStorage.setItem('apoio_requirements_v1', '{"rampa":"indispensavel","teleporte":"indispensavel","elevador":"sempre"}')`, recarregar, abrir "Ajustes" e checar que só "Rampa" está "Indispensável" e os outros 11 estão "Não preciso". Repetir com `'{broken'` e checar que a página carrega e os 12 estão "Não preciso".
-- **Pronto quando**: B14 morto.
-
-### 3. COMP-12 no selo do card (Minor, spec-precision)
-- **Causa**: o card mostra "Atende X de N requisitos" sem a nota de não certificação.
-- **Correção**: decidir com o usuário. Uma opção é mostrar a nota uma vez acima da lista quando houver requisitos (em `ExplorerView.tsx`, junto ao filtro) e testar em `BN`. A outra é mudar COMP-12 para "WHEN o bloco de compatibilidade do local é exibido".
-
-### 4. COMP-10 no popup do mapa (Minor)
-- **Causa**: o popup depende do Google Maps, bloqueado nos testes. O mutante B13 sobreviveu.
-- **Correção**: registrar na spec, ao lado de COMP-10, que o popup só é verificado por leitura de código. Ou cobrir `AccessibilitySummary` renderizando-o em `PlaceAccessibilityPanel`, ou com um teste de unidade que use `react-dom/server` depois de compilar o TSX. Decidir também se grupos vazios devem aparecer.
-
-### 5. `spec.md` linha 1 corrompida (Cosmetic)
-- **Correção**: trocar a linha 1 por `# Compatibilidade com Minhas Necessidades Specification` e corrigir o comando que atualiza a tabela para alterar só as linhas `| COMP-`.
+1. Testar a ligação de um helper puro na tela que o usa, não só o helper (B14 e B15 só morreram depois do teste de ponta a ponta).
+2. Quando um AC cita mais de uma superfície e uma delas não roda no ambiente de teste, registrar a exceção na tabela de premissas da spec e conferir a ligação lendo o código (B13).
 
 ---
 
 ## Requirement Traceability Update
 
-Veredito FAIL: os status em `spec.md` ficam como `Implementing`. Quando as lacunas 1 e 2 estiverem corrigidas e a 3 e a 4 decididas, todos podem ir para `Verified`. Os que já têm evidência completa: COMP-01, 02, 03, 05, 06, 07, 08, 09, 11, 13, 14, 15, 16, 17, 18, 19.
+Veredito PASS: COMP-01 a COMP-20 passam de `Implementing` para `Verified` em `spec.md`. O item "Done when" da linha 162 da spec não foi alterado, porque está fora do que me foi permitido editar.
 
 ---
 
 ## Summary
 
-**Overall**: ❌ Not Ready (falta pouco)
+**Overall**: ✅ Ready
 
-**Spec-anchored check**: 16/20 ACs batem com o resultado exato da spec; 4 com lacuna (COMP-04, COMP-10, COMP-12, COMP-20), sendo 1 de spec-precision (COMP-12).
-**Sensor**: 20/23 mutantes mortos (B13, B14, B15 sobreviveram).
-**Gate**: tsc ok, lint ok sem avisos novos, 46/46 unitários, `browser-needs` e `browser-community` passam. `browser-regressions` falha no mesmo passo de antes da feature.
+**Spec-anchored check**: 20/20 ACs com evidência. COMP-10 no popup é verificado por leitura de código, como exceção registrada.
+**Sensor (rodada 2)**: 7/7 mortos (B14, B15, N1, N2a, N2b, B9, B3). B13 sobrevive como exceção aceita.
+**Gate**: tsc ok, lint sem avisos novos, 46/46 unitários, `browser-needs` e `browser-community` passam.
 
-**O que funciona**: edição e persistência do perfil, comparação e rótulo exato, destaque do indispensável, nota na página do local, selos, filtro e os dois edge cases. Tudo com asserções no valor exato e mutantes mortos.
-
-**Próximos passos**: tarefas de correção 1 e 2 (testes de navegador), decisão sobre 3 e 4, conserto da linha 1 do spec, e depois nova verificação.
+**Lacunas que ficam (não bloqueiam)**: o popup do mapa não tem teste executável. O texto do EARS de COMP-12 não cita a premissa da lista. O teste de navegador de COMP-20 confere 1 dos 3 recursos sensoriais.

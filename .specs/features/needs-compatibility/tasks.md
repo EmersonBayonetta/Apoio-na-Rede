@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: inline (no `design.md`; decisions in `context.md` and below)
-**Status**: Done (awaiting Verifier)
+**Status**: Done (Verifier PASS, round 2)
 
 ### Design notes
 

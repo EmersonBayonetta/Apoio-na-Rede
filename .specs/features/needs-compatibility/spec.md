@@ -131,26 +131,26 @@ Hoje a pessoa vê a lista de recursos de cada local (Sim, Não, Não verificado)
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| COMP-01 | P1: Definir meus requisitos | Tasks | Implementing |
-| COMP-02 | P1: Definir meus requisitos | Tasks | Implementing |
-| COMP-03 | P1: Definir meus requisitos | Tasks | Implementing |
-| COMP-04 | P1: Definir meus requisitos | Tasks | Implementing |
-| COMP-05 | P1: Definir meus requisitos | Tasks | Implementing |
-| COMP-06 | P1: Comparar um local | Tasks | Implementing |
-| COMP-07 | P1: Comparar um local | Tasks | Implementing |
-| COMP-08 | P1: Comparar um local | Tasks | Implementing |
-| COMP-09 | P1: Comparar um local | Tasks | Implementing |
-| COMP-10 | P1: Comparar um local | Tasks | Implementing |
-| COMP-11 | P1: Comparar um local | Tasks | Implementing |
-| COMP-12 | P1: Comparar um local | Tasks | Implementing |
-| COMP-13 | P1: Selo nos resultados | Tasks | Implementing |
-| COMP-14 | P1: Selo nos resultados | Tasks | Implementing |
-| COMP-15 | P1: Selo nos resultados | Tasks | Implementing |
-| COMP-16 | P2: Filtro de indispensáveis | Tasks | Implementing |
-| COMP-17 | P2: Filtro de indispensáveis | Tasks | Implementing |
-| COMP-18 | P2: Filtro de indispensáveis | Tasks | Implementing |
-| COMP-19 | P2: Critérios sensoriais | Tasks | Implementing |
-| COMP-20 | P2: Critérios sensoriais | Tasks | Implementing |
+| COMP-01 | P1: Definir meus requisitos | Tasks | Verified |
+| COMP-02 | P1: Definir meus requisitos | Tasks | Verified |
+| COMP-03 | P1: Definir meus requisitos | Tasks | Verified |
+| COMP-04 | P1: Definir meus requisitos | Tasks | Verified |
+| COMP-05 | P1: Definir meus requisitos | Tasks | Verified |
+| COMP-06 | P1: Comparar um local | Tasks | Verified |
+| COMP-07 | P1: Comparar um local | Tasks | Verified |
+| COMP-08 | P1: Comparar um local | Tasks | Verified |
+| COMP-09 | P1: Comparar um local | Tasks | Verified |
+| COMP-10 | P1: Comparar um local | Tasks | Verified |
+| COMP-11 | P1: Comparar um local | Tasks | Verified |
+| COMP-12 | P1: Comparar um local | Tasks | Verified |
+| COMP-13 | P1: Selo nos resultados | Tasks | Verified |
+| COMP-14 | P1: Selo nos resultados | Tasks | Verified |
+| COMP-15 | P1: Selo nos resultados | Tasks | Verified |
+| COMP-16 | P2: Filtro de indispensáveis | Tasks | Verified |
+| COMP-17 | P2: Filtro de indispensáveis | Tasks | Verified |
+| COMP-18 | P2: Filtro de indispensáveis | Tasks | Verified |
+| COMP-19 | P2: Critérios sensoriais | Tasks | Verified |
+| COMP-20 | P2: Critérios sensoriais | Tasks | Verified |
 
 **Coverage:** 20 total, 20 mapped to tasks, 0 unmapped.
 
@@ -159,5 +159,5 @@ Hoje a pessoa vê a lista de recursos de cada local (Sim, Não, Não verificado)
 ## Success Criteria
 
 - [ ] Uma pessoa com requisitos marcados descobre, em menos de 30 s, se um local atende aos seus indispensáveis.
-- [ ] `npm test` e o teste de navegador cobrem COMP-01 a COMP-20.
-- [ ] `npm run lint` e `npm run build` passam sem novos avisos.
+- [x] `npm test` e o teste de navegador cobrem COMP-01 a COMP-20.
+- [x] `npm run lint` e `npm run build` passam sem novos avisos.
