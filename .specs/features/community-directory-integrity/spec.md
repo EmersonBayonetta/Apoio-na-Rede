@@ -113,22 +113,22 @@ As telas de Rotas acessíveis e Profissionais (`CommunityDirectoryView`) aceitam
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| COMM-01 | P1: Cadastro de profissional | Execute | Implementing |
-| COMM-02 | P1: Cadastro de profissional | Execute | Implementing |
-| COMM-03 | P1: Cadastro de profissional | Execute | Implementing |
-| COMM-04 | P1: Cadastro de profissional | Execute | Implementing |
-| COMM-05 | P1: Cadastro de profissional | Execute | Implementing |
-| COMM-06 | P1: Cadastro de profissional | Execute | Implementing |
-| COMM-07 | P1: Link de WhatsApp | Execute | Implementing |
-| COMM-08 | P1: Link de WhatsApp | Execute | Implementing |
-| COMM-09 | P1: Link de WhatsApp | Execute | Implementing |
-| COMM-10 | P1: Link de WhatsApp | Execute | Implementing |
-| COMM-11 | P1: Cadastro de trecho | Execute | Implementing |
-| COMM-12 | P1: Cadastro de trecho | Execute | Implementing |
-| COMM-13 | P1: Cadastro de trecho | Execute | Implementing |
-| COMM-14 | P2: Busca sem acentos | Execute | Implementing |
-| COMM-15 | P2: Busca sem acentos | Execute | Implementing |
-| COMM-16 | P2: Busca sem acentos | Execute | Implementing |
+| COMM-01 | P1: Cadastro de profissional | Execute | Verified |
+| COMM-02 | P1: Cadastro de profissional | Execute | Verified |
+| COMM-03 | P1: Cadastro de profissional | Execute | Verified |
+| COMM-04 | P1: Cadastro de profissional | Execute | Verified |
+| COMM-05 | P1: Cadastro de profissional | Execute | Verified |
+| COMM-06 | P1: Cadastro de profissional | Execute | Verified |
+| COMM-07 | P1: Link de WhatsApp | Execute | Verified |
+| COMM-08 | P1: Link de WhatsApp | Execute | Verified |
+| COMM-09 | P1: Link de WhatsApp | Execute | Verified |
+| COMM-10 | P1: Link de WhatsApp | Execute | Verified |
+| COMM-11 | P1: Cadastro de trecho | Execute | Verified |
+| COMM-12 | P1: Cadastro de trecho | Execute | Verified |
+| COMM-13 | P1: Cadastro de trecho | Execute | Verified |
+| COMM-14 | P2: Busca sem acentos | Execute | Verified |
+| COMM-15 | P2: Busca sem acentos | Execute | Verified |
+| COMM-16 | P2: Busca sem acentos | Execute | Verified |
 
 **Coverage:** 16 total, 16 mapped to Execute, 0 unmapped.
 
