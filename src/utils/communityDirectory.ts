@@ -6,9 +6,9 @@ const digits = (value = '') => value.replace(/\D/g, '');
 const validPhone = (value: string) => [10, 11].includes(digits(value).length);
 const whatsappDigits = (value = '') => {
   const number = digits(value);
-  if ([10, 11].includes(number.length)) return `55${number}`;
-  if ([12, 13].includes(number.length) && number.startsWith('55')) return number;
-  return null;
+  const full = [10, 11].includes(number.length) ? `55${number}` : [12, 13].includes(number.length) && number.startsWith('55') ? number : null;
+  // Toll-free and other numbers starting with 0 have no WhatsApp.
+  return full && !full.startsWith('550') ? full : null;
 };
 
 export function whatsappUrl(value?: string): string | null {

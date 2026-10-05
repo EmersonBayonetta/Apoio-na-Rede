@@ -67,6 +67,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: `'0800 770 7722'` and `'55 0800 770 7722'` give null; valid numbers unchanged; quick gate passes.
 **Tests**: unit · **Gate**: quick
 **Commit**: `fix(community): skip whatsapp links for toll-free numbers`
+**Status**: ✅ Done. 48 unit tests pass. Registration now also rejects a WhatsApp starting with 0.
 
 ### T3: Walking route summary format
 **What**: `formatWalkingSummary(meters, seconds)` returns e.g. "1,2 km · 15 min" or "350 m · 5 min".

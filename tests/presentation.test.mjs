@@ -8,3 +8,11 @@ test('directions open in walking mode with destination and place id', () => {
   assert.equal(url.searchParams.get('destination'), '-21.39,-42.69');
   assert.equal(url.searchParams.get('destination_place_id'), 'abc');
 });
+
+import { whatsappUrl } from '../src/utils/communityDirectory.ts';
+test('toll-free numbers starting with 0 get no whatsapp link', () => {
+  assert.equal(whatsappUrl('0800 770 7722'), null);
+  assert.equal(whatsappUrl('55 0800 770 7722'), null);
+  assert.equal(whatsappUrl('(32) 98765-4321'), 'https://wa.me/5532987654321');
+  assert.equal(whatsappUrl('+55 32 98765-4321'), 'https://wa.me/5532987654321');
+});
