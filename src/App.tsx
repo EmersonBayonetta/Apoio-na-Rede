@@ -143,7 +143,7 @@ export const MainAppContent: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => selectTab('register')}
-                  className="hover:text-white transition-colors"
+                  className="inline-flex min-h-6 items-center hover:text-white transition-colors"
                 >
                   Cadastre seu Estabelecimento
                 </button>

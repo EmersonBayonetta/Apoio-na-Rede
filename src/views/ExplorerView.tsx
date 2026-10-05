@@ -808,7 +808,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
       {/* Cartões do catálogo */}
       {!searchQuery.trim() && <p className="mb-4 text-sm" role="status">{locationNotice}</p>}
       {isLoadingPlaces && !isLoading && catalogEntries.length > 0 && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Buscando locais…</p>}
-      {placesError && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões próximas voltarão quando a cota for renovada. Os cadastros disponíveis no catálogo continuam acessíveis.' : <>Não foi possível carregar locais do Google Maps. <button type="button" className="underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></>}</p>}
+      {placesError && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões próximas voltarão quando a cota for renovada. Os cadastros disponíveis no catálogo continuam acessíveis.' : <>Não foi possível carregar locais do Google Maps. <button type="button" className="inline-flex min-h-11 items-center px-1 font-semibold underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></>}</p>}
       {loadError && catalogEntries.length === 0 ? (
         <section role="alert" className="bg-white border border-rose-200 rounded-2xl px-6 py-10 text-center mb-12">
           <AlertCircle size={28} className="mx-auto text-rose-600 mb-3" aria-hidden="true" />

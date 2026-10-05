@@ -1,4 +1,5 @@
 import { WalkingRoute } from '../components/establishments/WalkingRoute';
+import { MAP_CATEGORIES } from '../data/mapCategories';
 import { imageFallback } from '../utils/imageFallback';
 import React, { useState } from 'react';
 import { Establishment, DisabilityType } from '../types';
@@ -144,7 +145,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 bg-blue-50 text-blue-700 font-bold text-xs rounded-full uppercase tracking-wider border border-blue-200">
-              {establishment.categoria.replace('_', ' ')}
+              {MAP_CATEGORIES[establishment.categoria]?.label ?? establishment.categoria}
             </span>
             <VerifiedBadge
               status={establishment.status}

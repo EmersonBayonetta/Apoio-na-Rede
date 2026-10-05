@@ -155,9 +155,9 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 | PRES-07 | P1: Rota a pé | Tasks | Implementing |
 | PRES-08 | P1: Rota a pé | Tasks | Implementing |
 | PRES-09 | P1: Rota a pé | Tasks | Implementing |
-| PRES-10 | P1: Acessibilidade | Tasks | In Tasks |
-| PRES-11 | P1: Acessibilidade | Tasks | In Tasks |
-| PRES-12 | P1: Acessibilidade | Tasks | In Tasks |
+| PRES-10 | P1: Acessibilidade | Tasks | Implementing |
+| PRES-11 | P1: Acessibilidade | Tasks | Implementing |
+| PRES-12 | P1: Acessibilidade | Tasks | Implementing |
 | PRES-13 | P1: Navegação | Tasks | Implementing |
 | PRES-14 | P1: Navegação | Tasks | Implementing |
 | PRES-15 | P1: Navegação | Tasks | Implementing |

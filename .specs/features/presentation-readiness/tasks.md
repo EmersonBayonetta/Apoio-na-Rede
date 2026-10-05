@@ -132,6 +132,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: browser audit finds the filter name, no target < 24 px outside sentences on Explorar/Rotas/Profissionais at 360 and 1280, and no overlap at page end; full gate passes.
 **Tests**: e2e · **Gate**: full
 **Commit**: `fix(a11y): name filter, enlarge targets and keep launcher off controls`
+**Status**: ✅ Done. Browser checks pass at 360 and 1280 on three screens. Deviation: the place page category chip showed the raw id ("EDUCACAO"); it now shows the category label (`EstablishmentDetailView.tsx`).
 
 ### T10: Empty states that explain
 **What**: Routes and professionals show a "nothing yet" message with the add button when there is no data and no search; Explorar shows "Os locais próximos não carregaram." with retry when Places fails and the list is empty.

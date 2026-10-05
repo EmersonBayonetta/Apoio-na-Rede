@@ -89,7 +89,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
     </form>}
     <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto]">
       <label className="relative"><Search className="absolute left-3 top-3 text-slate-500" size={19} /><input className={`${field} pl-10`} value={query} onChange={e => setQuery(e.target.value)} placeholder={section === 'routes' ? 'Buscar por cidade, trecho ou local' : 'Buscar por nome, especialidade ou cidade'} /></label>
-      {section === 'professionals' && <select className={field} value={need} onChange={e => setNeed(e.target.value as DisabilityType | '')}><option value="">Todas as necessidades</option>{needs.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}</select>}
+      {section === 'professionals' && <select aria-label="Filtrar por necessidade atendida" className={field} value={need} onChange={e => setNeed(e.target.value as DisabilityType | '')}><option value="">Todas as necessidades</option>{needs.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}</select>}
     </div>
     {section === 'routes' ? <div className="grid gap-4 lg:grid-cols-2">{filteredRoutes.map(route => <article key={route.id} className={panel}>
       <div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2 text-sm font-semibold text-teal-800"><MapPinned size={17}/>{route.cidade}</div><h2 className="mt-2 text-xl font-bold">{route.ponto_origem} <span aria-hidden="true">→</span> {route.ponto_destino}</h2></div>{route.auditada ? <span className="flex items-center gap-1 text-sm text-emerald-800"><CheckCircle2 size={16}/>Conferido</span> : <span className="flex items-center gap-1 text-sm text-amber-800"><Clock3 size={16}/>Relato</span>}</div>

@@ -277,3 +277,7 @@ body.reduced-sensory .explorer-shell .premium-card:hover, body.reduced-sensory .
   .hero-link { margin-top: 4px; }
   .how-steps { grid-template-columns: 1fr; gap: 10px; }
 }
+
+/* Keep the floating accessibility button clear of the last controls on the page. */
+footer.bg-blue-950 { padding-bottom: 104px; }
+@media (max-width: 1023px) { body { padding-bottom: calc(150px + env(safe-area-inset-bottom)); } }
