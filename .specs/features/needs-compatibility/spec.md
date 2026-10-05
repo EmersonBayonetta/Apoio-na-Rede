@@ -128,24 +128,24 @@ Hoje a pessoa vê a lista de recursos de cada local (Sim, Não, Não verificado)
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| COMP-01 | P1: Definir meus requisitos | Tasks | In Tasks |
-| COMP-02 | P1: Definir meus requisitos | Tasks | In Tasks |
-| COMP-03 | P1: Definir meus requisitos | Tasks | In Tasks |
-| COMP-04 | P1: Definir meus requisitos | Tasks | In Tasks |
-| COMP-05 | P1: Definir meus requisitos | Tasks | In Tasks |
-| COMP-06 | P1: Comparar um local | Tasks | In Tasks |
-| COMP-07 | P1: Comparar um local | Tasks | In Tasks |
-| COMP-08 | P1: Comparar um local | Tasks | In Tasks |
-| COMP-09 | P1: Comparar um local | Tasks | In Tasks |
-| COMP-10 | P1: Comparar um local | Tasks | In Tasks |
-| COMP-11 | P1: Comparar um local | Tasks | In Tasks |
-| COMP-12 | P1: Comparar um local | Tasks | In Tasks |
-| COMP-13 | P1: Selo nos resultados | Tasks | In Tasks |
-| COMP-14 | P1: Selo nos resultados | Tasks | In Tasks |
-| COMP-15 | P1: Selo nos resultados | Tasks | In Tasks |
-| COMP-16 | P2: Filtro de indispensáveis | Tasks | In Tasks |
-| COMP-17 | P2: Filtro de indispensáveis | Tasks | In Tasks |
-| COMP-18 | P2: Filtro de indispensáveis | Tasks | In Tasks |
+| COMP-01 | P1: Definir meus requisitos | Tasks | Implementing |
+| COMP-02 | P1: Definir meus requisitos | Tasks | Implementing |
+| COMP-03 | P1: Definir meus requisitos | Tasks | Implementing |
+| COMP-04 | P1: Definir meus requisitos | Tasks | Implementing |
+| COMP-05 | P1: Definir meus requisitos | Tasks | Implementing |
+| COMP-06 | P1: Comparar um local | Tasks | Implementing |
+| COMP-07 | P1: Comparar um local | Tasks | Implementing |
+| COMP-08 | P1: Comparar um local | Tasks | Implementing |
+| COMP-09 | P1: Comparar um local | Tasks | Implementing |
+| COMP-10 | P1: Comparar um local | Tasks | Implementing |
+| COMP-11 | P1: Comparar um local | Tasks | Implementing |
+| COMP-12 | P1: Comparar um local | Tasks | Implementing |
+| COMP-13 | P1: Selo nos resultados | Tasks | Implementing |
+| COMP-14 | P1: Selo nos resultados | Tasks | Implementing |
+| COMP-15 | P1: Selo nos resultados | Tasks | Implementing |
+| COMP-16 | P2: Filtro de indispensáveis | Tasks | Implementing |
+| COMP-17 | P2: Filtro de indispensáveis | Tasks | Implementing |
+| COMP-18 | P2: Filtro de indispensáveis | Tasks | Implementing |
 | COMP-19 | P2: Critérios sensoriais | Tasks | Implementing |
 | COMP-20 | P2: Critérios sensoriais | Tasks | Implementing |
 
