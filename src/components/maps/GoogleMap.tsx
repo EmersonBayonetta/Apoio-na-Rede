@@ -7,6 +7,7 @@ import { VerifiedBadge } from '../establishments/VerifiedBadge';
 import { MAP_CATEGORIES } from '../../data/mapCategories';
 import { AccessibilitySummary } from '../accessibility/AccessibilitySummary';
 import { loadGoogleMaps } from '../../lib/googleMaps';
+import { useAccessibility } from '../../context/AccessibilityContext';
 const getCategoryIconSvg = (category: string) => {
   const Icon = MAP_CATEGORIES[category as keyof typeof MAP_CATEGORIES]?.icon ?? Navigation;
   return renderToString(<Icon size={18} color="white" />);
@@ -42,6 +43,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   searchedAddress, nearbyPlaces = EMPTY_PLACES, userLocation, selectedPlace, onSelectPlace, onRequestRoute,
 }) => {
   const container = useRef<HTMLDivElement>(null);
+  const { requirements } = useAccessibility();
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
@@ -167,7 +169,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           <VerifiedBadge status={est.status} />
           <h3 className="my-2 text-sm font-bold">{est.nome}</h3>
           <p className="mb-2 text-xs">{est.endereco} - {est.bairro || est.cidade}</p>
-          <AccessibilitySummary establishment={est} />
+          <AccessibilitySummary establishment={est} requirements={requirements} />
           <div className="mb-3 flex gap-1">{supported.slice(0, 4).map(type => <DisabilityBadge key={type} type={type} size="sm" showLabel={false} />)}</div>
         </div>, selectRef.current ? () => selectRef.current?.(est) : undefined);
     });
@@ -193,7 +195,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       markers.forEach(marker => { marker.map = null; });
       overlays.forEach(overlay => overlay.setMap(null));
     };
-  }, [map, establishments, selectedEstablishment, selectedPlace, nearbyPlaces, searchedAddress, userLocation, activeRoute, interactivePointSelection, centerLat, centerLng]);
+  }, [map, establishments, selectedEstablishment, selectedPlace, nearbyPlaces, searchedAddress, userLocation, activeRoute, interactivePointSelection, centerLat, centerLng, requirements]);
 
   return <div className={`relative w-full ${heightClass} overflow-hidden rounded-3xl border border-slate-200 shadow-inner`}>
     <div ref={container} className="h-full w-full" aria-label="Mapa de estabelecimentos" />

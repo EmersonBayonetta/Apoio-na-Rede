@@ -140,7 +140,7 @@ T3 → T4 → T5 → T6 → T7
 ### T4: Requirements match block
 
 **What**: Create `RequirementsMatch`, which shows the label, the 3 groups, the unmet essential warning and the certification note. Render nothing when the profile is empty. Use it in `AccessibilitySummary` (map popup).
-**Where**: `src/components/accessibility/RequirementsMatch.tsx` (+ one line in `AccessibilitySummary.tsx`)
+**Where**: `src/components/accessibility/RequirementsMatch.tsx` (+ `AccessibilitySummary.tsx`, `src/components/maps/GoogleMap.tsx`)
 **Depends on**: T3
 **Reuses**: `compareRequirements`, `compatibilityLabel`
 **Requirement**: COMP-09, COMP-10, COMP-11, COMP-12
@@ -150,11 +150,12 @@ T3 → T4 → T5 → T6 → T7
 **Done when**:
 
 - [ ] Covered by browser checks in T5 (the map popup needs Google Maps, which is blocked in tests)
-- [ ] Gate passes: build gate
+- [x] Gate passes: build gate
 
 **Tests**: e2e (merged forward into T5: the first screen where the block can run offline)
 **Gate**: build
 **Commit**: `feat(compatibility): show requirement match in place summary`
+**Status**: ✅ Done (browser checks land in T5). Deviation: map popups render with `renderToString` outside the provider, so the profile is a prop and `GoogleMap` passes it from the context.
 
 ---
 
