@@ -38,6 +38,12 @@ try {
  await fill({name:'Bia Teste',specialty:'Odontologia',city:'Cataguases',state:'MG',phone:'',whatsapp:'(32) 98765-4321'});await pause(300);
  assert.equal(await evaluate(`${article('Bia Teste')}.querySelector('a[href^="https://wa.me"]').href`),'https://wa.me/5532987654321');
 
+ await clickButton('Cadastrar profissional');await pause(200);
+ await fill({name:'Clínica São José',specialty:'Fisioterapia',city:'Cataguases',state:'MG',phone:'',whatsapp:''});await pause(300);
+ assert.equal(await evaluate(`${article('Clínica São José')}.querySelectorAll('a[href^="tel:"], a[href^="https://wa.me"]').length`),0);
+ await evaluate(`(()=>{const input=document.querySelector('main input[placeholder^="Buscar"]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'CLINICA   sao');input.dispatchEvent(new Event('input',{bubbles:true}));})()`);await pause(200);
+ assert.deepEqual(await evaluate(`[...document.querySelectorAll('main article h2')].map(e=>e.textContent)`),['Clínica São José']);
+
  await clickButton('Rotas acessíveis');await pause(300);
  const routesBefore = await evaluate(`document.querySelectorAll('main article').length`);
  await clickButton('Compartilhar um trecho');await pause(200);

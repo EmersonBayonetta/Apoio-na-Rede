@@ -15,7 +15,7 @@ test('professional registration rejects invalid UF and accepts lowercase UF', ()
   assert.equal(validateProfessional({ ...professional, estado: ' mg ' }).estado, 'MG');
 });
 test('professional registration rejects phones without area code', () => {
-  for (const telefone of ['3422-1234', '123', '(32) 3422-12345-6']) {
+  for (const telefone of ['3422-1234', '98765-4321', '123', '(32) 3422-12345-6']) {
     assert.throws(() => validateProfessional({ ...professional, telefone }), { message: 'Informe um telefone com DDD.' });
   }
   for (const telefone of ['(32) 3422-1234', '(32) 98765-4321', '0800 770 7722']) {
@@ -23,7 +23,7 @@ test('professional registration rejects phones without area code', () => {
   }
 });
 test('professional registration rejects malformed whatsapp', () => {
-  for (const whatsapp of ['98765-4321', '44 32 98765-4321', '+1 32 98765-4321']) {
+  for (const whatsapp of ['98765-4321', '44 32 98765-4321', '+1 32 98765-4321', '+55 32 98765-43210']) {
     assert.throws(() => validateProfessional({ ...professional, whatsapp }), { message: 'Informe um WhatsApp com DDD.' });
   }
   assert.equal(validateProfessional({ ...professional, whatsapp: '+55 (32) 98765-4321' }).whatsapp, '+55 (32) 98765-4321');
@@ -40,7 +40,7 @@ test('whatsapp link adds the country code only when missing', () => {
   assert.equal(whatsappUrl('55 32 3422-1234'), 'https://wa.me/553234221234');
 });
 test('whatsapp link is omitted without a valid number', () => {
-  for (const value of ['', undefined, '   ', '98765-4321', '+1 32 98765-4321']) assert.equal(whatsappUrl(value), null);
+  for (const value of ['', undefined, '   ', '98765-4321', '+1 32 98765-4321', '+55 32 98765-43210']) assert.equal(whatsappUrl(value), null);
 });
 test('route registration rejects blank required fields', () => {
   for (const field of ['origin', 'destination', 'city', 'description']) {
