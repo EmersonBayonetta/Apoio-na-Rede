@@ -141,6 +141,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: browser checks for each message and button; full gate passes.
 **Tests**: e2e · **Gate**: full
 **Commit**: `fix(ux): explain empty screens and offer the next step`
+**Status**: ✅ Done. Browser checks pass. The inline Google error line now only shows when other results are listed, so there is one retry button.
 
 ### T11: Data cleanup and regression suite
 **What**: Remove the overlapping default criterion from the wizard; update `tests/browser-regressions.mjs` to the current UI.

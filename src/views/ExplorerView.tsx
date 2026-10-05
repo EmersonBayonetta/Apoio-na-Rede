@@ -808,7 +808,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
       {/* Cartões do catálogo */}
       {!searchQuery.trim() && <p className="mb-4 text-sm" role="status">{locationNotice}</p>}
       {isLoadingPlaces && !isLoading && catalogEntries.length > 0 && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Buscando locais…</p>}
-      {placesError && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões próximas voltarão quando a cota for renovada. Os cadastros disponíveis no catálogo continuam acessíveis.' : <>Não foi possível carregar locais do Google Maps. <button type="button" className="inline-flex min-h-11 items-center px-1 font-semibold underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></>}</p>}
+      {placesError && catalogEntries.length > 0 && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões próximas voltarão quando a cota for renovada. Os cadastros disponíveis no catálogo continuam acessíveis.' : <>Não foi possível carregar locais do Google Maps. <button type="button" className="inline-flex min-h-11 items-center px-1 font-semibold underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></>}</p>}
       {loadError && catalogEntries.length === 0 ? (
         <section role="alert" className="bg-white border border-rose-200 rounded-2xl px-6 py-10 text-center mb-12">
           <AlertCircle size={28} className="mx-auto text-rose-600 mb-3" aria-hidden="true" />
@@ -820,6 +820,16 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
         </section>
       ) : (isLoading || isLoadingPlaces) && catalogEntries.length === 0 ? (
         <CatalogSkeleton />
+      ) : catalogEntries.length === 0 && placesError && !selectedPlace && !selectedAddressLabel ? (
+        <section role="status" className="places-unavailable bg-white rounded-2xl px-6 py-12 text-center border border-slate-200 mb-12">
+          <AlertCircle size={28} className="mx-auto mb-3 text-slate-400" aria-hidden="true" />
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Os locais próximos não carregaram.</h2>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mb-5">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões voltam quando a cota for renovada.' : 'O serviço do Google Maps não respondeu. Verifique sua conexão.'} Você ainda pode buscar por endereço.</p>
+          <button type="button" onClick={() => setPlacesAttempt(value => value + 1)} className="inline-flex min-h-11 items-center gap-2 px-4 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-sm font-bold transition-colors">
+            <RotateCcw size={15} aria-hidden="true" />
+            Tentar novamente
+          </button>
+        </section>
       ) : catalogEntries.length === 0 ? (
         <section className="bg-white rounded-2xl px-6 py-12 text-center border border-slate-200 mb-12">
           <Search size={28} className="mx-auto mb-3 text-slate-400" aria-hidden="true" />

@@ -120,6 +120,25 @@ try {
  await open('/?local=est-r');
  assert.equal(await evaluate(`document.querySelector('main').textContent.includes('Educação')`), true);
 
+ // PRES-21, PRES-22: empty community screens invite the first contribution
+ await evaluate(`localStorage.removeItem('acessacidade_routes');localStorage.removeItem('acessacidade_professionals')`);
+ for (const [aba, message, button] of [['rotas', 'Ainda não há trechos compartilhados.', 'Compartilhar um trecho'], ['profissionais', 'Ainda não há profissionais cadastrados.', 'Cadastrar profissional']]) {
+  await open(`/?aba=${aba}`);
+  assert.equal(await evaluate(`document.querySelector('main .empty-state p').textContent`), message);
+  await evaluate(`[...document.querySelectorAll('main .empty-state button')].find(b=>b.textContent.trim()===${JSON.stringify(button)}).click()`); await pause(300);
+  assert.equal(await evaluate(`Boolean(document.querySelector('main form'))`), true, aba + ' form opens');
+  await evaluate(`(()=>{const i=document.querySelector('main input[placeholder^="Buscar"]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(i,'xyz');i.dispatchEvent(new Event('input',{bubbles:true}))})()`); await pause(200);
+  assert.equal(await evaluate(`document.querySelector('main .empty-state p').textContent`), 'Nenhum resultado para essa busca.');
+ }
+
+ // PRES-23: when Google places fail and nothing else is listed, explain and offer retry only
+ await evaluate(`localStorage.removeItem('acessacidade_establishments')`);
+ await open('/');
+ const unavailable = `document.querySelector('main .places-unavailable')`;
+ assert.equal(await evaluate(`${unavailable}?.querySelector('h2').textContent`), 'Os locais próximos não carregaram.');
+ assert.deepEqual(await evaluate(`[...${unavailable}.querySelectorAll('button')].map(b=>b.textContent.trim())`), ['Tentar novamente']);
+ assert.equal(await evaluate(`document.querySelector('main').textContent.includes('Limpar filtros')`), false);
+
  console.log('presentation browser checks passed');
 } finally {
  if (injection) await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});
