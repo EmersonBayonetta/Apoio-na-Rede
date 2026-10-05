@@ -87,6 +87,20 @@ try {
  await open('/?aba=rotas&local=est-r');
  assert.equal(await heading(), 'Biblioteca Municipal');
 
+ // PRES-19, PRES-20: needs dialog and display options link to each other
+ await open('/');
+ const dialogTitle = () => evaluate(`document.querySelector('[role="dialog"] #pref-modal-title')?.textContent.trim() ?? null`);
+ const panelOpen = () => evaluate(`Boolean(document.querySelector('#accessibility-menu'))`);
+ await evaluate(`[...document.querySelectorAll('nav.desktop-navigation button')].find(b=>b.textContent.trim()==='Minhas necessidades').click()`); await pause(300);
+ assert.equal(await dialogTitle(), 'Minhas necessidades');
+ await evaluate(`[...document.querySelectorAll('[role="dialog"] button')].find(b=>b.textContent.trim()==='Opções de exibição e leitura').click()`); await pause(300);
+ assert.equal(await dialogTitle(), null);
+ assert.equal(await panelOpen(), true);
+ await evaluate(`[...document.querySelectorAll('#accessibility-menu button')].find(b=>b.textContent.trim()==='Minhas necessidades').click()`); await pause(300);
+ assert.equal(await panelOpen(), false);
+ assert.equal(await dialogTitle(), 'Minhas necessidades');
+ await evaluate(`[...document.querySelectorAll('[role="dialog"] button')].find(b=>b.textContent.trim()==='Cancelar').click()`); await pause(200);
+
  console.log('presentation browser checks passed');
 } finally {
  if (injection) await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});

@@ -164,8 +164,8 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 | PRES-16 | P1: Navegação | Tasks | Implementing |
 | PRES-17 | P1: Navegação | Tasks | Implementing |
 | PRES-18 | P1: Navegação | Tasks | Implementing |
-| PRES-19 | P1: Navegação | Tasks | In Tasks |
-| PRES-20 | P1: Navegação | Tasks | In Tasks |
+| PRES-19 | P1: Navegação | Tasks | Implementing |
+| PRES-20 | P1: Navegação | Tasks | Implementing |
 | PRES-21 | P2: Telas vazias | Tasks | In Tasks |
 | PRES-22 | P2: Telas vazias | Tasks | In Tasks |
 | PRES-23 | P2: Telas vazias | Tasks | In Tasks |

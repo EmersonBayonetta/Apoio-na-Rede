@@ -118,10 +118,10 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
           </div>
           <div>
             <h2 id="pref-modal-title" className="text-xl font-bold text-slate-900">
-              Suas Preferências de Acessibilidade
+              Minhas necessidades
             </h2>
             <p className="text-xs text-slate-500">
-              Personalize o Apoio na rede para destacar os locais que atendem você
+              Diga do que você precisa para o app comparar os locais com você
             </p>
           </div>
         </div>
@@ -201,6 +201,14 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
             Limpar requisitos
           </button>
         </section>
+
+        <button
+          type="button"
+          onClick={() => { onClose(); window.dispatchEvent(new Event('apoio:open-display-options')); }}
+          className="mb-4 min-h-11 text-sm font-semibold text-blue-700 underline"
+        >
+          Opções de exibição e leitura
+        </button>
 
         <div className="flex items-center gap-3">
           <button

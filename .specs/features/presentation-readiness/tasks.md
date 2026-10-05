@@ -123,6 +123,7 @@ T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12
 **Done when**: browser checks that each link opens the other surface; `browser-needs.mjs` updated for the renamed button; full gate passes.
 **Tests**: e2e · **Gate**: full
 **Commit**: `feat(accessibility): separate needs from display options with cross links`
+**Status**: ✅ Done. Browser checks pass. Cross links are buttons (they open dialogs), wired with window events.
 
 ### T9: Interface accessibility fixes
 **What**: Name the professionals filter; raise undersized targets to ≥ 24 px; reserve space so the floating launcher never covers controls.

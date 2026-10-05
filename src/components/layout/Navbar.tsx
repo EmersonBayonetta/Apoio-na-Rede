@@ -25,6 +25,11 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
     browserStorage.setItem('apoio_color_theme', theme);
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#ffffff' : '#101111');
   }, [theme]);
+  useEffect(() => {
+    const open = () => setIsPrefModalOpen(true);
+    window.addEventListener('apoio:open-needs', open);
+    return () => window.removeEventListener('apoio:open-needs', open);
+  }, []);
   const destinationButton = (destination: typeof DESTINATIONS[number], mobile: boolean) => {
     const Icon = destination.icon;
     return <button key={destination.tab} type="button" aria-current={currentTab === destination.tab ? 'page' : undefined} onClick={() => onSelectTab(destination.tab)}>

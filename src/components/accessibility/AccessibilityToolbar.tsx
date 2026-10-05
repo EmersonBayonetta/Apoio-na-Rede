@@ -13,6 +13,11 @@ import {
 
 export const AccessibilityToolbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener('apoio:open-display-options', open);
+    return () => window.removeEventListener('apoio:open-display-options', open);
+  }, []);
   const launcherRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!isOpen) return;
@@ -110,6 +115,13 @@ export const AccessibilityToolbar: React.FC = () => {
             </button>
           </div>
 
+          <button
+            type="button"
+            onClick={() => { setIsOpen(false); window.dispatchEvent(new Event('apoio:open-needs')); }}
+            className="mb-4 min-h-11 text-sm font-semibold text-blue-700 underline"
+          >
+            Minhas necessidades
+          </button>
           <div className="space-y-5 text-sm">
             <label className="flex items-center gap-3 font-bold">
               <input type="checkbox" checked={settings.voiceReadingEnabled} onChange={event => applySettings({ voiceReadingEnabled: event.target.checked })} />
