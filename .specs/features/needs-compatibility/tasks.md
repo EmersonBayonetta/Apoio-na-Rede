@@ -122,15 +122,16 @@ T3 → T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] The section lists 12 resources, each with 3 levels, and "Não preciso" checked by default
-- [ ] Save, then reload: the levels are kept
-- [ ] "Limpar requisitos" resets every level to "Não preciso"
-- [ ] The section asks for no disability type
-- [ ] Gate passes (full)
+- [x] The section lists 12 resources, each with 3 levels, and "Não preciso" checked by default
+- [x] Save, then reload: the levels are kept
+- [x] "Limpar requisitos" resets every level to "Não preciso"
+- [x] The section asks for no disability type
+- [x] Gate passes (full)
 
 **Tests**: e2e
 **Gate**: full
 **Commit**: `feat(compatibility): let users set their requirements`
+**Status**: ✅ Done. 46 unit tests + `tests/browser-needs.mjs` pass. Deviation: the "Ajustes" modal only opened from the mobile bar, so the desktop header got an "Ajustes" button (`src/components/layout/Navbar.tsx`).
 
 > Context and modal are one task because the context alone has no UI to test it through.
 

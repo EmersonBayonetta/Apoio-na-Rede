@@ -41,6 +41,7 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
           <button type="button" aria-current={currentTab === 'routes' ? 'page' : undefined} onClick={() => navigate('routes')}><MapPin size={17} aria-hidden="true" />Rotas acessíveis</button>
           <button type="button" aria-current={currentTab === 'professionals' ? 'page' : undefined} onClick={() => navigate('professionals')}><Search size={17} aria-hidden="true" />Profissionais</button>
           <button type="button" aria-current={currentTab === 'register' ? 'page' : undefined} onClick={() => navigate('register')}><PlusCircle size={17} aria-hidden="true" />Cadastrar Local</button>
+          <button type="button" aria-haspopup="dialog" onClick={() => setIsPrefModalOpen(true)}><SlidersHorizontal size={17} aria-hidden="true" />Ajustes</button>
         </nav>
         <button
           type="button"

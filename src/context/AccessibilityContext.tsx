@@ -1,15 +1,19 @@
 import { browserStorage, readStoredArray } from '../lib/browserStorage';
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { AccessibilitySettings, DisabilityType } from '../types';
+import { parseRequirementProfile, type RequirementProfile } from '../utils/needsCompatibility';
 
 const SETTINGS_KEY = 'acessacidade_accessibility_settings';
 const PREFERENCES_KEY = 'apoio_accessibility_preferences_v1';
+const REQUIREMENTS_KEY = 'apoio_requirements_v1';
 
 interface AccessibilityContextType {
   settings: AccessibilitySettings;
   accessibilityPreferences: DisabilityType[];
+  requirements: RequirementProfile;
   applySettings: (settings: Partial<AccessibilitySettings>) => void;
   setAccessibilityPreferences: (preferences: DisabilityType[]) => void;
+  setRequirements: (requirements: RequirementProfile) => void;
   setFontSize: (size: 'sm' | 'md' | 'lg' | 'xl') => void;
   setHighContrast: (mode: 'default' | 'dark' | 'yellow-black') => void;
   toggleDyslexicFont: () => void;
@@ -50,6 +54,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       return [];
     }
   });
+  const [requirements, setRequirementsState] = useState<RequirementProfile>(() => parseRequirementProfile(browserStorage.getItem(REQUIREMENTS_KEY)));
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [activeSpeechText, setActiveSpeechText] = useState('');
@@ -92,6 +97,11 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const setAccessibilityPreferences = (preferences: DisabilityType[]) => {
     setAccessibilityPreferencesState(preferences);
     browserStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+  };
+
+  const setRequirements = (next: RequirementProfile) => {
+    setRequirementsState(next);
+    browserStorage.setItem(REQUIREMENTS_KEY, JSON.stringify(next));
   };
 
   const setFontSize = (size: 'sm' | 'md' | 'lg' | 'xl') => {
@@ -199,8 +209,10 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         settings,
         accessibilityPreferences,
+        requirements,
         applySettings,
         setAccessibilityPreferences,
+        setRequirements,
         setFontSize,
         setHighContrast,
         toggleDyslexicFont,

@@ -4,6 +4,14 @@ import { useAccessibility } from '../../context/AccessibilityContext';
 import { DisabilityType } from '../../types';
 import { DISABILITY_INFO } from './DisabilityBadge';
 import { X, Check, HeartHandshake } from 'lucide-react';
+import { ACCESSIBILITY_RESOURCES } from '../../data/accessibilityResources';
+import type { RequirementLevel, RequirementProfile } from '../../utils/needsCompatibility';
+
+const REQUIREMENT_LEVELS: { value: RequirementLevel | ''; label: string }[] = [
+  { value: 'indispensavel', label: 'Indispensável' },
+  { value: 'desejavel', label: 'Desejável' },
+  { value: '', label: 'Não preciso' },
+];
 
 interface UserPreferencesModalProps {
   isOpen: boolean;
@@ -11,8 +19,9 @@ interface UserPreferencesModalProps {
 }
 
 export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOpen, onClose }) => {
-  const { accessibilityPreferences, setAccessibilityPreferences } = useAccessibility();
+  const { accessibilityPreferences, setAccessibilityPreferences, requirements, setRequirements } = useAccessibility();
   const [selected, setSelected] = useState<DisabilityType[]>(accessibilityPreferences);
+  const [draftRequirements, setDraftRequirements] = useState<RequirementProfile>(requirements);
   const [isSaving, setIsSaving] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -21,6 +30,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
     if (!isOpen) return;
 
     setSelected(accessibilityPreferences);
+    setDraftRequirements(requirements);
     previousFocusRef.current = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -57,7 +67,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
       document.removeEventListener('keydown', handleKeyDown);
       previousFocusRef.current?.focus();
     };
-  }, [isOpen, accessibilityPreferences, onClose]);
+  }, [isOpen, accessibilityPreferences, requirements, onClose]);
 
   if (!isOpen) return null;
 
@@ -71,6 +81,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
     setIsSaving(true);
     try {
       setAccessibilityPreferences(selected);
+      setRequirements(draftRequirements);
       onClose();
     } catch (e) {
       console.error(e);
@@ -157,6 +168,39 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
             );
           })}
         </div>
+
+        <section aria-labelledby="requirements-title" className="mb-6">
+          <h3 id="requirements-title" className="text-base font-bold text-slate-900">Meus requisitos</h3>
+          <p className="text-xs text-slate-500 mt-0.5 mb-3">Marque os recursos de que você precisa. Não é preciso informar diagnóstico. Os locais mostram quantos requisitos atendem.</p>
+          <div className="space-y-2">
+            {ACCESSIBILITY_RESOURCES.map((resource) => (
+              <fieldset key={resource.id} className="rounded-xl border border-slate-200 p-2.5">
+                <legend className="px-1 text-sm font-semibold text-slate-900">{resource.label}</legend>
+                <div className="flex flex-wrap gap-3 text-xs">
+                  {REQUIREMENT_LEVELS.map((level) => (
+                    <label key={level.label} className="flex items-center gap-1.5">
+                      <input
+                        type="radio"
+                        name={`requirement-${resource.id}`}
+                        value={level.value}
+                        checked={(draftRequirements[resource.id] ?? '') === level.value}
+                        onChange={() => setDraftRequirements((prev) => {
+                          const next = { ...prev };
+                          if (level.value) next[resource.id] = level.value; else delete next[resource.id];
+                          return next;
+                        })}
+                      />
+                      {level.label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ))}
+          </div>
+          <button type="button" onClick={() => setDraftRequirements({})} className="mt-3 text-sm font-semibold text-blue-700 underline">
+            Limpar requisitos
+          </button>
+        </section>
 
         <div className="flex items-center gap-3">
           <button
