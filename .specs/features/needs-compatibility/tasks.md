@@ -171,15 +171,16 @@ T3 → T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] With 5 requirements (4 Sim, 1 unknown), the page shows "Atende 4 de 5 requisitos" and the unknown one under "Sem informação"
-- [ ] An essential with Não shows "Requisito indispensável não atendido: [label]"
-- [ ] The certification note is visible
-- [ ] With an empty profile, there is no block
-- [ ] Gate passes (full)
+- [x] With 5 requirements (4 Sim, 1 unknown), the page shows "Atende 4 de 5 requisitos" and the unknown one under "Sem informação"
+- [x] An essential with Não shows "Requisito indispensável não atendido: [label]"
+- [x] The certification note is visible
+- [x] With an empty profile, there is no block
+- [x] Gate passes (full)
 
 **Tests**: e2e
 **Gate**: full
 **Commit**: `feat(compatibility): show requirement match on place page`
+**Status**: ✅ Done. 46 unit tests + `tests/browser-needs.mjs` pass.
 
 ---
 

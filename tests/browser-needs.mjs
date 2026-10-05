@@ -17,6 +17,15 @@ const checkedLevels = () => evaluate(`Object.fromEntries([...${section}.querySel
 const storedRequirements = () => evaluate(`JSON.parse(localStorage.getItem('apoio_requirements_v1'))`);
 const openSettings = async () => { await clickButton('Ajustes'); await pause(300); };
 const reload = async () => { await send('Page.reload'); await pause(1500); };
+const place = (id, nome) => ({ id, nome, categoria: 'alimentacao', endereco: 'Rua Teste, 1', cidade: 'Cataguases', estado: 'MG', latitude: -21.3924, longitude: -42.6896, descricao: 'Local de teste', fotos: [], status: 'pendente', nota_media: 0, total_avaliacoes: 0 });
+const criterion = (establishment_id, recurso, presente) => ({ id: `${establishment_id}-${recurso}`, establishment_id, tipo_deficiencia: 'mobilidade', criterio: recurso, recurso, presente });
+const seed = (requirements) => evaluate(`localStorage.setItem('acessacidade_establishments', ${JSON.stringify(JSON.stringify([place('est-a', 'Café Acessível'), place('est-b', 'Bar Degrau')]))});
+ localStorage.setItem('acessacidade_criteria', ${JSON.stringify(JSON.stringify([...['rampa', 'elevador', 'corrimao', 'libras'].map(id => criterion('est-a', id, true)), criterion('est-a', 'banheiro_pcd', null), criterion('est-b', 'rampa', false)]))});
+ localStorage.setItem('apoio_requirements_v1', ${JSON.stringify(JSON.stringify(requirements))});`);
+const openPlace = async id => { await send('Page.navigate',{url:`http://127.0.0.1:4176/?local=${id}`}); await pause(2000); };
+const match = `document.querySelector('main section[aria-label="Compatibilidade com seus requisitos"]')`;
+const matchGroup = title => evaluate(`(()=>{const heading=[...${match}.querySelectorAll('h4')].find(h=>h.textContent===${JSON.stringify(title)});return heading?[...heading.nextElementSibling.querySelectorAll('li')].map(li=>li.textContent):null;})()`);
+const profile = { rampa: 'indispensavel', elevador: 'desejavel', corrimao: 'desejavel', libras: 'desejavel', banheiro_pcd: 'indispensavel' };
 
 try {
  await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable'); await send('Network.setBlockedURLs',{urls:['https://*']});
@@ -53,6 +62,25 @@ try {
  await reload(); await openSettings();
  assert.ok(Object.values(await checkedLevels()).every(level => level === 'Não preciso'));
  await clickButton('Cancelar'); await pause(200);
+ // COMP-06, COMP-07, COMP-10, COMP-12: comparison on the place page
+ await seed(profile); await openPlace('est-a');
+ assert.equal(await evaluate(`${match}.querySelector('p').textContent`), 'Atende 4 de 5 requisitos');
+ assert.deepEqual(await matchGroup('Atendidos'), ['Atendimento em Libras', 'Rampa (indispensável)', 'Elevador', 'Corrimão']);
+ assert.deepEqual(await matchGroup('Sem informação'), ['Banheiro PCD (indispensável)']);
+ assert.equal(await matchGroup('Não atendidos'), null);
+ assert.equal(await evaluate(`${match}.textContent.includes('Requisito indispensável não atendido')`), false);
+ assert.equal(await evaluate(`${match}.textContent.includes('Comparação com as informações cadastradas. Não é uma certificação de acessibilidade.')`), true);
+
+ // COMP-09: an essential marked as no is highlighted
+ await openPlace('est-b');
+ assert.equal(await evaluate(`${match}.querySelector('p').textContent`), 'Atende 0 de 5 requisitos');
+ assert.equal(await evaluate(`[...${match}.querySelectorAll('p')].some(p=>p.textContent==='Requisito indispensável não atendido: Rampa')`), true);
+ assert.deepEqual(await matchGroup('Não atendidos'), ['Rampa (indispensável)']);
+
+ // COMP-11: no comparison without requirements
+ await seed({}); await openPlace('est-a');
+ assert.equal(await evaluate(`Boolean(${match})`), false);
+ assert.equal(await evaluate(`document.querySelector('main h1')?.textContent.includes('Café Acessível') ?? false`), true);
  console.log('needs compatibility browser checks passed');
 } finally {
  ws.close();

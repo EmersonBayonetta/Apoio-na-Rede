@@ -21,6 +21,7 @@ import {
 import { VerifiedBadge } from '../components/establishments/VerifiedBadge';
 import { DisabilityBadge, DISABILITY_INFO } from '../components/accessibility/DisabilityBadge';
 import { AccessibilityChecklist } from '../components/accessibility/AccessibilityChecklist';
+import { RequirementsMatch } from '../components/accessibility/RequirementsMatch';
 import { AudioReaderButton } from '../components/accessibility/AudioReaderButton';
 
 interface EstablishmentDetailViewProps {
@@ -34,7 +35,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   onBack,
   onRefresh,
 }) => {
-  const { accessibilityPreferences } = useAccessibility();
+  const { accessibilityPreferences, requirements } = useAccessibility();
   const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
   const [reviewFilter, setReviewFilter] = useState<DisabilityType | 'todas'>('todas');
 
@@ -293,6 +294,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
 
         {/* Coluna Direita: Checklist de Critérios de Acessibilidade */}
         <div className="lg:col-span-2">
+          <div className="mb-4"><RequirementsMatch criteria={criteria} requirements={requirements} /></div>
           <AccessibilityChecklist criteria={criteria} />
         </div>
       </div>
