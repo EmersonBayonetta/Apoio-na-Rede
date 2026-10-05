@@ -1,4 +1,4 @@
-Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |# Compatibilidade com Minhas Necessidades Specification
+Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |Implementing |# Compatibilidade com Minhas Necessidades Specification
 
 ## Problem Statement
 

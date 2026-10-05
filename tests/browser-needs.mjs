@@ -90,6 +90,19 @@ try {
  assert.deepEqual(await badges(), { 'Café Acessível': 'Atende 4 de 5 requisitos', 'Bar Degrau': 'Atende 0 de 5 requisitos· Indispensável não atendido', 'Escola Municipal': 'Sem informações para seus requisitos' });
  await seed({}); await openEducation();
  assert.deepEqual(await badges(), { 'Café Acessível': null, 'Bar Degrau': null, 'Escola Municipal': null });
+ // COMP-16, COMP-17, COMP-18: filter for unmet essentials
+ const essentialFilter = `[...document.querySelectorAll('main label')].find(l=>l.textContent.trim()==='Ocultar locais com requisito indispensável não atendido')?.querySelector('input')`;
+ const cardNames = () => evaluate(`[...document.querySelectorAll('main article h2')].map(h=>h.textContent).sort()`);
+ assert.equal(await evaluate(`Boolean(${essentialFilter})`), false);
+ await seed({ rampa: 'desejavel', banheiro_pcd: 'desejavel' }); await openEducation();
+ assert.equal(await evaluate(`Boolean(${essentialFilter})`), false);
+ await seed(profile); await openEducation();
+ assert.equal(await evaluate(`${essentialFilter}.checked`), false);
+ assert.deepEqual(await cardNames(), ['Bar Degrau', 'Café Acessível', 'Escola Municipal']);
+ await evaluate(`${essentialFilter}.click()`); await pause(400);
+ assert.deepEqual(await cardNames(), ['Café Acessível', 'Escola Municipal']);
+ await evaluate(`${essentialFilter}.click()`); await pause(400);
+ assert.deepEqual(await cardNames(), ['Bar Degrau', 'Café Acessível', 'Escola Municipal']);
  console.log('needs compatibility browser checks passed');
 } finally {
  ws.close();

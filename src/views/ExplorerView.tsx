@@ -5,6 +5,7 @@ import { PlaceCatalog, type CatalogEntry } from '../components/explore/PlaceCata
 import { isPlacesQuotaError } from '../utils/placesError';
 import { externalDiscoveryPlaces } from '../utils/discoveryPlaces';
 import { normalizeSearchText } from '../utils/normalizeSearchText';
+import { hasUnmetEssential } from '../utils/needsCompatibility';
 import { browserStorage } from '../lib/browserStorage';
 import { ExplorerHero } from '../components/explore/ExplorerHero';
 import { ExploreCategories } from '../components/explore/ExploreCategories';
@@ -124,7 +125,9 @@ const distanceInMeters = (a: [number, number], b: [number, number]) => {
 
 export const ExplorerView: React.FC<ExplorerViewProps> = () => {
   const searchInputRef = useVisibleSearch();
-  const { accessibilityPreferences } = useAccessibility();
+  const { accessibilityPreferences, requirements } = useAccessibility();
+  const hasEssentials = Object.values(requirements).includes('indispensavel');
+  const [hideUnmetEssentials, setHideUnmetEssentials] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -172,9 +175,11 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
   }, [searchQuery, searchedPlaces, nearbyPlaces, cityAddressIndex, establishments, selectedCategory, onlyVerified, includeUnknownPlaces]);
   const catalogEntries = useMemo<CatalogEntry[]>(() => {
     if (selectedAddressLabel) return searchedAddress ? [{ addressLabel: selectedAddressLabel, place: { id: 'selected-address', nome: selectedAddressLabel, endereco: selectedAddressLabel, categoria: 'servico_publico', ...searchedAddress } }] : [];
-    if (selectedPlace) return [{ place: selectedPlace, establishment: establishments.find(est => est.place_id && est.place_id === selectedPlace.place_id) }];
-    return [...establishments.filter(establishment => selectedCategory === 'todas' || establishment.categoria === selectedCategory).map(establishment => ({ establishment })), ...visibleNearbyPlaces.map(place => ({ place }))];
-  }, [selectedAddressLabel, searchedAddress, selectedPlace, establishments, visibleNearbyPlaces, selectedCategory]);
+    const entries: CatalogEntry[] = selectedPlace
+      ? [{ place: selectedPlace, establishment: establishments.find(est => est.place_id && est.place_id === selectedPlace.place_id) }]
+      : [...establishments.filter(establishment => selectedCategory === 'todas' || establishment.categoria === selectedCategory).map(establishment => ({ establishment })), ...visibleNearbyPlaces.map(place => ({ place }))];
+    return hideUnmetEssentials && hasEssentials ? entries.filter(entry => !hasUnmetEssential(entry.establishment?.criteria, requirements)) : entries;
+  }, [selectedAddressLabel, searchedAddress, selectedPlace, establishments, visibleNearbyPlaces, selectedCategory, hideUnmetEssentials, hasEssentials, requirements]);
   useEffect(() => { setShowAllResults(false); }, [searchQuery, selectedCategory, onlyVerified, includeUnknownPlaces, selectedDisabilities]);
   const chooseCategory = (category: EstablishmentCategory | 'todas') => {
     setShowAllResults(false);
@@ -776,6 +781,10 @@ export const ExplorerView: React.FC<ExplorerViewProps> = () => {
         <input type="checkbox" checked={includeUnknownPlaces} disabled={onlyVerified} onChange={event => setIncludeUnknownPlaces(event.target.checked)} />
         <span>Incluir lugares sem informações de acessibilidade. Seus recursos precisam ser consultados; a exibição não confirma que atendem às suas preferências.</span>
       </label>
+      {hasEssentials && <label className="mb-4 flex items-start gap-2 text-sm">
+        <input type="checkbox" checked={hideUnmetEssentials} onChange={event => setHideUnmetEssentials(event.target.checked)} />
+        <span>Ocultar locais com requisito indispensável não atendido</span>
+      </label>}
 
 
 

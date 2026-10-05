@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: inline (no `design.md`; decisions in `context.md` and below)
-**Status**: In Progress
+**Status**: Done (awaiting Verifier)
 
 ### Design notes
 
@@ -220,13 +220,14 @@ T3 → T4 → T5 → T6 → T7
 
 **Done when**:
 
-- [ ] The checkbox is hidden with no essential and when all requirements are "Desejável"
-- [ ] Turned on, it hides a place with an essential Não and keeps a place with the essential unknown
-- [ ] Gate passes (full), then the build gate
+- [x] The checkbox is hidden with no essential and when all requirements are "Desejável"
+- [x] Turned on, it hides a place with an essential Não and keeps a place with the essential unknown
+- [x] Gate passes (full), then the build gate
 
 **Tests**: e2e
 **Gate**: full
 **Commit**: `feat(compatibility): filter places with unmet essential requirements`
+**Status**: ✅ Done. Build gate passes. Note: `tests/browser-regressions.mjs` already failed before this feature (it clicks a "Lista" button that no longer exists in `src`).
 
 ---
 
