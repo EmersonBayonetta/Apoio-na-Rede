@@ -348,7 +348,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                   type="text"
                   value={telefone}
                   onChange={(e) => setTelefone(e.target.value)}
-                  placeholder="Ex: (11) 3255-0011"
+                  placeholder="Ex: (32) 3421-0011"
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
                 />
               </div>
@@ -362,7 +362,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                   type="text"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="Ex: (11) 98765-4321"
+                  placeholder="Ex: (32) 98765-4321"
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
                 />
               </div>
@@ -417,7 +417,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                   type="text"
                   value={bairro}
                   onChange={(e) => setBairro(e.target.value)}
-                  placeholder="Ex: Bela Vista"
+                  placeholder="Ex: Centro"
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
                 />
               </div>

@@ -26,23 +26,27 @@ const STORAGE_KEYS = {
   ROUTES: 'acessacidade_routes',
 };
 
+// Grava os exemplos na primeira visita; nas seguintes, em dev, atualiza os exemplos já salvos
+// e preserva o que o usuário cadastrou
+const seedStorage = <T extends { id: string }>(key: string, mocks: T[]) => {
+  if (!browserStorage.getItem(key)) {
+    browserStorage.setItem(key, JSON.stringify(import.meta.env.DEV ? mocks : []));
+  } else if (import.meta.env.DEV) {
+    const seeded = new Map(mocks.map((item) => [item.id, item]));
+    const stored = readStoredArray<T>(key, mocks);
+    browserStorage.setItem(key, JSON.stringify(stored.map((item) => seeded.get(item.id) ?? item)));
+  }
+};
+
 // Inicialização segura dos dados locais
 const initStorage = () => {
-  if (!browserStorage.getItem(STORAGE_KEYS.ESTABLISHMENTS)) {
-    browserStorage.setItem(STORAGE_KEYS.ESTABLISHMENTS, JSON.stringify(import.meta.env.DEV ? MOCK_ESTABLISHMENTS : []));
-  }
-  if (!browserStorage.getItem(STORAGE_KEYS.CRITERIA)) {
-    browserStorage.setItem(STORAGE_KEYS.CRITERIA, JSON.stringify(import.meta.env.DEV ? MOCK_CRITERIA : []));
-  }
+  seedStorage(STORAGE_KEYS.ESTABLISHMENTS, MOCK_ESTABLISHMENTS);
+  seedStorage(STORAGE_KEYS.CRITERIA, MOCK_CRITERIA);
   if (!browserStorage.getItem(STORAGE_KEYS.REVIEWS)) {
     browserStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(import.meta.env.DEV ? MOCK_REVIEWS : []));
   }
-  if (!browserStorage.getItem(STORAGE_KEYS.PROFESSIONALS)) {
-    browserStorage.setItem(STORAGE_KEYS.PROFESSIONALS, JSON.stringify(import.meta.env.DEV ? MOCK_PROFESSIONALS : []));
-  }
-  if (!browserStorage.getItem(STORAGE_KEYS.ROUTES)) {
-    browserStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(import.meta.env.DEV ? MOCK_ROUTES : []));
-  }
+  seedStorage(STORAGE_KEYS.PROFESSIONALS, MOCK_PROFESSIONALS);
+  seedStorage(STORAGE_KEYS.ROUTES, MOCK_ROUTES);
 };
 
 initStorage();
