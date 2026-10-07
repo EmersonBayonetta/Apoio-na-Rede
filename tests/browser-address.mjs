@@ -1,4 +1,4 @@
-// Run against an isolated Chrome profile (CDP :9223) and Vite preview (:4175).
+// Run against an isolated Chrome profile (CDP :9223) and Vite preview (:4176).
 // External requests are blocked: these checks cover local behavior, not providers.
 import assert from 'node:assert/strict';
 const targets = await (await fetch('http://127.0.0.1:9223/json/list')).json();
@@ -17,21 +17,19 @@ const resize=async(width,height)=>{await send('Emulation.setDeviceMetricsOverrid
 
 try {
  await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable'); await send('Network.setBlockedURLs',{urls:['https://*']});
- await send('Page.navigate',{url:'http://127.0.0.1:4175/'}); await pause(800);
- await evaluate(`localStorage.clear();localStorage.setItem('apoio_accessibility_onboarding_v1','completed');localStorage.setItem('apoio_accessibility_preferences_v1','[]');localStorage.setItem('apoio_cataguases_urban_index_v3',JSON.stringify({savedAt:Date.now(),addresses:[{logradouro:'Rua 7 de Setembro',complemento:'',bairro:'Centro',cep:'36770000',localidade:'Cataguases',uf:'MG',kind:'address',latitude:-21.39,longitude:-42.69}]}));`);
+ await send('Page.navigate',{url:'http://127.0.0.1:4176/'}); await pause(800);
+ await evaluate(`localStorage.clear();localStorage.setItem('apoio_accessibility_onboarding_v1','completed');localStorage.setItem('apoio_accessibility_preferences_v1','[]');localStorage.setItem('apoio_cataguases_urban_index_v4',JSON.stringify({savedAt:Date.now(),addresses:[{logradouro:'Rua 7 de Setembro',complemento:'',bairro:'Centro',cep:'36770000',localidade:'Cataguases',uf:'MG',kind:'address',latitude:-21.39,longitude:-42.69}]}));`);
  await send('Page.reload'); await pause(800);
  for(const width of [1440,390]) {
   await resize(width,900);
-  await check(width+' catalog navigation label',`[...document.querySelectorAll('nav button')].filter(e=>e.textContent.trim()==='Cat\u00e1logo').length===2`);
+  await check(width+' explorer navigation label',`[...document.querySelectorAll('nav button')].filter(e=>e.textContent.trim()==='Explorar').length===2`);
   await check(width+' no map list switch',`!document.querySelector('[aria-label="Modo de visualiza\u00e7\u00e3o"]')`); await fill('#main-search-input','Rua 7');
   await evaluate(`document.querySelector('[role="option"] button').click()`); await pause(700);
   await check(width+' selected address remains in list',`document.querySelector('[aria-label="Endereço selecionado"]')?.innerText.includes('Rua 7 de Setembro')===true`);
   await check(width+' street number is not duplicated',`!document.querySelector('#main-search-input').value.includes('Setembro, 7')`);
   await check(width+' directions link is available',`document.querySelector('[aria-label="Endereço selecionado"] a').href.includes('destination=-21.39%2C-42.69')`);
   await check(width+' single result card',`document.querySelectorAll('article').length===1`);
-  await evaluate(`document.querySelector('article button[aria-expanded]').click()`); await pause(100);
-  await check(width+' accessibility expands inside card',`document.querySelector('article button[aria-expanded]').getAttribute('aria-expanded')==='true' && document.querySelectorAll('article').length===1`);
-  await evaluate(`document.querySelector('article button[aria-expanded]').click()`);
+  await check(width+' address does not claim accessibility',`!document.querySelector('article button[aria-expanded]') && !document.querySelector('article .place-card-status')`);
   await check(width+' suggestions stay closed',`!document.querySelector('[role="listbox"]')`);
   await evaluate(`document.querySelector('[aria-label="Mostrar filtros"]').click()`); await pause(80);
   await evaluate(`document.querySelector('#advanced-search-filters input[type="checkbox"]').click()`); await pause(150);

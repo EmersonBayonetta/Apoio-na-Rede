@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ExternalLink, Footprints } from 'lucide-react';
 import { fetchWalkingRoute, type RouteDestination } from '../../services/routeService';
 import { formatWalkingSummary } from '../../utils/formatDistance';
@@ -8,21 +8,35 @@ type RouteState = { status: 'idle' | 'loading' } | { status: 'done'; summary: st
 
 export function WalkingRoute({ destination }: { destination: RouteDestination & { place_id?: string } }) {
   const [route, setRoute] = useState<RouteState>({ status: 'idle' });
+  const request = useRef<AbortController | null>(null);
+  useEffect(() => {
+    setRoute({ status: 'idle' });
+    request.current?.abort();
+    return () => { request.current?.abort(); };
+  }, [destination.id, destination.latitude, destination.longitude]);
 
   const calculate = () => {
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
     if (!('geolocation' in navigator)) {
       setRoute({ status: 'error', message: 'Este navegador não informa sua localização. Abra o trajeto no Google Maps.' });
       return;
     }
     setRoute({ status: 'loading' });
     navigator.geolocation.getCurrentPosition(async position => {
+      if (controller.signal.aborted) return;
       try {
-        const result = await fetchWalkingRoute({ latitude: position.coords.latitude, longitude: position.coords.longitude }, destination);
+        const result = await fetchWalkingRoute({ latitude: position.coords.latitude, longitude: position.coords.longitude }, destination, controller.signal);
+        if (controller.signal.aborted) return;
         setRoute({ status: 'done', summary: formatWalkingSummary(result.distance, result.duration) });
       } catch {
+        if (controller.signal.aborted) return;
         setRoute({ status: 'error', message: 'Não foi possível calcular a rota agora. Tente de novo ou abra o trajeto no Google Maps.' });
       }
-    }, () => setRoute({ status: 'error', message: 'Sem acesso à sua localização. Autorize a localização no navegador ou abra o trajeto no Google Maps.' }), { timeout: 15000 });
+    }, () => {
+      if (!controller.signal.aborted) setRoute({ status: 'error', message: 'Sem acesso à sua localização. Autorize a localização no navegador ou abra o trajeto no Google Maps.' });
+    }, { timeout: 15000 });
   };
 
   return <section aria-labelledby="walking-route-title" className="mt-4 max-w-3xl rounded-2xl border border-slate-200 p-4">

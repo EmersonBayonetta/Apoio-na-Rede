@@ -40,6 +40,6 @@ for(const index of [0,1,3,8]) {
 }
 await evaluate("document.querySelectorAll('.category-tile')[2].click();document.querySelectorAll('.category-tile')[4].click()");await pause(600);
 assert.equal(await evaluate("document.querySelectorAll('article').length"),5);
-assert.ok(await evaluate('window.__cleanupFailures>0'),'exercised failed Google cleanup');
-console.log('PASS failed Google cleanup does not blank page; category selection keeps five suggestions without a show-all button');
+assert.equal(await evaluate('window.__cleanupFailures??0'),0,'catalog does not instantiate embedded Google maps');
+console.log('PASS category selection keeps five suggestions without embedded maps or a show-all button');
 }finally{if(injection)await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});await send('Fetch.disable');ws.close()}

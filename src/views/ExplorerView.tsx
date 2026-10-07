@@ -13,6 +13,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Establishment, FilterState, DisabilityType, EstablishmentCategory, NearbyPlace } from '../types';
 import { MAP_CATEGORIES } from '../data/mapCategories';
 import { PlacesService } from '../services/placesService';
+import { locateAddress } from '../services/addressService';
 import { StorageService } from '../services/storageService';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { DisabilityBadge } from '../components/accessibility/DisabilityBadge';
@@ -578,21 +579,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       }
 
       const query = `${suggestion.logradouro}${typedNumber ? `, ${typedNumber}` : ''}, ${suggestion.bairro}, Cataguases, Minas Gerais, Brasil`;
-      const nominatimResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=${encodeURIComponent(query)}`);
-      const nominatimData = nominatimResponse.ok ? await nominatimResponse.json() : [];
-      let latitude = Number(nominatimData[0]?.lat);
-      let longitude = Number(nominatimData[0]?.lon);
-      const isInsideCataguases = (lat: number, lng: number) => lat >= -21.55 && lat <= -21.20 && lng >= -42.90 && lng <= -42.50;
-
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !isInsideCataguases(latitude, longitude)) {
-        const photonResponse = await fetch(`https://photon.komoot.io/api/?limit=1&lat=-21.3924&lon=-42.6896&q=${encodeURIComponent(query)}`);
-        const photonData = photonResponse.ok ? await photonResponse.json() : null;
-        const coordinates = photonData?.features?.[0]?.geometry?.coordinates;
-        longitude = Number(coordinates?.[0]);
-        latitude = Number(coordinates?.[1]);
-      }
-
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !isInsideCataguases(latitude, longitude)) throw new Error('Coordenadas não encontradas');
+      const { latitude, longitude } = await locateAddress(query);
       if (selectionId !== addressSelectionRef.current) return;
       setSearchedAddress({ latitude, longitude, label: displayAddress });
       setAddressMessage(`Endereço selecionado: ${displayAddress}`);

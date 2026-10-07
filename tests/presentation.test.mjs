@@ -10,6 +10,11 @@ test('directions open in walking mode with destination and place id', () => {
 });
 
 import { whatsappUrl } from '../src/utils/communityDirectory.ts';
+test('OSM places open directions by coordinates without an invalid Google place ID', () => {
+  const url = new URL(directionsUrl({ latitude: -21.39, longitude: -42.69, place_id: 'osm-node-123' }));
+  assert.equal(url.searchParams.has('destination_place_id'), false);
+  assert.equal(url.searchParams.get('destination'), '-21.39,-42.69');
+});
 test('toll-free numbers starting with 0 get no whatsapp link', () => {
   assert.equal(whatsappUrl('0800 770 7722'), null);
   assert.equal(whatsappUrl('55 0800 770 7722'), null);
