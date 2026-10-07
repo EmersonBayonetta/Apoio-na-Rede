@@ -50,3 +50,9 @@ Os cabeçalhos de segurança estão preparados no vercel.json e passam a valer a
 ### Validação que requer interação do titular
 
 Ainda é necessário confirmar o recebimento do acesso por e-mail, entrar na conta administradora e realizar um upload real. Não foram enviados e-mails nem utilizados códigos de acesso do titular nos testes automatizados. Confira no Supabase Auth a Site URL `https://apoio-na-rede.vercel.app` e Redirect URLs para esse domínio (incluindo os caminhos usados) e, se necessário, o localhost. SMTP, restrições de domínio do Google e configurações da Vercel não foram alterados por estas migrações.
+
+### Diagnóstico do primeiro login real
+
+Os logs Auth registraram envio do e-mail, confirmação e login implícito, mas com destino/referer `http://localhost:3000`. Foi solicitado ao titular ajustar a Site URL e adicionar `https://apoio-na-rede.vercel.app/**` na URL Configuration. Essa configuração não pode ser editada pelas ferramentas conectadas nesta sessão.
+
+O primeiro login revelou que uma gravação posterior de metadados pelo GoTrue retirava a função atribuída na confirmação. A migração corretiva preserva a função somente para o UUID confirmado originalmente vinculado ao alvo privado. A conta real já confirmada foi atualizada e a consulta confirmou `role=admin`. Testes com ROLLBACK verificaram que uma conta não confirmada não recebe a função, a gravação posterior mantém a função e uma conta recriada com o mesmo e-mail não herda o acesso. A revogação exige remover o vínculo privado antes de retirar a função.
