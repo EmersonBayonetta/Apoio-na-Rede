@@ -42,7 +42,14 @@ export function SignInGate({ children, admin = false }: { children: ReactNode; a
         if (error) throw error;
         setSent(true); setMessage('Abra o link enviado ao seu e-mail para entrar. Confira também a pasta de spam.');
       }
-    } catch { setMessage('Não foi possível entrar. Confira o e-mail e o código ou tente novamente mais tarde.'); }
+    } catch(error) {
+      const code=error && typeof error==='object' && 'code' in error ? error.code : undefined;
+      const status=error && typeof error==='object' && 'status' in error ? error.status : undefined;
+      setMessage(code==='over_email_send_rate_limit' || code==='over_request_rate_limit' || status===429
+        ? 'Limite de envio atingido. Aguarde antes de solicitar outro link de acesso.'
+        : sent && useCode ? 'Não foi possível confirmar o código. Confira o código recebido ou solicite um novo acesso.'
+        : 'Não foi possível enviar o link de acesso. Tente novamente mais tarde.');
+    }
     finally { setBusy(false); }
   }}>
     {!admin && <h2 className="text-xl font-bold">Entre para contribuir</h2>}

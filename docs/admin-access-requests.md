@@ -27,4 +27,8 @@ Se o provedor ou as credenciais estiverem indisponíveis, a solicitação é pre
 
 As migrações terminam com `database/administrator_requests.sql`. As tabelas de acesso e solicitações ficam no schema privado, com RLS e sem permissões para leitura/escrita direta por usuários comuns. Apenas o titular pode listar e decidir solicitações. As funções de payload e confirmação de envio são exclusivas de `service_role`.
 
+### Limite no envio do link de login
+
+Os logs do teste real registraram `over_email_send_rate_limit` (HTTP 429) em `/auth/v1/otp`. A tela agora informa o limite, em vez de sugerir um código incorreto. Configurar Resend na Vercel não altera o SMTP do Supabase Auth. O provedor embutido tem limite de dois e-mails por hora por projeto; customizar o envio requer SMTP próprio ou Send Email hook. [Limites oficiais](https://supabase.com/docs/guides/auth/rate-limits). A configuração SMTP permanece uma etapa externa ao código e não foi alterada pelas ferramentas desta sessão.
+
 Verificações automatizadas: 65 testes unitários, build, lint e teste de navegador do fluxo de solicitação/decisão. Testes SQL transacionais no projeto real confirmam solicitação única, ausência de promoção automática, bloqueio de autoaprovação, bloqueio de aprovação por outro administrador, aprovação pelo titular, recusa e restrição dos dados de notificação ao servidor. Testes de e-mail usam respostas simuladas: a entrega real exige as credenciais acima e uma solicitação real.
