@@ -192,9 +192,7 @@ export const MOCK_ESTABLISHMENTS: Establishment[] = [
     latitude: -21.3895,
     longitude: -42.6958,
     descricao: 'Sanitário e fraldário 100% acessível e gratuito, com trocador para adultos, barras de apoio dos dois lados e alarme de emergência.',
-    fotos: [
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=800'
-    ],
+    fotos: [],
     status: 'verificado',
     telefone: '(32) 3421-3333',
     horario_funcionamento: 'Todos os dias: 08:00 às 17:00',

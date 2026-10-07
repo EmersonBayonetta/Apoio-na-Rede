@@ -276,3 +276,33 @@ body.reduced-sensory .explorer-shell .premium-card:hover, body.reduced-sensory .
 /* Keep the floating accessibility button clear of the last text and controls on the page. */
 footer.bg-blue-950 { padding-bottom: 104px; }
 @media (max-width: 1023px) { body { padding-bottom: calc(150px + env(safe-area-inset-bottom)); } }
+
+/* Place suggestions: one row of five cards. Below desktop the row scrolls sideways with snap,
+   so the list never adds more than one card's height to the page. */
+.place-catalog-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.place-catalog-row.is-single { grid-template-columns: minmax(0, 340px); }
+.place-catalog-row > li { display: flex; min-width: 0; }
+.explorer-shell article.place-card { display: flex; flex-direction: column; width: 100%; padding: 0; overflow: hidden; }
+.place-card-media { position: relative; height: 128px; flex-shrink: 0; display: grid; place-items: center; overflow: hidden; color: #edfcf9; background: linear-gradient(140deg, color-mix(in srgb, var(--place-color) 55%, #171919), #202221); }
+.place-card-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.place-card-status { position: absolute; left: 10px; top: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; line-height: 1.2; box-shadow: 0 2px 8px #0004; }
+.place-card-maps { position: absolute; right: 8px; top: 8px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: #101111cc; color: #fff; border: 1px solid #ffffff40; }
+.place-card-maps:hover { background: var(--ds-accent); color: var(--ds-accent-ink); }
+.place-card-distance { position: absolute; left: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; background: #101111d9; color: #fff; font-size: 0.75rem; font-weight: 700; line-height: 1.2; }
+.place-card-content { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 14px; }
+.place-card-title { font-size: 1rem; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.place-card-address { display: flex; align-items: flex-start; gap: 5px; font-size: 0.8125rem; line-height: 1.35; }
+.place-card-address svg { flex-shrink: 0; margin-top: 2px; }
+.place-card-address span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden; overflow-wrap: anywhere; }
+.place-card-actions { margin-top: auto; padding-top: 4px; }
+.place-card-action { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 12px; font-size: 0.875rem; font-weight: 700; line-height: 1.2; text-align: center; }
+@media (max-width: 1023px) {
+  .place-catalog-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px; padding-bottom: 12px; scrollbar-width: thin; scrollbar-color: #36544e transparent; }
+  .place-catalog-row > li { flex: 0 0 260px; scroll-snap-align: start; }
+}
+@media (max-width: 600px) { .place-catalog-row > li { flex-basis: 78%; } }
+/* Larger text does not fit five columns; keep the single scrolling row instead. */
+html:is(.font-size-lg, .font-size-xl) .place-catalog-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px; padding-bottom: 12px; }
+html:is(.font-size-lg, .font-size-xl) .place-catalog-row > li { flex: 0 0 300px; max-width: 85%; scroll-snap-align: start; }
+body:is(.theme-high-contrast-dark, .theme-yellow-black) .place-card-media { background: #000; border-bottom: 1px solid currentColor; }
+body:is(.theme-high-contrast-dark, .theme-yellow-black) :is(.place-card-maps, .place-card-distance) { background: #000; border: 1px solid currentColor; }

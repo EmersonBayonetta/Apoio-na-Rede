@@ -36,11 +36,10 @@ for(const index of [0,1,3,8]) {
  await evaluate(`document.querySelectorAll('.category-tile')[${index}].click()`);await pause(600);
  assert.equal(await evaluate("document.querySelectorAll('article').length"),5,'category must keep five cards');
  assert.equal(await evaluate(`[...document.querySelectorAll('article h2')].every(e=>e.textContent.startsWith(${JSON.stringify(['restaurant','hospital',null,'supermarket',null,null,null,null,'hotel'][index])}))`),true,'results match requested category');
- await evaluate("[...document.querySelectorAll('button')].find(e=>e.textContent.startsWith('Ver todos os')).click()");await pause(100);
- assert.equal(await evaluate("document.querySelectorAll('article').length"),8,'show all matching results');
+ assert.equal(await evaluate("[...document.querySelectorAll('button')].some(e=>e.textContent.startsWith('Ver todos'))"),false,'no show-all button: the home keeps five suggestions');
 }
 await evaluate("document.querySelectorAll('.category-tile')[2].click();document.querySelectorAll('.category-tile')[4].click()");await pause(600);
 assert.equal(await evaluate("document.querySelectorAll('article').length"),5);
 assert.ok(await evaluate('window.__cleanupFailures>0'),'exercised failed Google cleanup');
-console.log('PASS failed Google cleanup does not blank page; category selection, five previews, all eight results and switching resets preview');
+console.log('PASS failed Google cleanup does not blank page; category selection keeps five suggestions without a show-all button');
 }finally{if(injection)await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});await send('Fetch.disable');ws.close()}

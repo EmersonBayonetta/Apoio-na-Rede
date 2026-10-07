@@ -134,7 +134,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const [loadError, setLoadError] = useState(false);
   const routeRequestRef = useRef(0);
   const localRequestRef = useRef(0);
-  const [showAllResults, setShowAllResults] = useState(false);
+  const [hasUserLocation, setHasUserLocation] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [cityAddressIndex, setCityAddressIndex] = useState<AddressSuggestion[]>([]);
   const [isLoadingAddressIndex, setIsLoadingAddressIndex] = useState(true);
@@ -180,9 +180,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       : [...establishments.filter(establishment => selectedCategory === 'todas' || establishment.categoria === selectedCategory).map(establishment => ({ establishment })), ...visibleNearbyPlaces.map(place => ({ place }))];
     return hideUnmetEssentials && hasEssentials ? entries.filter(entry => !hasUnmetEssential(entry.establishment?.criteria, requirements)) : entries;
   }, [selectedAddressLabel, searchedAddress, selectedPlace, establishments, visibleNearbyPlaces, selectedCategory, hideUnmetEssentials, hasEssentials, requirements]);
-  useEffect(() => { setShowAllResults(false); }, [searchQuery, selectedCategory, onlyVerified, includeUnknownPlaces, selectedDisabilities]);
   const chooseCategory = (category: EstablishmentCategory | 'todas') => {
-    setShowAllResults(false);
     setSelectedPlace(null);
     addressSelectionRef.current++;
     setSelectedAddressLabel(''); setAddressFilter(null);
@@ -258,6 +256,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             ? [nextLocation.latitude, nextLocation.longitude]
             : previous);
           hasLocation.current = true;
+          setHasUserLocation(true);
         } else {
           setLocationNotice('Você está fora da área atendida. As sugestões usam o centro de Cataguases.');
         }
@@ -796,7 +795,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             <span>Carregando estabelecimentos...</span>
           ) : (
             <span>
-              {searchQuery.trim() ? 'Resultados da busca' : showAllResults ? 'Todos os locais encontrados' : 'Até 5 sugestões próximas'}
+              {searchQuery.trim() ? 'Resultados da busca' : 'Até 5 sugestões próximas'}
               {selectedCategory !== 'todas' ? ` · ${MAP_CATEGORIES[selectedCategory].label}` : ''}
               {searchQuery ? ` para "${searchQuery}"` : ''}
             </span>
@@ -841,17 +840,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           </button>
         </section>
       ) : (
-        <>
-          <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={showAllResults ? undefined : 5} onOpenPlace={onSelectEstablishment} />
-          {(catalogEntries.length > 5 || showAllResults) && <button
-            type="button"
-            className="premium-button rounded-xl px-5 py-3 mb-12 font-bold"
-            onClick={() => {
-              setShowAllResults(previous => !previous);
-              document.getElementById('results-section')?.scrollIntoView({ block: 'start', behavior: 'instant' });
-            }}
-          >{showAllResults ? 'Voltar às 5 sugestões' : `Ver todos os ${catalogEntries.length} locais${selectedCategory !== 'todas' ? ` de ${MAP_CATEGORIES[selectedCategory].label}` : ''}`}</button>}
-        </>
+        <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={5} showDistance={hasUserLocation} onOpenPlace={onSelectEstablishment} />
       )}
     </div>
   );
