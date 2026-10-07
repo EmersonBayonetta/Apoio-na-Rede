@@ -23,6 +23,14 @@ export async function requireUser() {
   return data.user;
 }
 
+export async function requireAdministrator() {
+  const client = getSupabase();
+  if (!client) return;
+  await requireUser();
+  const {data,error} = await client.rpc('is_site_admin');
+  if (error || data !== true) throw new Error('Acesso não autorizado');
+}
+
 export { confirmedCriteria } from '../utils/communityConfirmation';
 
 export const ContributionService = {
@@ -88,8 +96,7 @@ export const ContributionService = {
   async pending() {
     const client = getSupabase();
     if (!client) return { reports: readStoredArray<PlaceReport>(REPORTS).filter(r => r.status === 'pendente'), places: readStoredArray<Establishment>('acessacidade_establishments').filter(e => e.status === 'pendente') };
-    const user = await requireUser();
-    if (user?.app_metadata.role !== 'admin') throw new Error('Acesso não autorizado');
+    await requireAdministrator();
     const [reports, places] = await Promise.all([client.from('place_reports').select('*').eq('status','pendente'), client.from('establishments').select('*').eq('status','pendente')]);
     if (reports.error || places.error) throw new Error('Não foi possível carregar a moderação.');
     return { reports: reports.data as PlaceReport[], places: places.data as Establishment[] };
@@ -98,8 +105,7 @@ export const ContributionService = {
     if (!approve && !reason.trim()) throw new Error('Informe o motivo da recusa.');
     const client = getSupabase();
     if (client) {
-      const user = await requireUser();
-      if (user?.app_metadata.role !== 'admin') throw new Error('Acesso não autorizado');
+      await requireAdministrator();
       const result = kind === 'report'
         ? await client.from('place_reports').update({ status: approve ? 'aprovado' : 'recusado', motivo_recusa: approve ? null : reason }).eq('id',id).eq('status','pendente')
         : await client.from('establishments').update({ status: approve ? 'verificado' : 'rejeitado', motivo_rejeicao: approve ? null : reason, verificado_em: approve ? new Date().toISOString() : null }).eq('id',id).eq('status','pendente');

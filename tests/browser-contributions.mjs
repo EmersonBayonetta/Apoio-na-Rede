@@ -34,17 +34,16 @@ try {
  assert.ok(await evaluate(`document.documentElement.scrollWidth<=document.documentElement.clientWidth`));
  await open('/gestao');
  assert.equal(await evaluate(`document.querySelector('meta[name="robots"]').content`),'noindex, nofollow');
- assert.ok(await evaluate(`document.body.innerText.includes('Modo demonstração')`));
- await click('Aprovar');
- assert.equal(await evaluate(`JSON.parse(localStorage.getItem('apoio_reports_v1'))[0].status`),'aprovado');
- // A responsible person's pending registration is independently moderated.
- await evaluate(`localStorage.setItem('acessacidade_establishments',${JSON.stringify(JSON.stringify([{...place,status:'pendente',informado_responsavel:true}]))})`);
- await open('/gestao');await click('Aprovar');
+ assert.ok(await evaluate(`document.body.innerText.includes('Painel administrativo indisponível')`));
+ assert.equal(await evaluate(`[...document.querySelectorAll('button')].some(b=>b.textContent==='Aprovar')`),false);
+ assert.equal(await evaluate(`JSON.parse(localStorage.getItem('apoio_reports_v1'))[0].status`),'pendente');
+ // Seed approved fixtures to check public rendering; demo has no administrative bypass.
+ await evaluate(`localStorage.setItem('apoio_reports_v1',JSON.stringify(JSON.parse(localStorage.getItem('apoio_reports_v1')).map(r=>({...r,status:'aprovado'}))));localStorage.setItem('acessacidade_establishments',${JSON.stringify(JSON.stringify([{...place,status:'verificado',informado_responsavel:true}]))})`);
  await open('/?local=test-report-place');
  assert.ok(await evaluate(`document.body.innerText.includes('Informado pelo responsável')`));
  assert.ok(await evaluate(`document.body.innerText.includes('Conferido')`));
  assert.equal(await evaluate(`document.querySelectorAll('section[aria-labelledby="approved-reports-title"] details').length`),1);
  await open('/');
  assert.equal(await evaluate(`Boolean(document.querySelector('a[href="/gestao"]'))`),false);
- console.log('PASS: duplicate UI, persistence, demo moderation, owner seal, mobile width, noindex.');
+ console.log('PASS: duplicate UI, persistence, demo admin blocked, approved fixtures, owner seal, mobile width, noindex.');
 } finally { ws.close(); }

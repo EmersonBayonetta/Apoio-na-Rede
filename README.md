@@ -56,6 +56,7 @@ Em um banco novo, execute nesta ordem:
 6. `database/contribution_indexes.sql`
 7. `database/community_directory.sql`
 8. `database/administrator_bootstrap.sql`
+9. `database/administrator_access.sql`
 
 O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto.
 
@@ -63,19 +64,18 @@ O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_D
 
 Habilite o provedor Email no Supabase Auth. Configure **Site URL** e **Redirect URLs** com o endereço real do site e, para desenvolvimento, `http://localhost:5173/**`. O acesso funciona por link de e-mail ou código; para fornecer o código, inclua `{{ .Token }}` no template de Magic Link. Configure SMTP próprio para envio de e-mails em produção. O fluxo de envio real depende desse serviço e deve ser verificado com uma conta autorizada antes da publicação.
 
-A gestão fica em `/gestao`, sem link no menu ou rodapé, e envia `noindex`. Exige login e `app_metadata.role = 'admin'`. Para atribuir o papel a uma conta já cadastrada, use o painel administrativo ou SQL executado por um administrador:
+A gestão fica em `/gestao`, sem link no menu ou rodapé, e envia `noindex`. Exige login e uma conta habilitada na lista privada `private.administrator_access`. Somente administradores do banco podem adicionar pessoas da equipe. Confirmação de e-mail, cadastro comum e metadados não concedem esse acesso. Para autorizar uma conta já cadastrada e confirmada, execute pelo SQL Editor com acesso administrativo:
 
 ```sql
-update auth.users
-set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
-where id = 'UUID_DA_CONTA';
+insert into private.administrator_access(user_id)
+select id from auth.users
+where id = 'UUID_DA_CONTA' and email_confirmed_at is not null
+on conflict(user_id) do update set enabled=true;
 ```
 
-A conta deve sair e entrar novamente para renovar o token. Não use `user_metadata` para permissões. A interface e a RLS impedem aprovação por usuários comuns. Recusas exigem motivo.
+A interface consulta `is_site_admin`, e RLS e triggers consultam a mesma autorização no banco. Para revogar, defina `enabled=false` na lista privada: tokens antigos não mantêm a permissão nas operações seguintes. Não use `user_metadata` para permissões. Recusas exigem motivo.
 
-Para preparar o primeiro administrador antes de seu cadastro, um administrador do banco pode inserir o e-mail escolhido em `private.administrator_bootstrap(email)`. A função só é concedida após a confirmação desse e-mail, e o alvo é consumido uma única vez. Não armazene esse e-mail em arquivos versionados.
-
-O vínculo permanece restrito ao UUID original e preserva a função quando o serviço Auth atualiza os metadados no primeiro login. Para revogar esse administrador, exclua primeiro seu vínculo em `private.administrator_bootstrap` e depois remova `role` de `raw_app_meta_data`; renove ou revogue suas sessões. Recriar uma conta com o mesmo e-mail não concede a função automaticamente.
+A migração de acesso preserva a conta originalmente autorizada e remove o trigger histórico de concessão automática por e-mail. Novas contas da equipe precisam de inclusão explícita pelo administrador do banco. Recriar uma conta com o mesmo e-mail não herda acesso. Não versione os e-mails da equipe nem exponha a lista privada no frontend.
 
 Rotas e profissionais são compartilhados após revisão em `/gestao`. Novos cadastros exigem login, com limite de 10 envios por catálogo em 24 horas. Aprovar um relato de rota não confirma uma auditoria presencial. A opção de importação permite exportar cadastros do navegador original e enviá-los no site publicado; exemplos de demonstração e campos de aprovação são descartados. Consulte [o procedimento de transferência](docs/contribuicoes-validacao.md).
 

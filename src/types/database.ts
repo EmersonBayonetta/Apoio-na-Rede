@@ -485,6 +485,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_site_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_approved_reports: { Args: { requested_key: string }; Returns: Json }
       get_place_accessibility: {
         Args: { requested_place_id: string }

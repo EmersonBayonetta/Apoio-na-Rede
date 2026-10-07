@@ -10,6 +10,7 @@ for (const [endpoint, method, body, expected] of [
   ['/rest/v1/rpc/get_place_accessibility','POST',{ requested_place_id: 'connectivity-check-no-place' },200],
   ['/rest/v1/rpc/get_approved_reports','POST',{ requested_key: 'connectivity-check-no-place' },200],
   ['/rest/v1/place_reports?select=id&limit=1','GET',null,401],
+  ['/rest/v1/rpc/is_site_admin','POST',{},401],
   ['/rest/v1/routes?select=id,titulo,status,auditada&limit=1','GET',null,200],
   ['/rest/v1/professionals?select=id,nome,status&limit=1','GET',null,200],
   ['/rest/v1/routes?select=author_id,source_key&limit=1','GET',null,401],

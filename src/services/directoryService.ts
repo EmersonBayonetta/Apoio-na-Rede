@@ -1,5 +1,5 @@
 import { getSupabase } from '../lib/supabase';
-import { requireUser } from './contributionService';
+import { requireUser, requireAdministrator } from './contributionService';
 import type { AccessibleRoute, Professional } from '../types';
 
 export const ROUTE_COLUMNS = 'id,titulo,cidade,ponto_origem,ponto_destino,trecho_descricao,tem_rampa,tem_piso_tatil,tem_semaforo_sonoro,nivel_seguranca,coordenadas,distancia_metros,duracao_segundos,auditada,status,motivo_rejeicao,verificado_em';
@@ -52,8 +52,7 @@ export const DirectoryService = {
     return data as unknown as Professional;
   },
   async pending() {
-    const user = await requireUser();
-    if (user?.app_metadata.role !== 'admin') throw new Error('Acesso não autorizado');
+    await requireAdministrator();
     const client = getSupabase()!;
     const [routes,professionals] = await Promise.all([
       client.from('routes').select(ROUTE_COLUMNS).eq('status','pendente').order('criado_em'),
@@ -64,8 +63,7 @@ export const DirectoryService = {
   },
   async moderate(kind: DirectoryKind, id: string, approve: boolean, reason: string, audited = false) {
     if (!approve && !reason.trim()) throw new Error('Informe o motivo da recusa.');
-    const user = await requireUser();
-    if (user?.app_metadata.role !== 'admin') throw new Error('Acesso não autorizado');
+    await requireAdministrator();
     const client = getSupabase()!;
     const change = { status:approve ? 'verificado' as const : 'rejeitado' as const,motivo_rejeicao:approve ? null : reason.trim() };
     const { data,error } = kind === 'routes'

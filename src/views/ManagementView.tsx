@@ -24,6 +24,7 @@ function Queue() {
 }
 
 export function ManagementView() {
+  const [section,setSection] = useState<'places'|'directory'>('places');
   useEffect(() => { const meta = document.createElement('meta'); meta.name = 'robots'; meta.content = 'noindex, nofollow'; document.head.appendChild(meta); return () => meta.remove(); }, []);
-  return <main id="main-content" className="max-w-4xl mx-auto p-6"><h1 className="text-3xl font-bold mb-6">Gestão de contribuições</h1><SignInGate admin><Queue /><DirectoryModerationQueue /></SignInGate><a className="inline-flex min-h-11 items-center underline mt-6" href="/">Voltar ao site</a></main>;
+  return <main id="main-content" className="max-w-4xl mx-auto p-6"><h1 className="text-3xl font-bold mb-6">Administração</h1><SignInGate admin><nav aria-label="Revisão de contribuições" className="flex flex-wrap gap-3 mb-6">{(['places','directory'] as const).map(tab=><button type="button" key={tab} aria-pressed={section===tab} className={`min-h-11 rounded-lg border px-4 ${section===tab ? 'bg-blue-900 text-white' : ''}`} onClick={()=>setSection(tab)}>{tab==='places' ? 'Locais e relatos' : 'Rotas e profissionais'}</button>)}</nav>{section==='places' ? <Queue /> : <DirectoryModerationQueue />}</SignInGate><a className="inline-flex min-h-11 items-center underline mt-6" href="/">Voltar ao site</a></main>;
 }

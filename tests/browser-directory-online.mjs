@@ -20,6 +20,7 @@ try {
   window.fetch=(input,options={})=>{
    const url=String(input),json=data=>Promise.resolve(new Response(JSON.stringify(data),{status:200,headers:{'Content-Type':'application/json'}}));
    if(url.includes('/auth/v1/user'))return json({id:'00000000-0000-4000-8000-000000000001',email:'test@example.invalid',app_metadata:{role:'admin'},user_metadata:{}});
+   if(url.includes('/rest/v1/rpc/is_site_admin'))return json(true);
    if(url.includes('/rest/v1/routes')) {
     if(options.method==='POST'){const row=JSON.parse(options.body);window.__writes.push(row);return json({...row,id:'route-test',status:'pendente',auditada:false});}
     return json([]);
@@ -50,6 +51,7 @@ try {
  assert.equal(await evaluate('window.__writes[1].source_key'),'local:old-real');
  assert.equal(await evaluate(`Object.hasOwn(window.__writes[1],'auditada')`),false);
  await open('/gestao');
+ await click('Rotas e profissionais');await pause();
  assert.ok(await evaluate(`document.body.innerText.includes('Rotas pendentes (0)') && document.body.innerText.includes('Profissionais pendentes (0)')`));
  console.log('PASS: online directory login, pending submission, stripped privileges, local import excludes mocks, admin queues.');
 } finally {if(injection)await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});await send('Network.setBlockedURLs',{urls:[]});await evaluate('localStorage.clear()');ws.close();}

@@ -15,18 +15,27 @@ try {
  injection=await send('Page.addScriptToEvaluateOnNewDocument',{source:`
   localStorage.setItem('apoio_accessibility_onboarding_v1','completed');
   window.__privateQueries=0;
+  window.__otpRequest=null;
   const original=window.fetch;
   window.fetch=(input,options)=>{
    const url=String(input);
-   if(url.includes('/auth/v1/user'))return Promise.resolve(new Response(JSON.stringify({id:'00000000-0000-4000-8000-000000000001',email:'test@example.invalid',app_metadata:{role:'comum'},user_metadata:{role:'admin'}}),{status:200,headers:{'Content-Type':'application/json'}}));
+   if(url.includes('/auth/v1/user'))return Promise.resolve(new Response(JSON.stringify({id:'00000000-0000-4000-8000-000000000001',email:'test@example.invalid',app_metadata:{role:'admin'},user_metadata:{role:'admin'}}),{status:200,headers:{'Content-Type':'application/json'}}));
+   if(url.includes('/auth/v1/otp')){window.__otpRequest=JSON.parse(options.body);return Promise.resolve(new Response(JSON.stringify({user:null,session:null}),{status:200,headers:{'Content-Type':'application/json'}}));}
+   if(url.includes('/rest/v1/rpc/is_site_admin'))return Promise.resolve(new Response('false',{status:200,headers:{'Content-Type':'application/json'}}));
    if(url.includes('/rest/v1/place_reports'))window.__privateQueries++;
    if(url.includes('/rest/v1/establishments'))return Promise.resolve(new Response('[]',{status:200,headers:{'Content-Type':'application/json'}}));
    return original(input,options);
   };
  `});
  await open('/gestao');
- assert.ok(await evaluate(`document.body.innerText.includes('Entre para acessar a gestão')`));
+ assert.ok(await evaluate(`document.body.innerText.includes('Administração') && document.querySelector('input[type=email]') !== null`));
  assert.equal(await evaluate('window.__privateQueries'),0);
+ await evaluate(`(()=>{const input=document.querySelector('input[type=email]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'test@example.invalid');input.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+ await new Promise(r=>setTimeout(r,100));
+ await evaluate(`document.querySelector('form').requestSubmit()`);await new Promise(r=>setTimeout(r,300));
+ assert.equal(await evaluate('window.__otpRequest.create_user'),false);
+ assert.ok(await evaluate(`document.body.innerText.includes('Abra o link enviado')`));
+ assert.equal(await evaluate(`document.querySelector('input[autocomplete="one-time-code"]')`),null);
  const payload=Buffer.from(JSON.stringify({sub:'00000000-0000-4000-8000-000000000001',exp:Math.floor(Date.now()/1000)+3600,role:'authenticated'})).toString('base64url');
  const token=`eyJhbGciOiJIUzI1NiJ9.${payload}.test`;
  await evaluate(`localStorage.setItem('sb-pwzqivjkpiqsizuebjlt-auth-token',${JSON.stringify(JSON.stringify({access_token:token,refresh_token:'test-refresh-token',expires_at:Math.floor(Date.now()/1000)+3600,token_type:'bearer',user:{id:'00000000-0000-4000-8000-000000000001',email:'test@example.invalid',app_metadata:{role:'comum'},user_metadata:{role:'admin'}}}))})`);
