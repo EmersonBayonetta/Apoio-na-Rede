@@ -38,6 +38,7 @@ export interface Review {
 }
 
 export interface Establishment {
+  demonstracao?: boolean;
   external?: boolean;
   informado_responsavel?: boolean;
   id: string;
@@ -71,6 +72,7 @@ export interface Establishment {
 }
 
 export interface Professional {
+  demonstracao?: boolean;
   status?: EstablishmentStatus;
   motivo_rejeicao?: string | null;
   verificado_em?: string | null;
@@ -91,6 +93,7 @@ export interface Professional {
 }
 
 export interface AccessibleRoute {
+  demonstracao?: boolean;
   status?: EstablishmentStatus;
   motivo_rejeicao?: string | null;
   verificado_em?: string | null;

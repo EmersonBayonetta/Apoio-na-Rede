@@ -1,6 +1,6 @@
 // Normal build on :4177; isolated Chrome on :9224. Supabase responses are simulated.
 import assert from 'node:assert/strict';
-const pages = await (await fetch('http://127.0.0.1:9224/json/list')).json();
+const pages = await (await fetch(`${process.env.BROWSER_CDP_URL ?? 'http://127.0.0.1:9224'}/json/list`)).json();
 const ws = new WebSocket(pages.find(p=>p.type==='page').webSocketDebuggerUrl);
 await new Promise((resolve,reject)=>{ws.onopen=resolve;ws.onerror=reject;});
 let id=0;const pending=new Map();
@@ -8,7 +8,7 @@ ws.onmessage=({data})=>{const m=JSON.parse(data),p=pending.get(m.id);if(p){pendi
 const send=(method,params={})=>new Promise((resolve,reject)=>{const requestId=++id,timer=setTimeout(()=>reject(Error(method)),15000);pending.set(requestId,{resolve,reject,timer});ws.send(JSON.stringify({id:requestId,method,params}));});
 const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true,userGesture:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result.value;};
 const pause=()=>new Promise(r=>setTimeout(r,700));
-const open=async path=>{await send('Page.navigate',{url:'http://127.0.0.1:4177'+path});await pause();};
+const open=async path=>{await send('Page.navigate',{url:(process.env.BROWSER_BASE_URL ?? 'http://127.0.0.1:4177')+path});await pause();};
 const click=text=>evaluate(`[...document.querySelectorAll('button')].find(e=>e.textContent.trim()===${JSON.stringify(text)}).click()`);
 let injection;
 try {
@@ -42,16 +42,11 @@ try {
  assert.equal(await evaluate(`Object.hasOwn(window.__writes[0],'auditada')`),false);
  assert.equal(await evaluate(`Object.hasOwn(window.__writes[0],'status')`),false);
  assert.ok(await evaluate(`document.body.innerText.includes('Em verificação')`));
- await evaluate(`localStorage.setItem('acessacidade_routes',JSON.stringify([{id:'rot-1'}, {id:'old-real',ponto_origem:'Praça',ponto_destino:'Escola',cidade:'Cataguases',trecho_descricao:'Relato real',tem_rampa:false,tem_piso_tatil:false,tem_semaforo_sonoro:false,auditada:true,status:'verificado'}]));localStorage.setItem('acessacidade_professionals','[]')`);
- await evaluate(`document.querySelector('main details summary').click()`);
- await click('Carregar dados deste navegador');await pause();
- assert.ok(await evaluate(`document.body.innerText.includes('1 rotas e 0 profissionais.')`));
- await click('Enviar cadastros para revisão');await pause();
- assert.equal(await evaluate('window.__writes.length'),2);
- assert.equal(await evaluate('window.__writes[1].source_key'),'local:old-real');
- assert.equal(await evaluate(`Object.hasOwn(window.__writes[1],'auditada')`),false);
+ assert.equal(await evaluate(`document.querySelectorAll('main article').length`),1,'real submission replaces presentation examples');
+ assert.equal(await evaluate(`document.querySelector('main article').textContent.includes('Demonstração')`),false);
+ assert.equal(await evaluate(`document.body.innerText.includes('Importar cadastros feitos anteriormente')`),false);
  await open('/gestao');
  await click('Rotas e profissionais');await pause();
  assert.ok(await evaluate(`document.body.innerText.includes('Rotas pendentes (0)') && document.body.innerText.includes('Profissionais pendentes (0)')`));
- console.log('PASS: online directory login, pending submission, stripped privileges, local import excludes mocks, admin queues.');
+ console.log('PASS: online directory login, pending submission, stripped privileges, import panel removed, admin queues.');
 } finally {if(injection)await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});await send('Network.setBlockedURLs',{urls:[]});await evaluate('localStorage.clear()');ws.close();}

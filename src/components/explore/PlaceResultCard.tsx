@@ -31,9 +31,9 @@ export function PlaceResultCard({ place, establishment, addressLabel, distance, 
   return <article className="place-card premium-card rounded-2xl border" aria-label={addressLabel ? 'Endereço selecionado' : name}>
     <div className="place-card-media" style={{ '--place-color': category.color } as React.CSSProperties}>
       {photo ? <img src={photo} alt="" loading="lazy" onError={imageFallback} /> : <CategoryIcon size={40} strokeWidth={1.4} aria-hidden="true" />}
-      {!addressLabel && <span className={`place-card-status ${status.className}`}><status.Icon size={14} aria-hidden="true" />{status.label}</span>}
+      {!addressLabel && <span className={`place-card-status ${status.className}`}><status.Icon size={14} aria-hidden="true" />{establishment?.demonstracao ? 'Demonstração' : status.label}</span>}
       {distance !== undefined && <span className="place-card-distance"><Footprints size={13} aria-hidden="true" />{formatDistance(distance)}<span className="sr-only"> de você</span></span>}
-      {canOpen && <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="place-card-maps" title="Abrir no Google Maps">
+      {canOpen && !establishment?.demonstracao && <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="place-card-maps" title="Abrir no Google Maps">
         <Navigation size={18} aria-hidden="true" /><span className="sr-only">Abrir no Google Maps (abre em nova aba)</span>
       </a>}
     </div>
@@ -55,7 +55,7 @@ export function PlaceResultCard({ place, establishment, addressLabel, distance, 
               endereco: place!.endereco, cidade: 'Cataguases', estado: 'MG', latitude: place!.latitude, longitude: place!.longitude,
               descricao: 'Local encontrado no mapa. A comunidade pode informar os recursos de acessibilidade.', fotos: place!.foto ? [place!.foto] : [],
               status: 'pendente', nota_media: 0, total_avaliacoes: 0, external: true,
-            })} className="place-card-action bg-blue-700 text-white">Ver acessibilidade e rota</button>
+            })} className="place-card-action bg-blue-700 text-white">{establishment?.demonstracao ? 'Ver exemplo de cadastro' : 'Ver acessibilidade e rota'}</button>
           : <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="place-card-action border border-slate-300 text-slate-900"><Navigation size={16} aria-hidden="true" />Abrir no Google Maps<span className="sr-only"> (abre em nova aba)</span></a>}
       </div>
     </div>

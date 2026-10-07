@@ -14,7 +14,7 @@ export function PlaceCatalog({ entries, center, limit, showDistance = false, onO
     <ul className={`place-catalog-row${results.length === 1 ? ' is-single' : ''}`}>{results.map(entry => {
       const meters = distance(entry);
       return <li key={(entry.establishment ?? entry.place)?.id ?? entry.addressLabel}>
-        <PlaceResultCard {...entry} distance={showDistance && !entry.addressLabel && Number.isFinite(meters) ? meters : undefined} onOpenPlace={onOpenPlace} />
+        <PlaceResultCard {...entry} distance={showDistance && !entry.addressLabel && !entry.establishment?.demonstracao && Number.isFinite(meters) ? meters : undefined} onOpenPlace={onOpenPlace} />
       </li>;
     })}</ul>
   </section>;

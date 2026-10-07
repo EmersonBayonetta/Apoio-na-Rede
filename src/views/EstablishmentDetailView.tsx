@@ -134,6 +134,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             }}
             className="p-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-2xl transition-colors"
             title="Compartilhar localização"
+            disabled={establishment.demonstracao}
             aria-label="Compartilhar localização"
           >
             <Share2 size={18} aria-hidden="true" />
@@ -150,7 +151,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             <span className="px-3 py-1 bg-blue-50 text-blue-700 font-bold text-xs rounded-full uppercase tracking-wider border border-blue-200">
               {MAP_CATEGORIES[establishment.categoria]?.label ?? establishment.categoria}
             </span>
-            {establishment.external ? <span className="rounded-full border px-3 py-1 text-xs">Sem informações</span> : <VerifiedBadge
+            {establishment.demonstracao ? <span className="rounded-full border px-3 py-1 text-xs">Demonstração</span> : establishment.external ? <span className="rounded-full border px-3 py-1 text-xs">Sem informações</span> : <VerifiedBadge
               status={establishment.status}
               verificadoEm={establishment.verificado_em}
               motivoRejeicao={establishment.motivo_rejeicao}
@@ -181,11 +182,11 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         <p className="text-base text-slate-700 leading-relaxed max-w-3xl">
           {establishment.descricao}
         </p>
-        <WalkingRoute destination={establishment} />
+        {establishment.demonstracao ? <p className="mt-4 rounded-xl border p-3 text-sm">Exemplo fictício para apresentação. Endereço, recursos e imagens são ilustrativos; este cadastro não representa um local real.</p> : <WalkingRoute destination={establishment} />}
         {establishment.status === 'verificado' && establishment.informado_responsavel && <p className="font-semibold mt-4">Informado pelo responsável</p>}
       </header>
-      <ReportPanel place={establishment} onRefresh={onRefresh} />
-      <ApprovedReports placeKey={localKey(establishment)} />
+      {!establishment.demonstracao && <><ReportPanel place={establishment} onRefresh={onRefresh} />
+      <ApprovedReports placeKey={localKey(establishment)} /></>}
 
       {/* Galeria de Fotos Acessível */}
       <section aria-label="Fotos do Estabelecimento" className="mb-8">
@@ -193,7 +194,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           <div className="h-80 sm:h-96 w-full rounded-2xl overflow-hidden bg-slate-100 relative mb-3">
             <img onError={imageFallback}
               src={photos[selectedPhotoIdx]}
-              alt={`Foto principal de ${establishment.nome} mostrando entrada e instalações adaptadas`}
+              alt={establishment.demonstracao ? `Imagem ilustrativa do exemplo ${establishment.nome}` : `Foto principal de ${establishment.nome} mostrando entrada e instalações adaptadas`}
               className="w-full h-full object-cover transition-all"
             />
           </div>
@@ -246,7 +247,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                   <div>
                     <div className="text-xs font-bold text-slate-500 uppercase">Telefone</div>
                     <a
-                      href={`tel:${establishment.telefone.replace(/\D/g, '')}`}
+                      href={establishment.demonstracao ? undefined : `tel:${establishment.telefone.replace(/\D/g, '')}`}
                       className="text-blue-700 font-bold hover:underline"
                     >
                       {establishment.telefone}
@@ -261,7 +262,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                   <div>
                     <div className="text-xs font-bold text-slate-500 uppercase">WhatsApp (Suporte Acessível)</div>
                     <a
-                      href={`https://wa.me/55${establishment.whatsapp.replace(/\D/g, '')}`}
+                      href={establishment.demonstracao ? undefined : `https://wa.me/55${establishment.whatsapp.replace(/\D/g, '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-emerald-700 font-bold hover:underline"
@@ -278,7 +279,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                   <div>
                     <div className="text-xs font-bold text-slate-500 uppercase">Site Oficial</div>
                     <a
-                      href={establishment.website}
+                      href={establishment.demonstracao ? undefined : establishment.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-700 font-bold hover:underline truncate block max-w-[200px]"
@@ -300,7 +301,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
       </div>
 
       {/* Seção de Avaliações da Comunidade */}
-      <section aria-labelledby="reviews-heading" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-12">
+      {!establishment.demonstracao && <section aria-labelledby="reviews-heading" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-12">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
           <div>
             <h2 id="reviews-heading" className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
@@ -473,7 +474,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             </button>
           </form></SignInGate>
         </div>
-      </section>
+      </section>}
     </article>
   );
 };

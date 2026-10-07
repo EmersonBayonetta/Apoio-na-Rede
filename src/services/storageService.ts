@@ -1,5 +1,6 @@
 import { getSupabase } from '../lib/supabase';
 import { DirectoryService } from './directoryService';
+import { PRESENTATION_PLACES, PRESENTATION_PROFESSIONALS, PRESENTATION_ROUTES } from '../data/presentationData';
 import { ContributionService, confirmedCriteria, localKey, PUBLIC_PLACE_COLUMNS, requireUser } from './contributionService';
 import { normalizeSearchText } from '../utils/normalizeSearchText';
 import { validateRegistration } from '../utils/registrationValidation';
@@ -76,12 +77,13 @@ export const StorageService = {
     const allReviews = readStoredArray<Review>(STORAGE_KEYS.REVIEWS, import.meta.env.DEV ? MOCK_REVIEWS : []);
 
     // Attach criteria and reviews
-    const fullEstablishments = await Promise.all(establishments.map(async (est) => ({
+    const fullEstablishments: Establishment[] = await Promise.all(establishments.map(async (est) => ({
       ...est,
       criteria: await mergeCommunity(est, client ? est.criteria ?? [] : allCriteria.filter(c => c.establishment_id === est.id)),
       reviews: client ? est.reviews ?? [] : allReviews.filter((r) => r.establishment_id === est.id),
     })));
 
+    if (client) fullEstablishments.push(...PRESENTATION_PLACES.filter(example => !fullEstablishments.some(place => place.categoria === example.categoria)));
     if (!filters) return fullEstablishments;
 
     return fullEstablishments.filter((est) => {
@@ -131,6 +133,8 @@ export const StorageService = {
   },
 
   getEstablishmentById: async (id: string): Promise<Establishment | null> => {
+    const example = PRESENTATION_PLACES.find(place => place.id === id);
+    if (example) return example;
     const list = await StorageService.getEstablishments();
     return list.find((e) => e.id === id) || null;
   },
@@ -252,7 +256,8 @@ export const StorageService = {
     especialidade?: string,
     tipoDeficiencia?: DisabilityType
   ): Promise<Professional[]> => {
-    const list = getSupabase() ? await DirectoryService.professionals() : readStoredArray<Professional>(STORAGE_KEYS.PROFESSIONALS, import.meta.env.DEV ? MOCK_PROFESSIONALS : []);
+    const stored = getSupabase() ? await DirectoryService.professionals() : readStoredArray<Professional>(STORAGE_KEYS.PROFESSIONALS, import.meta.env.DEV ? MOCK_PROFESSIONALS : []);
+    const list = getSupabase() && !stored.length ? PRESENTATION_PROFESSIONALS : stored;
 
     return list.filter((p) => {
       if (especialidade && especialidade !== 'todas') {
@@ -271,7 +276,8 @@ export const StorageService = {
 
   // ROUTES
   getRoutes: async (cidade?: string): Promise<AccessibleRoute[]> => {
-    const list = getSupabase() ? await DirectoryService.routes() : readStoredArray<AccessibleRoute>(STORAGE_KEYS.ROUTES, import.meta.env.DEV ? MOCK_ROUTES : []);
+    const stored = getSupabase() ? await DirectoryService.routes() : readStoredArray<AccessibleRoute>(STORAGE_KEYS.ROUTES, import.meta.env.DEV ? MOCK_ROUTES : []);
+    const list = getSupabase() && !stored.length ? PRESENTATION_ROUTES : stored;
     if (cidade && cidade !== 'todas') {
       return list.filter((r) => r.cidade.toLowerCase().includes(cidade.toLowerCase()));
     }
