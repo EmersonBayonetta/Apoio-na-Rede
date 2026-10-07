@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabase } from '../../lib/supabase';
+import { AdminAccessRequest } from './AdminAccessRequest';
 
 export function SignInGate({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
   const client = getSupabase();
@@ -29,7 +30,7 @@ export function SignInGate({ children, admin = false }: { children: ReactNode; a
   if (!client) return admin ? <p role="alert">Painel administrativo indisponível neste ambiente.</p> : <><p role="status" className="rounded-xl border p-4 mb-4">Modo demonstração: os dados ficam apenas neste navegador.</p>{children}</>;
   if (loading) return <p role="status">Verificando acesso…</p>;
   if (user && admin && access?.id!==user.id) return <p role="status">Verificando acesso…</p>;
-  if (user) return <Fragment key={user.id}>{admin && !access?.allowed ? <p role="alert">Acesso não autorizado. Esta conta não pertence à equipe administrativa.</p> : children}<button type="button" className="min-h-11 underline mt-4" onClick={async () => { const { error } = await client.auth.signOut(); if (error) setMessage('Não foi possível sair.'); }}>Sair da conta</button>{message && <p role="status">{message}</p>}</Fragment>;
+  if (user) return <Fragment key={user.id}>{admin && !access?.allowed ? <><p role="alert" className="mb-4">Acesso não autorizado.</p><AdminAccessRequest /></> : children}<button type="button" className="min-h-11 underline mt-4" onClick={async () => { const { error } = await client.auth.signOut(); if (error) setMessage('Não foi possível sair.'); }}>Sair da conta</button>{message && <p role="status">{message}</p>}</Fragment>;
   return <form className="rounded-xl border bg-white p-5 space-y-4" onSubmit={async event => {
     event.preventDefault(); if (busy) return; setBusy(true); setMessage('');
     try {
@@ -37,7 +38,7 @@ export function SignInGate({ children, admin = false }: { children: ReactNode; a
         const { error } = await client.auth.verifyOtp({ email: email.trim(), token: token.trim(), type: 'email' });
         if (error) throw error;
       } else {
-        const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: !admin, emailRedirectTo: admin ? `${window.location.origin}/gestao` : window.location.href } });
+        const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true, emailRedirectTo: admin ? `${window.location.origin}/gestao` : window.location.href } });
         if (error) throw error;
         setSent(true); setMessage('Abra o link enviado ao seu e-mail para entrar. Confira também a pasta de spam.');
       }

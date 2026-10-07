@@ -33,7 +33,7 @@ try {
  await evaluate(`(()=>{const input=document.querySelector('input[type=email]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'test@example.invalid');input.dispatchEvent(new Event('input',{bubbles:true}));})()`);
  await new Promise(r=>setTimeout(r,100));
  await evaluate(`document.querySelector('form').requestSubmit()`);await new Promise(r=>setTimeout(r,300));
- assert.equal(await evaluate('window.__otpRequest.create_user'),false);
+ assert.equal(await evaluate('window.__otpRequest.create_user'),true);
  assert.ok(await evaluate(`document.body.innerText.includes('Abra o link enviado')`));
  assert.equal(await evaluate(`document.querySelector('input[autocomplete="one-time-code"]')`),null);
  const payload=Buffer.from(JSON.stringify({sub:'00000000-0000-4000-8000-000000000001',exp:Math.floor(Date.now()/1000)+3600,role:'authenticated'})).toString('base64url');

@@ -57,6 +57,7 @@ Em um banco novo, execute nesta ordem:
 7. `database/community_directory.sql`
 8. `database/administrator_bootstrap.sql`
 9. `database/administrator_access.sql`
+10. `database/administrator_requests.sql`
 
 O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto.
 
@@ -76,6 +77,8 @@ on conflict(user_id) do update set enabled=true;
 A interface consulta `is_site_admin`, e RLS e triggers consultam a mesma autorização no banco. Para revogar, defina `enabled=false` na lista privada: tokens antigos não mantêm a permissão nas operações seguintes. Não use `user_metadata` para permissões. Recusas exigem motivo.
 
 A migração de acesso preserva a conta originalmente autorizada e remove o trigger histórico de concessão automática por e-mail. Novas contas da equipe precisam de inclusão explícita pelo administrador do banco. Recriar uma conta com o mesmo e-mail não herda acesso. Não versione os e-mails da equipe nem exponha a lista privada no frontend.
+
+O titular também pode autorizar a equipe pelo fluxo de [solicitação de acesso](docs/admin-access-requests.md): a pessoa confirma seu e-mail e solicita, um aviso é enviado ao titular e somente ele aprova ou recusa no painel. O aviso usa Resend em uma Vercel Function e exige configuração de servidor. O link do aviso não concede acesso automaticamente.
 
 Rotas e profissionais são compartilhados após revisão em `/gestao`. Novos cadastros exigem login, com limite de 10 envios por catálogo em 24 horas. Aprovar um relato de rota não confirma uma auditoria presencial. A opção de importação permite exportar cadastros do navegador original e enviá-los no site publicado; exemplos de demonstração e campos de aprovação são descartados. Consulte [o procedimento de transferência](docs/contribuicoes-validacao.md).
 

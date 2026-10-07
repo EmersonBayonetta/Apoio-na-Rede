@@ -485,6 +485,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_site_owner: { Args: Record<PropertyKey, never>; Returns: boolean }
+      request_admin_access: { Args: Record<PropertyKey, never>; Returns: Json }
+      my_admin_access_request: { Args: Record<PropertyKey, never>; Returns: Json }
+      list_admin_access_requests: { Args: Record<PropertyKey, never>; Returns: Json }
+      decide_admin_access_request: { Args: {request_id:string;approve:boolean}; Returns: undefined }
+      admin_access_notification: { Args: {request_id:string}; Returns: Json }
+      mark_admin_access_notified: { Args: {request_id:string}; Returns: undefined }
       is_site_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
