@@ -24,7 +24,6 @@ import {
   SlidersHorizontal,
   RotateCcw,
   AlertCircle,
-  LoaderCircle,
   Utensils,
   Stethoscope,
   Landmark,
@@ -138,8 +137,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const [hasUserLocation, setHasUserLocation] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [cityAddressIndex, setCityAddressIndex] = useState<AddressSuggestion[]>([]);
-  const [isLoadingAddressIndex, setIsLoadingAddressIndex] = useState(true);
-  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const [addressMessage, setAddressMessage] = useState('');
   const [searchedAddress, setSearchedAddress] = useState<{ latitude: number; longitude: number; label: string } | null>(null);
@@ -302,7 +299,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         const parsed = JSON.parse(cached) as { savedAt: number; addresses: AddressSuggestion[] };
         if (Date.now() - parsed.savedAt < 7 * 24 * 60 * 60 * 1000 && parsed.addresses.length) {
           setCityAddressIndex(parsed.addresses);
-          setIsLoadingAddressIndex(false);
           return;
         }
       } catch {
@@ -312,7 +308,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
     const controller = new AbortController();
     const loadAddressIndex = async () => {
-      setIsLoadingAddressIndex(true);
       const query = '[out:json][timeout:60];area["boundary"="administrative"]["name"="Cataguases"]->.city;(way(area.city)["highway"]["name"];nwr(area.city)["addr:street"];nwr(area.city)["amenity"]["name"];nwr(area.city)["amenity"="toilets"];nwr(area.city)["highway"="bus_stop"];nwr(area.city)["public_transport"="platform"];nwr(area.city)["shop"]["name"];nwr(area.city)["tourism"]["name"];nwr(area.city)["leisure"]["name"];nwr(area.city)["office"]["name"];nwr(area.city)["craft"]["name"];nwr(area.city)["historic"]["name"];nwr(area.city)["natural"]["name"];nwr(area.city)["public_transport"]["name"];nwr(area.city)["place"~"suburb|neighbourhood|square"]["name"];nwr(area.city)["building"]["name"];);out center tags;';
       const endpoints = [
         'https://overpass-api.de/api/interpreter',
@@ -386,8 +381,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         browserStorage.setItem(ADDRESS_INDEX_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), addresses: unique }));
       } catch (error) {
         if ((error as Error).name !== 'AbortError') setAddressMessage('O índice urbano completo está temporariamente indisponível; a busca por endereços continua ativa.');
-      } finally {
-        if (!controller.signal.aborted) setIsLoadingAddressIndex(false);
       }
     };
     void loadAddressIndex();
@@ -400,7 +393,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     }
 
     const normalizedQuery = normalizeSearchText(searchQuery);
-    setIsSearchingAddress(false);
     if (!normalizedQuery) {
       setAddressSuggestions([]);
       setAddressMessage('');
@@ -425,7 +417,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
-      setIsSearchingAddress(true);
       try {
         const searchSignal = AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]);
         const viaCepRequest = isCepQuery || streetQuery.length >= 3
@@ -490,8 +481,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         setAddressMessage(combined.length ? `${combined.length} locais correspondem ao texto digitado.` : 'Nenhum endereço ou local encontrado em Cataguases.');
       } catch {
         if (!controller.signal.aborted && !skipAddressLookupRef.current) setAddressMessage('Não foi possível consultar os locais agora.');
-      } finally {
-        if (!controller.signal.aborted) setIsSearchingAddress(false);
       }
     }, 500);
 
@@ -544,7 +533,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     routeRequestRef.current++;
     setSearchedAddress(null);
     setSelectedAddressLabel('');
-    setIsSearchingAddress(false);
     setActiveSuggestion(-1);
     setSelectedPlace(null);
     if (suggestion.externalPlace) {
@@ -643,7 +631,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
               autoComplete="off"
               className="w-full pl-11 pr-11 py-4 bg-white border border-blue-950/15 rounded-xl text-sm font-medium shadow-inner focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
             />
-            {(isSearchingAddress || isLoadingAddressIndex) && <LoaderCircle size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-700 animate-spin" aria-hidden="true" />}
             {addressSuggestions.length > 0 && (
               <ul id="address-suggestions" role="listbox" aria-label="Locais sugeridos em Cataguases" className="absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
                 {addressSuggestions.map((suggestion, index) => {
