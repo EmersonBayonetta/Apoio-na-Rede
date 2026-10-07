@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto';
-import { validateRegistration } from '../src/utils/registrationValidation.ts';
+import { validateRegistration } from './_lib/registrationValidation.js';
 const first=(env,names)=>names.map(name=>env[name]?.trim()).find(Boolean);
 const categories=['alimentacao','saude','lazer_cultura','comercio_loja','servico_publico','banheiro_adaptado','educacao','hospedagem','transporte_mobilidade'];
 
