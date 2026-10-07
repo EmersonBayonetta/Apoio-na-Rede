@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Compass, HeartHandshake, Route, Stethoscope, Sun, Moon, type LucideIcon } from 'lucide-react';
+import { Compass, HeartHandshake, Route, Stethoscope, Building2, Sun, Moon, type LucideIcon } from 'lucide-react';
 import { browserStorage } from '../../lib/browserStorage';
 import { UserPreferencesModal } from '../accessibility/UserPreferencesModal';
 import type { AppTab } from '../../utils/appTabs';
@@ -13,6 +13,7 @@ const DESTINATIONS: { tab: AppTab; label: string; desktopLabel: string; icon: Lu
   { tab: 'explorer', label: 'Explorar', desktopLabel: 'Explorar', icon: Compass },
   { tab: 'routes', label: 'Rotas', desktopLabel: 'Rotas acessíveis', icon: Route },
   { tab: 'professionals', label: 'Profissionais', desktopLabel: 'Profissionais', icon: Stethoscope },
+  { tab: 'register', label: 'Cadastrar', desktopLabel: 'Cadastrar local', icon: Building2 },
 ];
 
 export function Navbar({ currentTab, onSelectTab }: NavbarProps) {

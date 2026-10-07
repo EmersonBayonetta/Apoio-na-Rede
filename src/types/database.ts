@@ -485,6 +485,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      registration_for_review: { Args: { registration_id: string }; Returns: Json }
+      decide_registration: { Args: { registration_id: string; approve: boolean; reason?: string }; Returns: undefined }
+      submit_public_registration: { Args: { details: Json; criteria: Json; source_hash: string }; Returns: Json }
+      mark_registration_notified: { Args: { registration_id: string }; Returns: undefined }
       is_site_owner: { Args: Record<PropertyKey, never>; Returns: boolean }
       request_admin_access: { Args: Record<PropertyKey, never>; Returns: Json }
       my_admin_access_request: { Args: Record<PropertyKey, never>; Returns: Json }

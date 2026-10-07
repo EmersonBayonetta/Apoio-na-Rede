@@ -143,7 +143,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
                 role="checkbox"
                 aria-checked={isChecked}
                 onClick={() => toggleType(type)}
-                className={`w-full flex items-start gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
+                className={`needs-choice w-full flex items-start gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
                   isChecked
                     ? 'border-blue-600 bg-blue-50/70 text-slate-900 shadow-xs'
                     : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'

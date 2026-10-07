@@ -9,8 +9,7 @@ import { MerchantRegisterWizard } from './views/MerchantRegisterWizard';
 import { Establishment } from './types';
 import { StorageService } from './services/storageService';
 import { ContributionService, confirmedCriteria, localKey } from './services/contributionService';
-import { ManagementView } from './views/ManagementView';
-import { SignInGate } from './components/contributions/SignInGate';
+import { RegistrationReviewView } from './views/RegistrationReviewView';
 import { ShieldCheck } from 'lucide-react';
 import { browserStorage } from './lib/browserStorage';
 import { CommunityDirectoryView } from './views/CommunityDirectoryView';
@@ -105,7 +104,7 @@ export const MainAppContent: React.FC = () => {
               <ExplorerView onSelectEstablishment={handleSelectEstablishment} />
             )}
             {currentTab === 'register' && (
-              <div className="max-w-4xl mx-auto p-4"><SignInGate><MerchantRegisterWizard onSuccess={() => selectTab('explorer')} /></SignInGate></div>
+              <div className="max-w-4xl mx-auto p-4"><MerchantRegisterWizard onSuccess={() => selectTab('explorer')} /></div>
             )}
             {currentTab === 'routes' && <CommunityDirectoryView section="routes" />}
             {currentTab === 'professionals' && <CommunityDirectoryView section="professionals" />}
@@ -189,7 +188,7 @@ export const MainAppContent: React.FC = () => {
 export default function App() {
   return (
     <AccessibilityProvider>
-      {window.location.pathname.replace(/\/$/, '') === '/gestao' ? <ManagementView /> : <MainAppContent />}
+      {window.location.pathname.replace(/\/$/, '') === '/revisao' ? <RegistrationReviewView /> : <MainAppContent />}
     </AccessibilityProvider>
   );
 }

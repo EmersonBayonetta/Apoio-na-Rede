@@ -10,7 +10,7 @@ import {
 import { ACCESSIBILITY_RESOURCES, registrationCriteriaTemplates } from '../data/accessibilityResources';
 import { PlacesService } from '../services/placesService';
 import type { NearbyPlace } from '../types';
-import { StorageService } from '../services/storageService';
+import { submitPublicRegistration } from '../services/publicRegistrationService';
 import { GoogleMap } from '../components/maps/GoogleMap';
 import { DISABILITY_INFO } from '../components/accessibility/DisabilityBadge';
 import {
@@ -151,7 +151,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
           observacao_livre: c.observacao || undefined,
         }));
 
-      await StorageService.createEstablishment(
+      const result = await submitPublicRegistration(
         {
           nome,
           place_id: linkedPlace?.place_id,
@@ -172,8 +172,8 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
         criteriaList
       );
 
-      setFormMessage('Cadastro recebido. As informações ficarão pendentes até serem revisadas.');
-      window.setTimeout(onSuccess, 1600);
+      setFormMessage(result.message);
+      window.setTimeout(onSuccess, 5000);
     } catch (err) {
       console.error(err);
       setFormMessage(err instanceof Error ? err.message : 'Não foi possível salvar o cadastro. Revise os dados e tente novamente.');

@@ -15,7 +15,7 @@ O Apoio na Rede reúne os recursos de acessibilidade dos locais de Cataguases (M
 - **Explorar:** busca de locais e endereços, categorias, compatibilidade com suas necessidades e página de cada local com recursos, fotos, avaliações e rota a pé.
 - **Rotas acessíveis:** relatos da comunidade sobre trechos da cidade (rampas, piso tátil, semáforo sonoro), sempre marcados como relato até serem conferidos.
 - **Profissionais:** catálogo de profissionais que atendem pessoas com deficiência, com filtro por necessidade atendida.
-- **Contribuir:** relatos rápidos na página do local e cadastro do responsável, disponível pelo rodapé. Cada envio passa por moderação.
+- **Cadastrar:** formulário público de locais, disponível no menu e no rodapé. Cada envio fica pendente até revisão do titular por link do Supabase. Veja o [fluxo atual de cadastro](docs/cadastro-revisao-supabase.md).
 - **Acessibilidade da interface:** alto contraste, fonte para dislexia, texto ampliado, menos estímulos, leitura em voz alta, VLibras, busca por voz e navegação completa por teclado.
 
 Limites atuais, ditos com clareza na interface:
@@ -58,10 +58,13 @@ Em um banco novo, execute nesta ordem:
 8. `database/administrator_bootstrap.sql`
 9. `database/administrator_access.sql`
 10. `database/administrator_requests.sql`
+11. `database/registration_email_review.sql`
 
 O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto.
 
 ### Login e moderação
+
+O fluxo público atual é o [cadastro com revisão pelo Supabase](docs/cadastro-revisao-supabase.md), sem painel administrativo. As instruções de gestão abaixo descrevem a estrutura anterior preservada no banco; `/gestao` não apresenta mais esse painel e o fluxo de equipe por Resend não é usado no cadastro atual.
 
 Habilite o provedor Email no Supabase Auth. Configure **Site URL** e **Redirect URLs** com o endereço real do site e, para desenvolvimento, `http://localhost:5173/**`. O acesso funciona por link de e-mail ou código; para fornecer o código, inclua `{{ .Token }}` no template de Magic Link. Configure SMTP próprio para envio de e-mails em produção. O fluxo de envio real depende desse serviço e deve ser verificado com uma conta autorizada antes da publicação.
 
