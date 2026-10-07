@@ -308,7 +308,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 <ul className="mt-2 space-y-2">{placeResults.map(place => <li key={place.id}><button type="button" className="w-full rounded-xl border border-slate-200 p-3 text-left text-xs hover:bg-blue-50" onClick={() => {
                   setLinkedPlace(place); setNome(place.nome); setEndereco(place.endereco); setLatitude(place.latitude); setLongitude(place.longitude); setLocationConfirmed(true); setCategoria(place.categoria); setPlaceResults([]);
                 }}><strong>{place.nome}</strong><span className="block">{place.endereco}</span></button></li>)}</ul>
-                <p className="mt-2 text-xs text-slate-500">Vincule o local para que suas informações sejam encontradas pela busca do mapa. Neste protótipo, os novos cadastros ficam neste navegador.</p>
+                <p className="mt-2 text-xs text-slate-500">Comece buscando o local para preencher nome, endereço e ponto no mapa. Se não encontrar, você pode cadastrar manualmente. O cadastro será enviado para moderação.</p>
               </div>
 
               <div>

@@ -15,8 +15,8 @@ export const AccessibilityService = {
     if (supabase) {
       const { data, error } = await supabase.rpc('get_place_accessibility', { requested_place_id: placeId });
       if (error) throw new Error('Não foi possível consultar a acessibilidade no banco.');
-      if (!data || typeof data.encontrado !== 'boolean') throw new Error('Resposta inválida do banco.');
-      return data as PlaceAccessibilityResult;
+      if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.encontrado !== 'boolean') throw new Error('Resposta inválida do banco.');
+      return data as unknown as PlaceAccessibilityResult;
     }
     // Exact provider identity only. A similar name or address is not a match.
     const list = await StorageService.getEstablishments();

@@ -126,7 +126,7 @@ try {
  // COMP-20: the registration form saves sensory resources under the intellectual type
  await evaluate(`localStorage.removeItem('acessacidade_establishments');localStorage.removeItem('acessacidade_criteria')`);
  await send('Page.navigate',{url:'http://127.0.0.1:4176/'}); await pause(2000);
- await clickButton('Cadastrar local'); await pause(300);
+ await clickButton('Contribuir'); await pause(300);
  await fillField('#est-nome','Sala Tranquila'); await fillField('#est-desc','Local de teste'); await clickButton('Próxima Etapa'); await pause(200);
  await fillField('#est-end','Rua Teste, 2'); await fillField('#est-cidade','Cataguases'); await fillField('#est-estado','MG'); await clickButton('Próxima Etapa'); await pause(200);
  await fillField('#manual-latitude','-21.4'); await fillField('#manual-longitude','-42.7'); await clickButton('Confirmar coordenadas'); await pause(200); await clickButton('Próxima Etapa'); await pause(200);

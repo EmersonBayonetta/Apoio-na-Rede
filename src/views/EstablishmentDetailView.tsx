@@ -1,3 +1,7 @@
+import { ReportPanel } from '../components/contributions/ReportPanel';
+import { ApprovedReports } from '../components/contributions/ApprovedReports';
+import { localKey } from '../services/contributionService';
+import { SignInGate } from '../components/contributions/SignInGate';
 import { WalkingRoute } from '../components/establishments/WalkingRoute';
 import { MAP_CATEGORIES } from '../data/mapCategories';
 import { imageFallback } from '../utils/imageFallback';
@@ -81,7 +85,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
       setTimeout(() => setReviewSuccessMsg(false), 4000);
       onRefresh();
     } catch (err) {
-      console.error('Erro ao adicionar avaliação:', err);
+      setActionMessage((err as Error).message);
     } finally {
       setIsSubmittingReview(false);
     }
@@ -90,7 +94,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const handleReportReview = async (reviewId: string) => {
     const motivo = prompt('Por favor, informe o motivo da denúncia desta avaliação:');
     if (motivo) {
-      await StorageService.reportReview(reviewId, motivo);
+      try { await StorageService.reportReview(reviewId, motivo); } catch(error) { setActionMessage((error as Error).message); return; }
       setActionMessage('Denúncia registrada para revisão.');
       onRefresh();
     }
@@ -146,11 +150,11 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             <span className="px-3 py-1 bg-blue-50 text-blue-700 font-bold text-xs rounded-full uppercase tracking-wider border border-blue-200">
               {MAP_CATEGORIES[establishment.categoria]?.label ?? establishment.categoria}
             </span>
-            <VerifiedBadge
+            {establishment.external ? <span className="rounded-full border px-3 py-1 text-xs">Sem informações</span> : <VerifiedBadge
               status={establishment.status}
               verificadoEm={establishment.verificado_em}
               motivoRejeicao={establishment.motivo_rejeicao}
-            />
+            />}
           </div>
 
           <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full text-amber-900 font-black text-sm">
@@ -178,7 +182,10 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           {establishment.descricao}
         </p>
         <WalkingRoute destination={establishment} />
+        {establishment.status === 'verificado' && establishment.informado_responsavel && <p className="font-semibold mt-4">Informado pelo responsável</p>}
       </header>
+      <ReportPanel place={establishment} onRefresh={onRefresh} />
+      <ApprovedReports placeKey={localKey(establishment)} />
 
       {/* Galeria de Fotos Acessível */}
       <section aria-label="Fotos do Estabelecimento" className="mb-8">
@@ -398,7 +405,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             </div>
           )}
 
-          <form onSubmit={handleAddReview} className="space-y-4">
+          <SignInGate><form onSubmit={handleAddReview} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -464,7 +471,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               <Send size={16} aria-hidden="true" />
               <span>{isSubmittingReview ? 'Enviando avaliação...' : 'Publicar Avaliação'}</span>
             </button>
-          </form>
+          </form></SignInGate>
         </div>
       </section>
     </article>

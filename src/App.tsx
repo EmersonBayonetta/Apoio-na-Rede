@@ -8,6 +8,9 @@ import { EstablishmentDetailView } from './views/EstablishmentDetailView';
 import { MerchantRegisterWizard } from './views/MerchantRegisterWizard';
 import { Establishment } from './types';
 import { StorageService } from './services/storageService';
+import { ContributionService, confirmedCriteria, localKey } from './services/contributionService';
+import { ManagementView } from './views/ManagementView';
+import { SignInGate } from './components/contributions/SignInGate';
 import { ShieldCheck } from 'lucide-react';
 import { browserStorage } from './lib/browserStorage';
 import { CommunityDirectoryView } from './views/CommunityDirectoryView';
@@ -27,9 +30,13 @@ export const MainAppContent: React.FC = () => {
       setCurrentTab(tabFromUrl(window.location.search));
       const id = new URL(window.location.href).searchParams.get('local');
       if (!id) { setSelectedEstablishment(null); return; }
-      const local = await StorageService.getEstablishmentById(id);
+      let local: Establishment | null = null;
+      try {
+        local = id.startsWith('external-') ? JSON.parse(browserStorage.getItem('apoio_external_' + id) || 'null') : await StorageService.getEstablishmentById(id);
+        if (local?.external) local.criteria = confirmedCriteria(await ContributionService.approved(localKey(local)), local.id);
+      } catch { setNavigationMessage('Falha ao carregar o local. Tente novamente.'); return; }
       setSelectedEstablishment(local);
-      setNavigationMessage(local ? '' : 'Este cadastro não está disponível neste navegador. Os cadastros locais não são sincronizados entre dispositivos.');
+      setNavigationMessage(local ? '' : 'Este local não está disponível. Confira o endereço ou tente novamente mais tarde.');
     };
     void restoreLocal();
     window.addEventListener('popstate', restoreLocal);
@@ -46,6 +53,10 @@ export const MainAppContent: React.FC = () => {
   }, []);
 
   const handleSelectEstablishment = (est: Establishment) => {
+    if (est.external) {
+      browserStorage.setItem('apoio_external_' + est.id, JSON.stringify(est));
+      void ContributionService.approved(localKey(est)).then(reports => setSelectedEstablishment(current => current?.id === est.id ? { ...current, criteria: confirmedCriteria(reports, est.id) } : current)).catch(() => setNavigationMessage('Falha ao consultar relatos. Tente novamente.'));
+    }
     updateLocalUrl(est.id);
     setSelectedEstablishment(est);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -80,8 +91,12 @@ export const MainAppContent: React.FC = () => {
             establishment={selectedEstablishment}
             onBack={handleBackToExplorer}
             onRefresh={async () => {
-              const updated = await StorageService.getEstablishmentById(selectedEstablishment.id);
+              try {
+              const updated = selectedEstablishment.external
+                ? { ...selectedEstablishment, criteria: confirmedCriteria(await ContributionService.approved(localKey(selectedEstablishment)), selectedEstablishment.id) }
+                : await StorageService.getEstablishmentById(selectedEstablishment.id);
               if (updated) setSelectedEstablishment(updated);
+              } catch { setNavigationMessage('Não foi possível atualizar as informações do local. Tente novamente.'); }
             }}
           />
         ) : (
@@ -90,9 +105,7 @@ export const MainAppContent: React.FC = () => {
               <ExplorerView onSelectEstablishment={handleSelectEstablishment} />
             )}
             {currentTab === 'register' && (
-              <MerchantRegisterWizard
-                onSuccess={() => selectTab('explorer')}
-              />
+              <div className="max-w-4xl mx-auto p-4"><SignInGate><MerchantRegisterWizard onSuccess={() => selectTab('explorer')} /></SignInGate></div>
             )}
             {currentTab === 'routes' && <CommunityDirectoryView section="routes" />}
             {currentTab === 'professionals' && <CommunityDirectoryView section="professionals" />}
@@ -145,9 +158,9 @@ export const MainAppContent: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => selectTab('register')}
-                  className="inline-flex min-h-6 items-center hover:text-white transition-colors"
+                  className="inline-flex min-h-11 items-center hover:text-white transition-colors"
                 >
-                  Cadastre seu Estabelecimento
+                  Contribuir
                 </button>
               </li>
               <li>
@@ -176,7 +189,7 @@ export const MainAppContent: React.FC = () => {
 export default function App() {
   return (
     <AccessibilityProvider>
-      <MainAppContent />
+      {window.location.pathname.replace(/\/$/, '') === '/gestao' ? <ManagementView /> : <MainAppContent />}
     </AccessibilityProvider>
   );
 }

@@ -38,6 +38,8 @@ export interface Review {
 }
 
 export interface Establishment {
+  external?: boolean;
+  informado_responsavel?: boolean;
   id: string;
   place_id?: string;
   nome: string;

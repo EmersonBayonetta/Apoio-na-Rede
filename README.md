@@ -15,13 +15,13 @@ O Apoio na Rede reúne os recursos de acessibilidade dos locais de Cataguases (M
 - **Explorar:** busca de locais e endereços, categorias, compatibilidade com suas necessidades e página de cada local com recursos, fotos, avaliações e rota a pé.
 - **Rotas acessíveis:** relatos da comunidade sobre trechos da cidade (rampas, piso tátil, semáforo sonoro), sempre marcados como relato até serem conferidos.
 - **Profissionais:** catálogo de profissionais que atendem pessoas com deficiência, com filtro por necessidade atendida.
-- **Cadastrar local:** formulário em etapas com o checklist de recursos baseado na NBR 9050; cada recurso começa como "Não verificado".
+- **Contribuir:** relatos rápidos na página do local e cadastro do responsável, disponível pelo rodapé. Cada envio passa por moderação.
 - **Acessibilidade da interface:** alto contraste, fonte para dislexia, texto ampliado, menos estímulos, leitura em voz alta, VLibras, busca por voz e navegação completa por teclado.
 
 Limites atuais, ditos com clareza na interface:
 - A rota a pé vem do OpenStreetMap e não verifica calçadas, rampas ou obstáculos.
 - A compatibilidade compara as informações cadastradas e não é certificação de acessibilidade.
-- Cadastros, relatos e preferências ficam no navegador de quem usa. Publicação compartilhada e moderação ainda dependem de backend.
+- Sem Supabase, cadastros e relatos ficam neste navegador. Com Supabase, locais aprovados e relatos moderados são compartilhados. Requisitos pessoais continuam apenas no navegador.
 
 ## Executar
 
@@ -36,13 +36,44 @@ npm run dev
 
 Sem chave, o app funciona com busca de endereços (ViaCEP, Photon e OpenStreetMap) e com os cadastros locais. Os locais próximos do Google e as vistas aéreas pedem uma chave.
 
-1. Copie `.env.example` para `.env.local` e preencha `VITE_GOOGLE_MAPS_API_KEY`. Para demonstrar sem custo, use uma [Maps Demo Key](https://developers.google.com/maps/documentation/javascript/demo-key).
+1. Acrescente `VITE_GOOGLE_MAPS_API_KEY` ao `.env.local`, preservando as variáveis existentes. Para demonstrar sem custo, use uma [Maps Demo Key](https://developers.google.com/maps/documentation/javascript/demo-key).
 2. Em produção, habilite Maps JavaScript API e Places API (New), crie um Map ID do tipo JavaScript (`VITE_GOOGLE_MAPS_MAP_ID`) e restrinja a chave por referenciador HTTP. Variáveis `VITE_` ficam visíveis no navegador.
 3. No deploy, configure as variáveis antes de `npm run build`.
 
 ### Supabase (opcional)
 
-Sem Supabase, o app usa o armazenamento do navegador. Para consultar um banco remoto, execute `supabase_schema.sql` e depois `database/place_accessibility.sql`, e configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. O endpoint `POST /rest/v1/rpc/get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna `encontrado`, `verificado` e `local`. Não use chaves secretas ou `service_role` no frontend.
+O projeto utilizado é `supabase-green-school` (`pwzqivjkpiqsizuebjlt`). Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` no `.env.local` e na Vercel antes do build. Nunca use chaves secretas ou `service_role` no frontend. O arquivo local está ignorado pelo Git; o deploy precisa receber suas próprias variáveis.
+
+Em um banco novo, execute nesta ordem:
+
+1. `supabase_schema.sql`
+2. `database/place_accessibility.sql`
+3. `database/contributions.sql`
+4. `database/contribution_hardening.sql`
+5. `database/public_accessibility.sql`
+6. `database/contribution_indexes.sql`
+
+O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto.
+
+### Login e moderação
+
+Habilite o provedor Email no Supabase Auth. Configure **Site URL** e **Redirect URLs** com o endereço real do site e, para desenvolvimento, `http://localhost:5173/**`. O acesso funciona por link de e-mail ou código; para fornecer o código, inclua `{{ .Token }}` no template de Magic Link. Configure SMTP próprio para envio de e-mails em produção. O fluxo de envio real depende desse serviço e deve ser verificado com uma conta autorizada antes da publicação.
+
+A gestão fica em `/gestao`, sem link no menu ou rodapé, e envia `noindex`. Exige login e `app_metadata.role = 'admin'`. Para atribuir o papel a uma conta já cadastrada, use o painel administrativo ou SQL executado por um administrador:
+
+```sql
+update auth.users
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
+where id = 'UUID_DA_CONTA';
+```
+
+A conta deve sair e entrar novamente para renovar o token. Não use `user_metadata` para permissões. A interface e a RLS impedem aprovação por usuários comuns. Recusas exigem motivo.
+
+Cada pessoa pode enviar um relato por local, incluindo locais encontrados no Google/OSM. A identidade é normalizada no banco quando existe cadastro vinculado. O relato permanece único mesmo se recusado. Há limites de 10 relatos e 3 cadastros por usuário em 24 horas. Fotos de relatos são privadas (até 3 JPG/PNG/WebP de 5 MB), ficam na pasta do autor e só podem ser lidas pelo autor, administrador ou após aprovação. As URLs de visualização expiram em 5 minutos. O bucket limita cada conta a 30 uploads por per?odo de 24 horas; fotos vinculadas a relatos não podem ser apagadas pelo cliente.
+
+### Demonstração
+
+Sem variáveis Supabase, o modo local funciona automaticamente. Para demonstrar mesmo com `.env.local` configurado, use `npm run dev:demo` ou `npm run build:demo` seguido de `npm run preview`. Nesse modo, o aviso deixa claro que a moderação é uma simulação e não exige login. A regra de um relato por local vale por navegador; limpar o armazenamento remove essa identidade. Os dados locais não são enviados automaticamente ao Supabase.
 
 ## Testes
 
@@ -53,6 +84,8 @@ npm run build
 ```
 
 Os testes de navegador (`tests/browser-*.mjs`) rodam contra um Chrome com depuração remota e o `vite preview`. As portas estão no topo de cada arquivo: `browser-regressions.mjs` usa CDP 9222 e preview 4173; os demais usam CDP 9223 e preview 4176. Eles bloqueiam serviços externos e simulam localização e rotas quando precisam.
+
+Use `npm run build:demo` antes desses testes isolados. `tests/browser-contributions.mjs` cobre envio único, fotos, persistência, moderação e selo do responsável. `tests/browser-supabase-auth.mjs` usa build normal em preview 4177 e CDP 9224, simula respostas Auth e verifica o bloqueio de visitantes/usuários comuns e a exigência de login do responsável. `tests/supabase-security.sql` testa cadastro, duplicação, campos protegidos, respostas inválidas, cotas e RLS dentro de uma transação com `ROLLBACK`. Execute-o pelo SQL Editor/MCP em ambiente controlado. `node scripts/verify-supabase.mjs` verifica a API real com a chave pública sem imprimi-la. A entrega real do e-mail e Google Maps real exigem configurações externas e não são simulados por esses testes.
 
 ## Organização
 

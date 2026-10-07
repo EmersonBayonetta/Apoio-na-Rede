@@ -67,11 +67,11 @@ try {
  // PRES-13, PRES-14, PRES-15: five destinations, distinct icons, readable labels
  await viewport(360, 780); await open('/');
  const mobileNav = `[...document.querySelectorAll('nav.mobile-navigation button')]`;
- assert.deepEqual(await evaluate(`${mobileNav}.map(b=>b.textContent.trim())`), ['Explorar', 'Rotas', 'Profissionais', 'Cadastrar', 'Minhas necessidades']);
- assert.equal(await evaluate(`new Set(${mobileNav}.map(b=>b.querySelector('svg').getAttribute('class'))).size`), 5);
+ assert.deepEqual(await evaluate(`${mobileNav}.map(b=>b.textContent.trim())`), ['Explorar', 'Rotas', 'Profissionais', 'Minhas necessidades']);
+ assert.equal(await evaluate(`new Set(${mobileNav}.map(b=>b.querySelector('svg').getAttribute('class'))).size`), 4);
  assert.ok(await evaluate(`${mobileNav}.every(b=>parseFloat(getComputedStyle(b.querySelector('span')).fontSize)>=12)`));
  await viewport(1280, 900); await open('/');
- assert.deepEqual(await evaluate(`[...document.querySelectorAll('nav.desktop-navigation button')].map(b=>b.textContent.trim())`), ['Explorar', 'Rotas acessíveis', 'Profissionais', 'Cadastrar local', 'Minhas necessidades']);
+ assert.deepEqual(await evaluate(`[...document.querySelectorAll('nav.desktop-navigation button')].map(b=>b.textContent.trim())`), ['Explorar', 'Rotas acessíveis', 'Profissionais', 'Minhas necessidades']);
 
  // PRES-16, PRES-17, PRES-18: tabs in the url, reload and back
  const heading = () => evaluate(`document.querySelector('main h1')?.textContent`);

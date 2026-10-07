@@ -5,5 +5,37 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com https://vlibras.gov.br https://*.vlibras.gov.br; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.googleusercontent.com https://*.supabase.co wss://*.supabase.co https://images.unsplash.com https://routing.openstreetmap.de https://photon.komoot.io https://nominatim.openstreetmap.org https://overpass-api.de https://overpass.kumi.systems https://overpass.nchc.org.tw https://viacep.com.br https://vlibras.gov.br https://*.vlibras.gov.br; frame-src https://www.google.com https://vlibras.gov.br https://*.vlibras.gov.br; worker-src 'self' blob:; media-src 'self' blob: https://vlibras.gov.br https://*.vlibras.gov.br; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        }
+      ]
+    },
+    {
+      "source": "/gestao",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
   ]
 }

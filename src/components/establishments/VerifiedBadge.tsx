@@ -19,7 +19,7 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
     return (
       <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-xs font-semibold">
         <Clock size={14} aria-hidden="true" />
-        <span>Em Análise</span>
+        <span>Em verificação</span>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
         aria-label="Informações revisadas pelo Apoio na Rede. Saiba como funciona."
       >
         <ShieldCheck size={16} className="text-emerald-600" aria-hidden="true" />
-        <span>Verificado</span>
+        <span>Conferido</span>
         <Info size={12} className="text-emerald-600 ml-0.5 opacity-80" aria-hidden="true" />
       </button>
 

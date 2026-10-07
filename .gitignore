@@ -27,6 +27,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+!.env.demo
 tmp/
 
 # Internal handoff notes (security details; repository is public)

@@ -21,7 +21,7 @@ try {
  await resize(320,800);await send('Page.navigate',{url:'http://127.0.0.1:4173/'});await pause(1500);
  // Only this isolated test origin is reset.
  await evaluate('localStorage.clear()');await send('Page.reload');await pause(1200);
- await evaluate(`document.querySelector('[aria-label="Continuar com configuração padrão"]').click()`);await click('Cadastrar');
+ await evaluate(`document.querySelector('[aria-label="Continuar com configuração padrão"]').click()`);await click('Contribuir');
  await check('Educação disponível',`[...document.querySelector('#est-categoria').options].some(e=>e.value==='educacao')`);
  await click('Próxima Etapa');await check('Nome obrigatório e foco',`document.activeElement.id==='est-nome'`);
  await fill('#est-nome','Café de Regressão');await click('Próxima Etapa');await check('Descrição obrigatória',`document.activeElement.id==='est-desc'&&!!document.querySelector('#step1-heading')`);
