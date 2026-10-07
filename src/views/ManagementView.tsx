@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SignInGate } from '../components/contributions/SignInGate';
+import { DirectoryModerationQueue } from '../components/contributions/DirectoryModerationQueue';
 import { ContributionService, type PlaceReport } from '../services/contributionService';
 import { ACCESSIBILITY_RESOURCES } from '../data/accessibilityResources';
 import type { Establishment } from '../types';
@@ -24,5 +25,5 @@ function Queue() {
 
 export function ManagementView() {
   useEffect(() => { const meta = document.createElement('meta'); meta.name = 'robots'; meta.content = 'noindex, nofollow'; document.head.appendChild(meta); return () => meta.remove(); }, []);
-  return <main id="main-content" className="max-w-4xl mx-auto p-6"><h1 className="text-3xl font-bold mb-6">Gestão de contribuições</h1><SignInGate admin><Queue /></SignInGate><a className="inline-flex min-h-11 items-center underline mt-6" href="/">Voltar ao site</a></main>;
+  return <main id="main-content" className="max-w-4xl mx-auto p-6"><h1 className="text-3xl font-bold mb-6">Gestão de contribuições</h1><SignInGate admin><Queue /><DirectoryModerationQueue /></SignInGate><a className="inline-flex min-h-11 items-center underline mt-6" href="/">Voltar ao site</a></main>;
 }

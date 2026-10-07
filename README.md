@@ -44,6 +44,8 @@ Sem chave, o app funciona com busca de endereços (ViaCEP, Photon e OpenStreetMa
 
 O projeto utilizado é `supabase-green-school` (`pwzqivjkpiqsizuebjlt`). Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` no `.env.local` e na Vercel antes do build. Nunca use chaves secretas ou `service_role` no frontend. O arquivo local está ignorado pelo Git; o deploy precisa receber suas próprias variáveis.
 
+O build também aceita as variáveis públicas da integração Vercel: `SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY`/`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ou as variantes `ANON_KEY`). Nenhuma chave secreta é utilizada. Um deploy Vercel Production sem configuração completa do banco é interrompido.
+
 Em um banco novo, execute nesta ordem:
 
 1. `supabase_schema.sql`
@@ -52,6 +54,8 @@ Em um banco novo, execute nesta ordem:
 4. `database/contribution_hardening.sql`
 5. `database/public_accessibility.sql`
 6. `database/contribution_indexes.sql`
+7. `database/community_directory.sql`
+8. `database/administrator_bootstrap.sql`
 
 O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto.
 
@@ -68,6 +72,10 @@ where id = 'UUID_DA_CONTA';
 ```
 
 A conta deve sair e entrar novamente para renovar o token. Não use `user_metadata` para permissões. A interface e a RLS impedem aprovação por usuários comuns. Recusas exigem motivo.
+
+Para preparar o primeiro administrador antes de seu cadastro, um administrador do banco pode inserir o e-mail escolhido em `private.administrator_bootstrap(email)`. A função só é concedida após a confirmação desse e-mail, e o alvo é consumido uma única vez. Não armazene esse e-mail em arquivos versionados.
+
+Rotas e profissionais são compartilhados após revisão em `/gestao`. Novos cadastros exigem login, com limite de 10 envios por catálogo em 24 horas. Aprovar um relato de rota não confirma uma auditoria presencial. A opção de importação permite exportar cadastros do navegador original e enviá-los no site publicado; exemplos de demonstração e campos de aprovação são descartados. Consulte [o procedimento de transferência](docs/contribuicoes-validacao.md).
 
 Cada pessoa pode enviar um relato por local, incluindo locais encontrados no Google/OSM. A identidade é normalizada no banco quando existe cadastro vinculado. O relato permanece único mesmo se recusado. Há limites de 10 relatos e 3 cadastros por usuário em 24 horas. Fotos de relatos são privadas (até 3 JPG/PNG/WebP de 5 MB), ficam na pasta do autor e só podem ser lidas pelo autor, administrador ou após aprovação. As URLs de visualização expiram em 5 minutos. O bucket limita cada conta a 30 uploads por per?odo de 24 horas; fotos vinculadas a relatos não podem ser apagadas pelo cliente.
 

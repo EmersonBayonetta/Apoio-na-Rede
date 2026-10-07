@@ -71,6 +71,9 @@ export interface Establishment {
 }
 
 export interface Professional {
+  status?: EstablishmentStatus;
+  motivo_rejeicao?: string | null;
+  verificado_em?: string | null;
   id: string;
   nome: string;
   especialidade: string;
@@ -88,6 +91,9 @@ export interface Professional {
 }
 
 export interface AccessibleRoute {
+  status?: EstablishmentStatus;
+  motivo_rejeicao?: string | null;
+  verificado_em?: string | null;
   id: string;
   titulo: string;
   cidade: string;

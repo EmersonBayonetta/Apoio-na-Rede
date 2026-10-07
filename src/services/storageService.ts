@@ -1,4 +1,5 @@
 import { getSupabase } from '../lib/supabase';
+import { DirectoryService } from './directoryService';
 import { ContributionService, confirmedCriteria, localKey, PUBLIC_PLACE_COLUMNS, requireUser } from './contributionService';
 import { normalizeSearchText } from '../utils/normalizeSearchText';
 import { validateRegistration } from '../utils/registrationValidation';
@@ -251,7 +252,7 @@ export const StorageService = {
     especialidade?: string,
     tipoDeficiencia?: DisabilityType
   ): Promise<Professional[]> => {
-    const list = readStoredArray<Professional>(STORAGE_KEYS.PROFESSIONALS, import.meta.env.DEV ? MOCK_PROFESSIONALS : []);
+    const list = getSupabase() ? await DirectoryService.professionals() : readStoredArray<Professional>(STORAGE_KEYS.PROFESSIONALS, import.meta.env.DEV ? MOCK_PROFESSIONALS : []);
 
     return list.filter((p) => {
       if (especialidade && especialidade !== 'todas') {
@@ -270,7 +271,7 @@ export const StorageService = {
 
   // ROUTES
   getRoutes: async (cidade?: string): Promise<AccessibleRoute[]> => {
-    const list = readStoredArray<AccessibleRoute>(STORAGE_KEYS.ROUTES, import.meta.env.DEV ? MOCK_ROUTES : []);
+    const list = getSupabase() ? await DirectoryService.routes() : readStoredArray<AccessibleRoute>(STORAGE_KEYS.ROUTES, import.meta.env.DEV ? MOCK_ROUTES : []);
     if (cidade && cidade !== 'todas') {
       return list.filter((r) => r.cidade.toLowerCase().includes(cidade.toLowerCase()));
     }
@@ -278,6 +279,7 @@ export const StorageService = {
   },
 
   saveRoute: async (route: Omit<AccessibleRoute, 'id'>): Promise<AccessibleRoute> => {
+    if (getSupabase()) return DirectoryService.saveRoute(route);
     const list = readStoredArray<AccessibleRoute>(STORAGE_KEYS.ROUTES, import.meta.env.DEV ? MOCK_ROUTES : []);
     const saved = { ...route, id: `route-${crypto.randomUUID()}` };
     list.unshift(saved);
@@ -286,6 +288,7 @@ export const StorageService = {
   },
 
   saveProfessional: async (professional: Omit<Professional, 'id'>): Promise<Professional> => {
+    if (getSupabase()) return DirectoryService.saveProfessional(professional);
     const list = readStoredArray<Professional>(STORAGE_KEYS.PROFESSIONALS, import.meta.env.DEV ? MOCK_PROFESSIONALS : []);
     const saved = { ...professional, id: `professional-${crypto.randomUUID()}` };
     list.unshift(saved);

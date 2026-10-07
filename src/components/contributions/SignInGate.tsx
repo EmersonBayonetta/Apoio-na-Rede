@@ -28,7 +28,7 @@ export function SignInGate({ children, admin = false }: { children: ReactNode; a
         const { error } = await client.auth.verifyOtp({ email: email.trim(), token: token.trim(), type: 'email' });
         if (error) throw error;
       } else {
-        const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: !admin, emailRedirectTo: window.location.href } });
+        const { error } = await client.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true, emailRedirectTo: window.location.href } });
         if (error) throw error;
         setSent(true); setMessage('Confira seu e-mail. Use o código recebido ou abra o link de acesso.');
       }

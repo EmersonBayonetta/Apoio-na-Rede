@@ -206,6 +206,7 @@ export type Database = {
       professionals: {
         Row: {
           atende_por_tipo: Database["public"]["Enums"]["disability_type"][]
+          author_id: string | null
           cidade: string
           criado_em: string | null
           descricao: string | null
@@ -216,13 +217,18 @@ export type Database = {
           estado: string
           foto_url: string | null
           id: string
+          motivo_rejeicao: string | null
           nome: string
           registro_profissional: string | null
+          source_key: string | null
+          status: Database["public"]["Enums"]["establishment_status"]
           telefone: string | null
+          verificado_em: string | null
           whatsapp: string | null
         }
         Insert: {
           atende_por_tipo?: Database["public"]["Enums"]["disability_type"][]
+          author_id?: string | null
           cidade: string
           criado_em?: string | null
           descricao?: string | null
@@ -233,13 +239,18 @@ export type Database = {
           estado?: string
           foto_url?: string | null
           id?: string
+          motivo_rejeicao?: string | null
           nome: string
           registro_profissional?: string | null
+          source_key?: string | null
+          status?: Database["public"]["Enums"]["establishment_status"]
           telefone?: string | null
+          verificado_em?: string | null
           whatsapp?: string | null
         }
         Update: {
           atende_por_tipo?: Database["public"]["Enums"]["disability_type"][]
+          author_id?: string | null
           cidade?: string
           criado_em?: string | null
           descricao?: string | null
@@ -250,9 +261,13 @@ export type Database = {
           estado?: string
           foto_url?: string | null
           id?: string
+          motivo_rejeicao?: string | null
           nome?: string
           registro_profissional?: string | null
+          source_key?: string | null
+          status?: Database["public"]["Enums"]["establishment_status"]
           telefone?: string | null
+          verificado_em?: string | null
           whatsapp?: string | null
         }
         Relationships: [
@@ -356,49 +371,70 @@ export type Database = {
       }
       routes: {
         Row: {
+          auditada: boolean
+          author_id: string | null
           cidade: string
           coordenadas: Json
           criado_em: string | null
           distancia_metros: number | null
+          duracao_segundos: number | null
           id: string
+          motivo_rejeicao: string | null
           nivel_seguranca: string
           ponto_destino: string
           ponto_origem: string
+          source_key: string | null
+          status: Database["public"]["Enums"]["establishment_status"]
           tem_piso_tatil: boolean
           tem_rampa: boolean
           tem_semaforo_sonoro: boolean
           titulo: string
           trecho_descricao: string
+          verificado_em: string | null
         }
         Insert: {
+          auditada?: boolean
+          author_id?: string | null
           cidade: string
           coordenadas?: Json
           criado_em?: string | null
           distancia_metros?: number | null
+          duracao_segundos?: number | null
           id?: string
+          motivo_rejeicao?: string | null
           nivel_seguranca?: string
           ponto_destino: string
           ponto_origem: string
+          source_key?: string | null
+          status?: Database["public"]["Enums"]["establishment_status"]
           tem_piso_tatil?: boolean
           tem_rampa?: boolean
           tem_semaforo_sonoro?: boolean
           titulo: string
           trecho_descricao: string
+          verificado_em?: string | null
         }
         Update: {
+          auditada?: boolean
+          author_id?: string | null
           cidade?: string
           coordenadas?: Json
           criado_em?: string | null
           distancia_metros?: number | null
+          duracao_segundos?: number | null
           id?: string
+          motivo_rejeicao?: string | null
           nivel_seguranca?: string
           ponto_destino?: string
           ponto_origem?: string
+          source_key?: string | null
+          status?: Database["public"]["Enums"]["establishment_status"]
           tem_piso_tatil?: boolean
           tem_rampa?: boolean
           tem_semaforo_sonoro?: boolean
           titulo?: string
           trecho_descricao?: string
+          verificado_em?: string | null
         }
         Relationships: []
       }

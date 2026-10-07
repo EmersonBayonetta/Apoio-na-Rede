@@ -26,3 +26,25 @@ Projeto Supabase existente: `supabase-green-school` (`pwzqivjkpiqsizuebjlt`). Ne
 Os sete testes antigos que o handoff identifica como já falhando não foram reexecutados nesta entrega. Os testes de navegador isolados bloqueiam as APIs externas, portanto seus resultados não comprovam disponibilidade de Google, SMTP ou outros serviços em produção.
 
 Os cabeçalhos de segurança estão preparados no vercel.json e passam a valer após o deploy. A proteção dos dados no banco já está aplicada por permissões, RLS e triggers.
+
+## Atualização — 07/10/2026: catálogo compartilhado
+
+- Rotas e profissionais agora usam o mesmo Supabase existente. Novos envios exigem login e ficam pendentes, visíveis ao autor e à administração. A aprovação publica o cadastro para todos os visitantes.
+- As migrações `database/community_directory.sql` e `database/administrator_bootstrap.sql` foram aplicadas. O limite é de 10 envios por catálogo em 24 horas. Campos de autoria, status, auditoria e aprovação são controlados pelo banco; importações repetidas têm chave única por autor.
+- `/gestao` inclui revisão de rotas e profissionais. A publicação de um relato de rota não certifica uma auditoria presencial; essa confirmação tem controle separado.
+- A conta administradora indicada foi configurada em uma tabela privada, sem incluir o e-mail no repositório. O primeiro login com e-mail confirmado concede a função por `app_metadata`. Contas sem confirmação não recebem acesso. O endereço também pode fazer o primeiro cadastro diretamente em `/gestao`.
+- A API real permite ler os campos públicos de ambos os catálogos e nega a leitura de autoria e chaves de importação. Testes SQL transacionais verificaram leitura do próprio envio, invisibilidade anônima de pendentes, impossibilidade de autoaprovação, publicação por administrador e concessão da função somente após confirmação do e-mail. Todos os registros de teste foram revertidos.
+- Security Advisors sem alertas após as migrações. Build normal e de demonstração, 55 testes unitários e lint passaram (lint mantém os dois avisos anteriores). O novo `tests/browser-directory-online.mjs` verifica login, envio pendente, retirada de campos privilegiados, exclusão dos exemplos na importação e filas administrativas usando respostas simuladas.
+- O bundle publicado consultado antes deste envio continha a configuração Google, mas nenhuma URL Supabase. O build passa a reconhecer também `SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_URL` e as variantes públicas de publishable/anon key criadas pela integração Vercel. Variáveis secretas não entram no bundle; uma chave `service_role` ou `sb_secret_` causa falha do build. Publicação Vercel Production sem banco configurado também falha, evitando disponibilizar silenciosamente um catálogo apenas local. Quatro testes adicionais cobrem a seleção e rejeição de credenciais, totalizando 59 testes unitários aprovados.
+- Os oito testes de navegador em demonstração passaram novamente; os dois testes com Auth e catálogo online simulado também passaram. Os testes externos não demonstram entrega de e-mail, upload com sessão real ou autorização das APIs Google em produção.
+
+### Como transferir cadastros anteriores
+
+1. Abra o endereço original (por exemplo, `http://localhost:5173`) no mesmo navegador em que cadastrou os dados.
+2. Em Rotas ou Profissionais, abra “Importar cadastros feitos anteriormente neste navegador”, carregue os dados e exporte o arquivo JSON. Os exemplos do app são excluídos.
+3. No site publicado, abra a mesma opção, selecione o arquivo, confira os nomes, entre na conta e envie para revisão. Use somente dados reais e contatos com autorização de publicação.
+4. Em `/gestao`, revise e aprove os cadastros. Eles passam a aparecer para todos. Se um lote exceder o limite diário, é possível tentar novamente depois sem duplicar os registros já enviados.
+
+### Validação que requer interação do titular
+
+Ainda é necessário confirmar o recebimento do acesso por e-mail, entrar na conta administradora e realizar um upload real. Não foram enviados e-mails nem utilizados códigos de acesso do titular nos testes automatizados. Confira no Supabase Auth a Site URL `https://apoio-na-rede.vercel.app` e Redirect URLs para esse domínio (incluindo os caminhos usados) e, se necessário, o localhost. SMTP, restrições de domínio do Google e configurações da Vercel não foram alterados por estas migrações.
