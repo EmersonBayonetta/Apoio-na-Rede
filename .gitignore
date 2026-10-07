@@ -28,3 +28,6 @@ dist-ssr
 .env.*
 !.env.example
 tmp/
+
+# Internal handoff notes (security details; repository is public)
+docs/handoff-codex-contribuicoes.md
