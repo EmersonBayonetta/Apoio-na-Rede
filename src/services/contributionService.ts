@@ -11,7 +11,7 @@ export interface PlaceReport {
   status: 'pendente' | 'aprovado' | 'recusado'; motivo_recusa?: string | null; criado_em: string;
 }
 const REPORTS = 'apoio_reports_v1';
-export const PUBLIC_PLACE_COLUMNS = 'id,place_id,nome,categoria,endereco,bairro,cidade,estado,cep,latitude,longitude,descricao,fotos,status,telefone,whatsapp,email_contato,horario_funcionamento,website,nota_media,total_avaliacoes,verificado_em,criado_em,informado_responsavel';
+export const PUBLIC_PLACE_COLUMNS = 'id,place_id,nome,categoria,endereco,bairro,cidade,estado,cep,latitude,longitude,descricao,fotos,status,telefone,whatsapp,email_contato,horario_funcionamento,website,nota_media,total_avaliacoes,verificado_em,criado_em,informado_responsavel,fonte_url,consultado_em,coordenadas_confirmadas';
 export const emptyAnswers = (): Answers => Object.fromEntries(ACCESSIBILITY_RESOURCES.map(r => [r.id, 'nao_sei']));
 export const localKey = (place: Pick<Establishment, 'id' | 'place_id'>) => place.place_id || place.id;
 

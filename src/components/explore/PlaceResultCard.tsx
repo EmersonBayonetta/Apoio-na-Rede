@@ -31,7 +31,7 @@ export function PlaceResultCard({ place, establishment, addressLabel, distance, 
   return <article className="place-card premium-card rounded-2xl border" aria-label={addressLabel ? 'Endereço selecionado' : name}>
     <div className="place-card-media" style={{ '--place-color': category.color } as React.CSSProperties}>
       {photo ? <img src={photo} alt="" loading="lazy" onError={imageFallback} /> : <CategoryIcon size={40} strokeWidth={1.4} aria-hidden="true" />}
-      {!addressLabel && <span className={`place-card-status ${status.className}`}><status.Icon size={14} aria-hidden="true" />{establishment?.demonstracao ? 'Demonstração' : status.label}</span>}
+      {!addressLabel && <span className={`place-card-status ${status.className}`}><status.Icon size={14} aria-hidden="true" />{establishment?.demonstracao ? 'Demonstração' : establishment?.fonte_url ? 'Dados públicos' : status.label}</span>}
       {distance !== undefined && <span className="place-card-distance"><Footprints size={13} aria-hidden="true" />{formatDistance(distance)}<span className="sr-only"> de você</span></span>}
       {canOpen && !establishment?.demonstracao && <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="place-card-maps" title="Abrir no Google Maps">
         <Navigation size={18} aria-hidden="true" /><span className="sr-only">Abrir no Google Maps (abre em nova aba)</span>

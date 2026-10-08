@@ -2,8 +2,8 @@ import { getSupabase } from '../lib/supabase';
 import { requireUser, requireAdministrator } from './contributionService';
 import type { AccessibleRoute, Professional } from '../types';
 
-export const ROUTE_COLUMNS = 'id,titulo,cidade,ponto_origem,ponto_destino,trecho_descricao,tem_rampa,tem_piso_tatil,tem_semaforo_sonoro,nivel_seguranca,coordenadas,distancia_metros,duracao_segundos,auditada,status,motivo_rejeicao,verificado_em';
-export const PROFESSIONAL_COLUMNS = 'id,nome,especialidade,registro_profissional,endereco,cidade,estado,telefone,email,whatsapp,atende_por_tipo,descricao,foto_url,status,motivo_rejeicao,verificado_em';
+export const ROUTE_COLUMNS = 'id,titulo,cidade,ponto_origem,ponto_destino,trecho_descricao,tem_rampa,tem_piso_tatil,tem_semaforo_sonoro,nivel_seguranca,coordenadas,distancia_metros,duracao_segundos,auditada,status,motivo_rejeicao,verificado_em,fonte_url,consultado_em';
+export const PROFESSIONAL_COLUMNS = 'id,nome,especialidade,registro_profissional,endereco,cidade,estado,telefone,email,whatsapp,atende_por_tipo,descricao,foto_url,status,motivo_rejeicao,verificado_em,fonte_url,consultado_em';
 export type DirectoryKind = 'routes' | 'professionals';
 
 function failure(error: { code?: string; message: string }) {

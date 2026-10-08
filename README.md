@@ -59,33 +59,16 @@ Em um banco novo, execute nesta ordem:
 9. `database/administrator_access.sql`
 10. `database/administrator_requests.sql`
 11. `database/registration_email_review.sql`
+12. `database/directory_email_review.sql`
+13. `database/registration_shared_limits.sql`
 
-O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto.
+O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto. A carga opcional pesquisada está em `database/public_catalog_cataguases.sql` e depende do titular já autorizado.
 
-### Login e moderação
+### Cadastro, revisão e catálogo público
 
-O fluxo público atual é o [cadastro com revisão pelo Supabase](docs/cadastro-revisao-supabase.md), sem painel administrativo. As instruções de gestão abaixo descrevem a estrutura anterior preservada no banco; `/gestao` não apresenta mais esse painel e o fluxo de equipe por Resend não é usado no cadastro atual.
+O cadastro de locais, trechos e profissionais é público e fica pendente até aprovação do titular autorizado. O servidor solicita um link de autenticação do Supabase para abrir a revisão de um cadastro, sem painel de gestão e sem Resend. A lista privada de autorização é conferida em cada leitura e decisão. O envio padrão do Supabase tem limites; cadastro salvo não garante entrega do aviso. Veja [configuração e limites](docs/cadastro-revisao-supabase.md).
 
-Habilite o provedor Email no Supabase Auth. Configure **Site URL** e **Redirect URLs** com o endereço real do site e, para desenvolvimento, `http://localhost:5173/**`. O acesso funciona por link de e-mail ou código; para fornecer o código, inclua `{{ .Token }}` no template de Magic Link. Configure SMTP próprio para envio de e-mails em produção. O fluxo de envio real depende desse serviço e deve ser verificado com uma conta autorizada antes da publicação.
-
-A gestão fica em `/gestao`, sem link no menu ou rodapé, e envia `noindex`. Exige login e uma conta habilitada na lista privada `private.administrator_access`. Somente administradores do banco podem adicionar pessoas da equipe. Confirmação de e-mail, cadastro comum e metadados não concedem esse acesso. Para autorizar uma conta já cadastrada e confirmada, execute pelo SQL Editor com acesso administrativo:
-
-```sql
-insert into private.administrator_access(user_id)
-select id from auth.users
-where id = 'UUID_DA_CONTA' and email_confirmed_at is not null
-on conflict(user_id) do update set enabled=true;
-```
-
-A interface consulta `is_site_admin`, e RLS e triggers consultam a mesma autorização no banco. Para revogar, defina `enabled=false` na lista privada: tokens antigos não mantêm a permissão nas operações seguintes. Não use `user_metadata` para permissões. Recusas exigem motivo.
-
-A migração de acesso preserva a conta originalmente autorizada e remove o trigger histórico de concessão automática por e-mail. Novas contas da equipe precisam de inclusão explícita pelo administrador do banco. Recriar uma conta com o mesmo e-mail não herda acesso. Não versione os e-mails da equipe nem exponha a lista privada no frontend.
-
-O titular também pode autorizar a equipe pelo fluxo de [solicitação de acesso](docs/admin-access-requests.md): a pessoa confirma seu e-mail e solicita, um aviso é enviado ao titular e somente ele aprova ou recusa no painel. O aviso usa Resend em uma Vercel Function e exige configuração de servidor. O link do aviso não concede acesso automaticamente.
-
-Rotas e profissionais são compartilhados após revisão em `/gestao`. Novos cadastros exigem login, com limite de 10 envios por catálogo em 24 horas. Aprovar um relato de rota não confirma uma auditoria presencial. Os painéis de importação foram retirados das telas públicas.
-
-Categorias e listas online sem cadastros reais exibem [exemplos de apresentação](docs/catalogo-apresentacao.md): nove locais, cinco rotas e seis profissionais. Cada card é identificado como demonstração, com contatos e recursos ilustrativos. Os exemplos não são gravados no banco, não oferecem contatos acionáveis ou navegação e não recebem relatos ou avaliações. Cadastros reais substituem os exemplos da categoria/lista correspondente. O filtro de locais conferidos exclui os exemplos.
+O catálogo online contém dados reais pesquisados: nove locais, três profissionais e cinco ligações entre endereços públicos. As fontes aparecem nos registros e estão documentadas no [catálogo real de Cataguases](docs/catalogo-real-cataguases.md). Recursos não confirmados ficam sem informação; publicação não certifica acessibilidade. Não são importadas avaliações externas. As avaliações do site mantêm notas, comentários, filtros, envio e denúncia, com resumo e distribuição de estrelas. A galeria de fotos da página do local foi removida.
 
 Cada pessoa pode enviar um relato por local, incluindo locais encontrados no Google/OSM. A identidade é normalizada no banco quando existe cadastro vinculado. O relato permanece único mesmo se recusado. Há limites de 10 relatos e 3 cadastros por usuário em 24 horas. Fotos de relatos são privadas (até 3 JPG/PNG/WebP de 5 MB), ficam na pasta do autor e só podem ser lidas pelo autor, administrador ou após aprovação. As URLs de visualização expiram em 5 minutos. O bucket limita cada conta a 30 uploads por per?odo de 24 horas; fotos vinculadas a relatos não podem ser apagadas pelo cliente.
 

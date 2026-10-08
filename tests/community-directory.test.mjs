@@ -39,6 +39,10 @@ test('whatsapp link adds the country code only when missing', () => {
   assert.equal(whatsappUrl('+55 32 98765-4321'), 'https://wa.me/5532987654321');
   assert.equal(whatsappUrl('55 32 3422-1234'), 'https://wa.me/553234221234');
 });
+test('professional contact email is trimmed and malformed email is rejected',()=>{
+ assert.equal(validateProfessional({...professional,email:' contato@example.org '}).email,'contato@example.org');
+ assert.throws(()=>validateProfessional({...professional,email:'contato inválido'}),{message:'Informe um e-mail válido.'});
+});
 test('whatsapp link is omitted without a valid number', () => {
   for (const value of ['', undefined, '   ', '98765-4321', '+1 32 98765-4321', '+55 32 98765-43210']) assert.equal(whatsappUrl(value), null);
 });

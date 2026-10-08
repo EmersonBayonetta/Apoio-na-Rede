@@ -43,3 +43,13 @@ test('public submission rejects invalid fields, foreign origins and unavailable 
  assert.equal((await run(handler,{method:'GET',headers:{}})).code,405);
  assert.equal((await run(createRegistrationHandler({env:{},fetchImpl:async()=>{throw Error();}}))).code,503);
 });
+test('routes and professionals use Supabase owner review and never accept publication, audit or owner fields',async()=>{
+ for(const [kind,details] of [['routes',{titulo:'Rua A → Rua B',cidade:'Cataguases',ponto_origem:'Rua A',ponto_destino:'Rua B',trecho_descricao:'Condições observadas',status:'verificado',auditada:true,author_id:'attacker'}],['professionals',{nome:'Teste',especialidade:'Fisioterapia',cidade:'Cataguases',estado:'MG',atende_por_tipo:[],telefone:'(32) 99999-0000',status:'verificado',author_id:'attacker'}]]){
+  const calls=[];const handler=createRegistrationHandler({env,fetchImpl:async(url,options)=>{calls.push({url,body:JSON.parse(options.body)});return url.includes('submit_public_directory')?result({id:'00000000-0000-4000-8000-000000000002',owner_email:'owner@example.invalid'}):result({});}});
+  const res=await run(handler,{method:'POST',headers:{origin:env.APP_SITE_URL},body:{kind,details}});
+  assert.equal(res.code,201);assert.equal(res.body.status,'pendente');assert.equal(calls[0].body.kind,kind);
+  for(const key of ['status','auditada','author_id'])assert.equal(Object.hasOwn(calls[0].body.details,key),false);
+  assert.equal(new URL(new URL(calls[1].url).searchParams.get('redirect_to')).searchParams.get('tipo'),kind);
+  assert.ok(calls[2].url.includes('mark_directory_notified'));
+ }
+});

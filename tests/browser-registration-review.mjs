@@ -12,10 +12,18 @@ const open=async path=>{await send('Page.navigate',{url:'http://127.0.0.1:4176'+
 let injection;
 try{
  await send('Page.enable');await send('Network.enable');await send('Network.setBlockedURLs',{urls:['https://*']});
- injection=await send('Page.addScriptToEvaluateOnNewDocument',{source:`localStorage.setItem('apoio_accessibility_onboarding_v1','completed');`});
+ injection=await send('Page.addScriptToEvaluateOnNewDocument',{source:`localStorage.setItem('apoio_accessibility_onboarding_v1','completed');const originalFetch=window.fetch;window.testSubmissions=[];window.fetch=(url,options)=>String(url)==='/api/register-place'?(window.testSubmissions.push(JSON.parse(options.body)),Promise.resolve(new Response(JSON.stringify({id:'test',status:'pendente',notified:true,message:'Cadastro pendente para revisão.'}),{headers:{'Content-Type':'application/json'}}))):originalFetch(url,options);`});
  await open('/?aba=cadastro');
  assert.ok(await evaluate(`document.querySelector('main h1')?.textContent.includes('Informe os recursos de acessibilidade')`),'public registration is available without login');
  assert.equal(await evaluate(`document.querySelector('main').textContent.includes('Receber link de acesso')`),false);
+ for(const [tab,kind,fields] of [['rotas','routes',{origin:'Praça Santa Rita, 462',destination:'Rua Major Vieira, 56',description:'Condições a verificar'}],['profissionais','professionals',{name:'Cadastro de teste',specialty:'Fisioterapia'}]]){
+  await open('/?aba='+tab);await evaluate(`[...document.querySelectorAll('main button')].find(b=>b.textContent.includes('${kind==='routes'?'Compartilhar um trecho':'Cadastrar profissional'}')).click()`);await pause(100);
+  assert.ok(await evaluate(`Boolean(document.querySelector('main form'))`),'directory form has no login gate');
+  await evaluate(`(()=>{const form=document.querySelector('main form');for(const [name,value] of Object.entries(${JSON.stringify(fields)})){const field=form.elements.namedItem(name);Object.getOwnPropertyDescriptor(field.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype,'value').set.call(field,value);field.dispatchEvent(new Event('input',{bubbles:true}));}form.requestSubmit();})()`);await pause(300);
+  assert.equal(await evaluate(`window.testSubmissions[0]?.kind`),kind);
+  assert.ok(await evaluate(`document.querySelector('main').textContent.includes('Cadastro pendente para revisão.')`));
+ }
+ await open('/?aba=cadastro');
  for(const width of [320,390,1024,1280]){
   await send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<1200});await pause(150);
   assert.ok(await evaluate(`document.documentElement.scrollWidth<=innerWidth`),'no overflow at '+width);

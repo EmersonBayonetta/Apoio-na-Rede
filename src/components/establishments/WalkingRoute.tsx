@@ -6,7 +6,7 @@ import { directionsUrl } from '../../utils/directionsUrl';
 
 type RouteState = { status: 'idle' | 'loading' } | { status: 'done'; summary: string } | { status: 'error'; message: string };
 
-export function WalkingRoute({ destination }: { destination: RouteDestination & { place_id?: string } }) {
+export function WalkingRoute({ destination }: { destination: RouteDestination & { place_id?: string;coordenadas_confirmadas?:boolean;endereco?:string;cidade?:string;estado?:string } }) {
   const [route, setRoute] = useState<RouteState>({ status: 'idle' });
   const request = useRef<AbortController | null>(null);
   useEffect(() => {
@@ -42,13 +42,14 @@ export function WalkingRoute({ destination }: { destination: RouteDestination & 
   return <section aria-labelledby="walking-route-title" className="mt-4 max-w-3xl rounded-2xl border border-slate-200 p-4">
     <h2 id="walking-route-title" className="flex items-center gap-2 text-lg font-bold text-slate-900"><Footprints size={20} aria-hidden="true" />Como chegar a pé</h2>
     <div className="mt-3 flex flex-wrap gap-3">
-      <button type="button" onClick={calculate} disabled={route.status === 'loading'} className="min-h-11 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-70">
+      {destination.coordenadas_confirmadas!==false&&<button type="button" onClick={calculate} disabled={route.status === 'loading'} className="min-h-11 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-70">
         {route.status === 'loading' ? 'Calculando…' : 'Calcular rota a pé'}
-      </button>
+      </button>}
       <a href={directionsUrl(destination)} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-800">
         Abrir no Google Maps <ExternalLink size={15} aria-hidden="true" /><span className="sr-only">(abre em nova aba)</span>
       </a>
     </div>
+    {destination.coordenadas_confirmadas===false&&<p className="mt-3 text-sm text-slate-600">Abra o endereço no Google Maps para escolher o acesso correto ao local.</p>}
     <div aria-live="polite">
       {route.status === 'done' && <div className="mt-3">
         <p className="walking-summary text-xl font-bold text-slate-900">{route.summary}</p>

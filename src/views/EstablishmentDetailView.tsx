@@ -3,8 +3,8 @@ import { ApprovedReports } from '../components/contributions/ApprovedReports';
 import { localKey } from '../services/contributionService';
 import { SignInGate } from '../components/contributions/SignInGate';
 import { WalkingRoute } from '../components/establishments/WalkingRoute';
+import { whatsappUrl } from '../utils/communityDirectory';
 import { MAP_CATEGORIES } from '../data/mapCategories';
-import { imageFallback } from '../utils/imageFallback';
 import React, { useState } from 'react';
 import { Establishment, DisabilityType } from '../types';
 import { StorageService } from '../services/storageService';
@@ -41,7 +41,6 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   onRefresh,
 }) => {
   const { accessibilityPreferences, requirements } = useAccessibility();
-  const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
   const [reviewFilter, setReviewFilter] = useState<DisabilityType | 'todas'>('todas');
 
   // Form de Avaliação
@@ -60,11 +59,6 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const filteredReviews = reviews.filter((r) =>
     reviewFilter === 'todas' ? true : r.tipo_deficiencia_avaliada === reviewFilter
   );
-
-  const photos =
-    establishment.fotos && establishment.fotos.length > 0
-      ? establishment.fotos
-      : ['/brand/apoio-na-rede-logo.png'];
 
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +116,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             onClick={async () => {
               const url = new URL('https://www.google.com/maps/search/');
               url.searchParams.set('api', '1');
-              url.searchParams.set('query', `${establishment.latitude},${establishment.longitude}`);
+              url.searchParams.set('query', establishment.coordenadas_confirmadas===false?`${establishment.endereco}, ${establishment.cidade}, ${establishment.estado}`:`${establishment.latitude},${establishment.longitude}`);
               if (establishment.place_id) url.searchParams.set('query_place_id', establishment.place_id);
               try {
                 if (navigator.share) await navigator.share({ title: establishment.nome, text: `Localização de ${establishment.nome}`, url: url.href });
@@ -151,7 +145,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             <span className="px-3 py-1 bg-blue-50 text-blue-700 font-bold text-xs rounded-full uppercase tracking-wider border border-blue-200">
               {MAP_CATEGORIES[establishment.categoria]?.label ?? establishment.categoria}
             </span>
-            {establishment.demonstracao ? <span className="rounded-full border px-3 py-1 text-xs">Demonstração</span> : establishment.external ? <span className="rounded-full border px-3 py-1 text-xs">Sem informações</span> : <VerifiedBadge
+            {establishment.demonstracao ? <span className="rounded-full border px-3 py-1 text-xs">Demonstração</span> : establishment.fonte_url ? <span className="rounded-full border px-3 py-1 text-xs">Dados públicos</span> : establishment.external ? <span className="rounded-full border px-3 py-1 text-xs">Sem informações</span> : <VerifiedBadge
               status={establishment.status}
               verificadoEm={establishment.verificado_em}
               motivoRejeicao={establishment.motivo_rejeicao}
@@ -182,44 +176,12 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         <p className="text-base text-slate-700 leading-relaxed max-w-3xl">
           {establishment.descricao}
         </p>
+        {establishment.fonte_url&&<p className="mt-3 text-sm text-slate-600"><a href={establishment.fonte_url} target="_blank" rel="noopener noreferrer" className="underline">Fonte dos dados de contato</a>{establishment.consultado_em&&` · Consultado em ${new Date(establishment.consultado_em+'T12:00:00').toLocaleDateString('pt-BR')}`}. Os recursos de acessibilidade ainda precisam ser confirmados.</p>}
         {establishment.demonstracao ? <p className="mt-4 rounded-xl border p-3 text-sm">Exemplo fictício para apresentação. Endereço, recursos e imagens são ilustrativos; este cadastro não representa um local real.</p> : <WalkingRoute destination={establishment} />}
         {establishment.status === 'verificado' && establishment.informado_responsavel && <p className="font-semibold mt-4">Informado pelo responsável</p>}
       </header>
       {!establishment.demonstracao && <><ReportPanel place={establishment} onRefresh={onRefresh} />
       <ApprovedReports placeKey={localKey(establishment)} /></>}
-
-      {/* Galeria de Fotos Acessível */}
-      <section aria-label="Fotos do Estabelecimento" className="mb-8">
-        <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm">
-          <div className="h-80 sm:h-96 w-full rounded-2xl overflow-hidden bg-slate-100 relative mb-3">
-            <img onError={imageFallback}
-              src={photos[selectedPhotoIdx]}
-              alt={establishment.demonstracao ? `Imagem ilustrativa do exemplo ${establishment.nome}` : `Foto principal de ${establishment.nome} mostrando entrada e instalações adaptadas`}
-              className="w-full h-full object-cover transition-all"
-            />
-          </div>
-
-          {photos.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {photos.map((url, idx) => (
-                <button
-                  key={url}
-                  type="button"
-                  onClick={() => setSelectedPhotoIdx(idx)}
-                  aria-label={`Ver foto ${idx + 1} de ${photos.length}`}
-                  className={`w-24 h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-all ${
-                    selectedPhotoIdx === idx
-                      ? 'border-blue-600 ring-2 ring-blue-400'
-                      : 'border-transparent opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img onError={imageFallback} src={url} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* Layout Grid: Informações Práticas + Checklist */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
@@ -260,9 +222,9 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                 <div className="flex items-start gap-3">
                   <MessageCircle size={18} className="text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
-                    <div className="text-xs font-bold text-slate-500 uppercase">WhatsApp (Suporte Acessível)</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase">WhatsApp</div>
                     <a
-                      href={establishment.demonstracao ? undefined : `https://wa.me/55${establishment.whatsapp.replace(/\D/g, '')}`}
+                      href={establishment.demonstracao ? undefined : whatsappUrl(establishment.whatsapp)??undefined}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-emerald-700 font-bold hover:underline"
@@ -273,6 +235,8 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                 </div>
               )}
 
+              {establishment.email_contato&&<div className="grid gap-1"><span className="text-xs font-bold text-slate-500 uppercase">E-mail</span><a className="break-all font-semibold text-blue-700 underline" href={`mailto:${establishment.email_contato}`}>{establishment.email_contato}</a></div>}
+              {!establishment.telefone&&!establishment.whatsapp&&!establishment.email_contato&&!establishment.website&&<p className="text-slate-600">Contato público não disponível. Consulte o local antes da visita.</p>}
               {establishment.website && (
                 <div className="flex items-start gap-3">
                   <Globe size={18} className="text-slate-400 shrink-0 mt-0.5" aria-hidden="true" />
@@ -301,7 +265,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
       </div>
 
       {/* Seção de Avaliações da Comunidade */}
-      {!establishment.demonstracao && <section aria-labelledby="reviews-heading" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-12">
+      {!establishment.demonstracao && <section aria-labelledby="reviews-heading" className="community-reviews bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm mb-12">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
           <div>
             <h2 id="reviews-heading" className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
@@ -309,7 +273,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               Avaliações da Comunidade PCD
             </h2>
             <p className="text-xs text-slate-500">
-              Relatos reais de quem experimentou a acessibilidade deste local
+              Experiências da comunidade sobre circulação, atendimento e recursos
             </p>
           </div>
 
@@ -320,7 +284,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               type="button"
               onClick={() => setReviewFilter('todas')}
               aria-pressed={reviewFilter === 'todas'}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+              className={`min-h-11 px-3 py-1 rounded-full text-xs font-bold transition-colors ${
                 reviewFilter === 'todas'
                   ? 'bg-slate-900 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -340,6 +304,10 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           </div>
         </div>
 
+        <div className="review-summary" aria-label="Resumo das avaliações">
+          <div><p className="review-summary-score">{reviews.length?(reviews.reduce((sum,review)=>sum+review.nota,0)/reviews.length).toFixed(1).replace('.',','):'—'}</p><p className="mt-2 text-sm text-slate-600">{reviews.length} {reviews.length===1?'avaliação':'avaliações'}</p></div>
+          <div className="review-distribution">{[5,4,3,2,1].map(rating=>{const count=reviews.filter(review=>review.nota===rating).length;return <div key={rating} className="review-distribution-row"><span>{rating} ★</span><progress aria-label={`${rating} estrelas: ${count} avaliações`} value={count} max={Math.max(reviews.length,1)}/><span>{count}</span></div>;})}</div>
+        </div>
         {/* Lista de Avaliações */}
         {filteredReviews.length === 0 ? (
           <div className="p-8 text-center bg-slate-50 rounded-2xl text-slate-500 text-sm mb-8">
@@ -350,7 +318,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             {filteredReviews.map((rev) => (
               <div
                 key={rev.id}
-                className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 transition-all hover:bg-slate-50"
+                className="review-entry p-5 rounded-2xl border border-slate-200"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
@@ -374,7 +342,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                     <button
                       type="button"
                       onClick={() => handleReportReview(rev.id)}
-                      className="text-slate-400 hover:text-rose-600 p-1 rounded-lg"
+                      className="text-slate-400 hover:text-rose-600 min-h-11 min-w-11 grid place-items-center rounded-lg"
                       title="Denunciar avaliação abusiva ou falsa"
                       aria-label="Denunciar avaliação"
                     >
@@ -390,7 +358,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         )}
 
         {/* Formulário: Adicionar Avaliação */}
-        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+        <div className="review-compose rounded-2xl p-5 sm:p-6 border border-slate-200">
           <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
             <Sparkles size={18} className="text-blue-600" aria-hidden="true" />
             Compartilhe sua experiência de acessibilidade
@@ -409,10 +377,11 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           <SignInGate><form onSubmit={handleAddReview} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label htmlFor="review-disability" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Qual acessibilidade você avaliou?
                 </label>
                 <select
+                  id="review-disability"
                   value={newDisability}
                   onChange={(e) => setNewDisability(e.target.value as DisabilityType)}
                   className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
@@ -435,7 +404,8 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                       key={star}
                       type="button"
                       onClick={() => setNewRating(star)}
-                      className="p-1 text-amber-400 hover:scale-125 transition-transform"
+                      aria-pressed={newRating === star}
+                      className="review-star grid h-11 w-11 place-items-center rounded-xl text-amber-400 transition-colors"
                       aria-label={`Avaliar com ${star} estrelas`}
                     >
                       <Star

@@ -8,6 +8,7 @@ import { EstablishmentDetailView } from './views/EstablishmentDetailView';
 import { MerchantRegisterWizard } from './views/MerchantRegisterWizard';
 import { Establishment } from './types';
 import { StorageService } from './services/storageService';
+import { PlacesService } from './services/placesService';
 import { ContributionService, confirmedCriteria, localKey } from './services/contributionService';
 import { RegistrationReviewView } from './views/RegistrationReviewView';
 import { ShieldCheck } from 'lucide-react';
@@ -33,6 +34,9 @@ export const MainAppContent: React.FC = () => {
       try {
         local = id.startsWith('external-') ? JSON.parse(browserStorage.getItem('apoio_external_' + id) || 'null') : await StorageService.getEstablishmentById(id);
         if (local?.external) local.criteria = confirmedCriteria(await ContributionService.approved(localKey(local)), local.id);
+      if(local?.external&&local.place_id&&!local.place_id.startsWith('osm-')) {
+        try{local={...local,...await PlacesService.contact(local.place_id)};}catch{setNavigationMessage('Os contatos públicos deste local não carregaram.');}
+      }
       } catch { setNavigationMessage('Falha ao carregar o local. Tente novamente.'); return; }
       setSelectedEstablishment(local);
       setNavigationMessage(local ? '' : 'Este local não está disponível. Confira o endereço ou tente novamente mais tarde.');
@@ -55,6 +59,9 @@ export const MainAppContent: React.FC = () => {
     if (est.external) {
       browserStorage.setItem('apoio_external_' + est.id, JSON.stringify(est));
       void ContributionService.approved(localKey(est)).then(reports => setSelectedEstablishment(current => current?.id === est.id ? { ...current, criteria: confirmedCriteria(reports, est.id) } : current)).catch(() => setNavigationMessage('Falha ao consultar relatos. Tente novamente.'));
+      if(est.place_id&&!est.place_id.startsWith('osm-'))void PlacesService.contact(est.place_id).then(contact=>{
+        setSelectedEstablishment(current=>current?.id===est.id?{...current,...contact}:current);
+      }).catch(()=>setNavigationMessage('Os contatos públicos deste local não carregaram. Tente novamente mais tarde.'));
     }
     updateLocalUrl(est.id);
     setSelectedEstablishment(est);

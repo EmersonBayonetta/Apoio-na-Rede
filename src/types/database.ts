@@ -485,6 +485,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      directory_for_review: { Args: { registration_id: string }; Returns: Json }
+      decide_directory: { Args: { registration_id: string; approve: boolean; reason?: string }; Returns: undefined }
       registration_for_review: { Args: { registration_id: string }; Returns: Json }
       decide_registration: { Args: { registration_id: string; approve: boolean; reason?: string }; Returns: undefined }
       submit_public_registration: { Args: { details: Json; criteria: Json; source_hash: string }; Returns: Json }

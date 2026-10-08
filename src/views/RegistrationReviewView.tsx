@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getSupabase } from '../lib/supabase';
 import type { Establishment } from '../types';
 
-type Registration = Pick<Establishment,'id'|'nome'|'endereco'|'cidade'|'estado'|'descricao'|'telefone'|'whatsapp'|'horario_funcionamento'|'fotos'|'status'|'motivo_rejeicao'> & {criteria:{criterio:string;presente:boolean|null;observacao_livre?:string}[]};
+type Registration = Pick<Establishment,'id'|'nome'|'endereco'|'cidade'|'estado'|'descricao'|'telefone'|'whatsapp'|'horario_funcionamento'|'fotos'|'status'|'motivo_rejeicao'> & {kind?:string;especialidade?:string;registro_profissional?:string;atende_por_tipo?:string[];email?:string;criteria:{criterio:string;presente:boolean|null;observacao_livre?:string}[]};
 
 export function RegistrationReviewView() {
   const [registration,setRegistration]=useState<Registration|null>(null);
@@ -11,6 +11,7 @@ export function RegistrationReviewView() {
   const [busy,setBusy]=useState(false);
   const [revision,setRevision]=useState(0);
   const id=new URLSearchParams(window.location.search).get('cadastro');
+  const directory=['routes','professionals'].includes(new URLSearchParams(window.location.search).get('tipo')||'');
   useEffect(()=>{
     const client=getSupabase();
     const listener=client?.auth.onAuthStateChange(()=>setRevision(value=>value+1));
@@ -25,21 +26,21 @@ export function RegistrationReviewView() {
       if(!client||!id||!/^[0-9a-f-]{36}$/i.test(id)){if(active)setMessage('Link de revisão inválido.');return;}
       const {data:{user}}=await client.auth.getUser();
       if(!user){if(active){setRegistration(null);setMessage('Abra o link de acesso enviado pelo Supabase ao e-mail do responsável pelo site.');}return;}
-      const {data,error}=await client.rpc('registration_for_review',{registration_id:id});
+      const {data,error}=await client.rpc(directory?'directory_for_review':'registration_for_review',{registration_id:id});
       if(!active)return;
       if(error||!data){setRegistration(null);setMessage('Este cadastro só pode ser revisado pelo titular autorizado, ou não está disponível.');return;}
       setRegistration(data as Registration);setMessage('');
     };
     void load().catch(()=>{if(active)setMessage('Não foi possível carregar o cadastro. Tente novamente mais tarde.');});
     return ()=>{active=false;};
-  },[id,revision]);
+  },[id,revision,directory]);
   const decide=async(approve:boolean)=>{
     if(busy||!registration)return;
     if(!approve&&!reason.trim()){setMessage('Informe o motivo da recusa.');return;}
     setBusy(true);
     try {
       const client=getSupabase();if(!client)throw Error();
-      const {error}=await client.rpc('decide_registration',{registration_id:registration.id,approve,reason});
+      const {error}=await client.rpc(directory?'decide_directory':'decide_registration',{registration_id:registration.id,approve,reason});
       if(error)throw error;
       setRegistration(previous=>previous?{...previous,status:approve?'verificado':'rejeitado'}:null);
       setMessage(approve?'Cadastro aprovado e publicado.':'Cadastro recusado.');
@@ -53,6 +54,9 @@ export function RegistrationReviewView() {
       <h2 className="text-2xl font-bold">{registration.nome}</h2>
       <p>{registration.endereco} · {registration.cidade} – {registration.estado}</p>
       <p className="whitespace-pre-wrap">{registration.descricao}</p>
+      {registration.especialidade&&<p>Especialidade: {registration.especialidade} · Registro: {registration.registro_profissional||'Não informado'}</p>}
+      {registration.atende_por_tipo&&<p>Necessidades atendidas informadas: {registration.atende_por_tipo.join(', ')||'Não informadas'}</p>}
+      {registration.email&&<p>E-mail profissional: {registration.email}</p>}
       <p>Telefone: {registration.telefone||'Não informado'} · WhatsApp: {registration.whatsapp||'Não informado'}</p>
       <p>Horário: {registration.horario_funcionamento||'Não informado'}</p>
       <h3 className="font-bold">Recursos informados</h3>

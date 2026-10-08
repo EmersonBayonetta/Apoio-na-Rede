@@ -30,6 +30,11 @@ const nearbyRequests = new Map<string, Promise<NearbyPlace[]>>();
 const nearbyCache = new Map<string, { expires: number; places: NearbyPlace[] }>();
 
 export const PlacesService = {
+  async contact(placeId:string) {
+    const {Place}=await library();const place=new Place({id:placeId});
+    await place.fetchFields({fields:['nationalPhoneNumber','websiteURI','regularOpeningHours']});
+    return {telefone:place.nationalPhoneNumber??undefined,website:place.websiteURI??undefined,horario_funcionamento:place.regularOpeningHours?.weekdayDescriptions?.join('; ')};
+  },
   async photos(placeId: string) {
     const { Place } = await library();
     const place = new Place({ id: placeId });

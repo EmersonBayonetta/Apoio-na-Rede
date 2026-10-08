@@ -6,7 +6,7 @@ export function PlaceCatalog({ entries, center, limit, showDistance = false, onO
   // Equirectangular approximation: accurate enough inside a single city.
   const distance = (entry: CatalogEntry) => {
     const point = entry.establishment ?? entry.place;
-    return point ? Math.hypot(point.latitude - center[0], (point.longitude - center[1]) * Math.cos(center[0] * Math.PI / 180)) * 111_320 : Infinity;
+    return point && entry.establishment?.coordenadas_confirmadas!==false ? Math.hypot(point.latitude - center[0], (point.longitude - center[1]) * Math.cos(center[0] * Math.PI / 180)) * 111_320 : Infinity;
   };
   const results = [...entries].sort((a, b) => distance(a) - distance(b)).slice(0, limit);
   return <section className="mb-12" aria-label="Locais sugeridos">

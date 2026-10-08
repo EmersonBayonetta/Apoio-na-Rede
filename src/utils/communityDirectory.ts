@@ -21,11 +21,13 @@ export function validateProfessional(data: Omit<Professional, 'id'>): Omit<Profe
     nome: data.nome.trim(), especialidade: data.especialidade.trim(), cidade: data.cidade.trim(), estado: data.estado.trim().toUpperCase(),
     endereco: data.endereco?.trim() ?? '', telefone: data.telefone?.trim() ?? '', whatsapp: data.whatsapp?.trim() ?? '',
     registro_profissional: data.registro_profissional?.trim() ?? '', descricao: data.descricao.trim(), atende_por_tipo: data.atende_por_tipo,
+    ...(data.email===undefined?{}:{email:data.email.trim()}),
   };
   if (![trimmed.nome, trimmed.especialidade, trimmed.cidade, trimmed.estado].every(Boolean)) throw new Error('Preencha nome, especialidade, cidade e estado.');
   if (!validUf(trimmed.estado)) throw new Error('Informe uma UF válida.');
   if (trimmed.telefone && !validPhone(trimmed.telefone)) throw new Error('Informe um telefone com DDD.');
   if (trimmed.whatsapp && !whatsappDigits(trimmed.whatsapp)) throw new Error('Informe um WhatsApp com DDD.');
+  if(trimmed.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed.email))throw new Error('Informe um e-mail válido.');
   return trimmed;
 }
 

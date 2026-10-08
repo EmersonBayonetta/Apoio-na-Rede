@@ -38,6 +38,9 @@ export interface Review {
 }
 
 export interface Establishment {
+  fonte_url?: string;
+  consultado_em?: string;
+  coordenadas_confirmadas?: boolean;
   demonstracao?: boolean;
   external?: boolean;
   informado_responsavel?: boolean;
@@ -72,6 +75,8 @@ export interface Establishment {
 }
 
 export interface Professional {
+  fonte_url?: string;
+  consultado_em?: string;
   demonstracao?: boolean;
   status?: EstablishmentStatus;
   motivo_rejeicao?: string | null;
@@ -93,6 +98,8 @@ export interface Professional {
 }
 
 export interface AccessibleRoute {
+  fonte_url?: string;
+  consultado_em?: string;
   demonstracao?: boolean;
   status?: EstablishmentStatus;
   motivo_rejeicao?: string | null;

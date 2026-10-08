@@ -2,6 +2,8 @@
 
 O menu Cadastrar abre o formulário público, sem login. Os envios online ficam pendentes no banco existente `supabase-green-school`; não aparecem no catálogo até serem aprovados.
 
+Compartilhar um trecho e Cadastrar profissional seguem o mesmo fluxo. O link de revisão inclui o tipo do catálogo e o banco confirma a autorização do titular. Os limites de envio são compartilhados entre locais, trechos e profissionais.
+
 A função `/api/register-place` solicita um link de acesso do Supabase Auth para o titular já autorizado. Nenhuma mensagem passa pelo Resend. O link abre `/revisao?cadastro=UUID`, com apenas aquele cadastro. Abrir o link não decide nada: o titular precisa clicar em Aprovar e publicar ou informar o motivo da recusa. A autorização é conferida no banco em cada operação; conhecer a URL ou confirmar outro e-mail não concede acesso. O antigo painel `/gestao` deixou de ser apresentado.
 
 ## Configuração existente e limites

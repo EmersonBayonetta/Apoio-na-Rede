@@ -3,7 +3,7 @@ import { Accessibility, MapPinned, Plus, Search, Stethoscope, ExternalLink, Chec
 import type { AccessibleRoute, DisabilityType, Professional } from '../types';
 import { StorageService } from '../services/storageService';
 import { getSupabase } from '../lib/supabase';
-import { SignInGate } from '../components/contributions/SignInGate';
+import { submitPublicDirectory } from '../services/publicRegistrationService';
 import { filterProfessionals, filterRoutes, validateProfessional, validateRoute, whatsappUrl } from '../utils/communityDirectory';
 
 const needs: { id: DisabilityType; label: string }[] = [
@@ -59,9 +59,9 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
     } catch (validationError) { setError((validationError as Error).message); return; }
     setBusy(true);
     try {
-      const saved = await StorageService.saveRoute(route);
-      setRoutes(previous => [saved,...previous.filter(item => !item.demonstracao)]); setShowForm(false); setError('');
-      setNotice(online ? 'Trecho enviado para revisão. Até a aprovação, ele aparece apenas para você e a moderação.' : 'Trecho adicionado. Ele aparece como relato comunitário até ser conferido no local.');
+      const result = await submitPublicDirectory('routes',route);
+      if(result.saved)setRoutes(previous => [result.saved as AccessibleRoute,...previous]); setShowForm(false); setError('');
+      setNotice(result.message);
     } catch (failure) { setError((failure as Error).message); }
     finally { setBusy(false); }
   };
@@ -76,14 +76,15 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
         nome: String(data.get('name')), especialidade: String(data.get('specialty')), cidade: String(data.get('city')),
         estado: String(data.get('state')), endereco: String(data.get('address')), telefone: String(data.get('phone')),
         whatsapp: String(data.get('whatsapp')), registro_profissional: String(data.get('registry')),
+        email:String(data.get('email')??''),
         atende_por_tipo: needs.filter(n => data.get(`need-${n.id}`) === 'on').map(n => n.id), descricao: String(data.get('description')),
       });
     } catch (validationError) { setError((validationError as Error).message); return; }
     setBusy(true);
     try {
-      const saved = await StorageService.saveProfessional(professional);
-      setProfessionals(previous => [saved,...previous.filter(item => !item.demonstracao)]); setShowForm(false); setError('');
-      setNotice(online ? 'Profissional enviado para revisão. Até a aprovação, ele aparece apenas para você e a moderação.' : 'Profissional adicionado ao catálogo deste navegador. Confira os dados antes de entrar em contato.');
+      const result = await submitPublicDirectory('professionals',professional);
+      if(result.saved)setProfessionals(previous => [result.saved as Professional,...previous]); setShowForm(false); setError('');
+      setNotice(result.message);
     } catch (failure) { setError((failure as Error).message); }
     finally { setBusy(false); }
   };
@@ -100,7 +101,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
     {notice && <p role="status" className="mb-4 rounded-xl bg-emerald-50 p-4 text-emerald-900">{notice}</p>}
     {loading && <p role="status">Carregando catálogo…</p>}
     {error && !showForm && <div role="alert" className="mb-4 rounded-xl border p-4"><p>{error}</p><button type="button" className="min-h-11 underline" onClick={() => setRevision(value => value + 1)}>Tentar novamente</button></div>}
-    {showForm && <SignInGate><form onSubmit={section === 'routes' ? saveRoute : saveProfessional} className={`${panel} mb-6 grid gap-4 md:grid-cols-2`}>
+    {showForm && <form onSubmit={section === 'routes' ? saveRoute : saveProfessional} className={`${panel} mb-6 grid gap-4 md:grid-cols-2`}>
       <h2 className="text-xl font-bold md:col-span-2">{section === 'routes' ? 'Descreva o trecho' : 'Dados para o catálogo'}</h2>
       {section === 'routes' ? <>
         <label className="grid gap-1">Ponto de partida<input className={field} name="origin" required /></label><label className="grid gap-1">Destino<input className={field} name="destination" required /></label>
@@ -111,13 +112,14 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
         <label className="grid gap-1">Nome<input className={field} name="name" required /></label><label className="grid gap-1">Especialidade<input className={field} name="specialty" required placeholder="Ex.: fisioterapia, odontologia" /></label>
         <label className="grid gap-1">Cidade<input className={field} name="city" defaultValue="Cataguases" required /></label><label className="grid gap-1">Estado<input className={field} name="state" defaultValue="MG" required maxLength={2} /></label>
         <label className="grid gap-1">Endereço<input className={field} name="address" /></label><label className="grid gap-1">Telefone<input className={field} name="phone" type="tel" placeholder="(32) 3422-1234" /></label><label className="grid gap-1">WhatsApp<input className={field} name="whatsapp" type="tel" placeholder="Opcional, com DDD" /></label>
+        <label className="grid gap-1">E-mail profissional<input className={field} name="email" type="email" placeholder="Opcional" /></label>
         <label className="grid gap-1">Registro profissional<input className={field} name="registry" placeholder="Opcional" /></label><label className="grid gap-1">Sobre o atendimento<textarea className={field} name="description" rows={2} /></label>
         <fieldset className="flex flex-wrap gap-4 md:col-span-2"><legend className="mb-2 font-semibold">Necessidades atendidas</legend>{needs.map(n => <label key={n.id} className="flex items-center gap-2"><input type="checkbox" name={`need-${n.id}`} />{n.label}</label>)}</fieldset>
       </>}
       {error && <p role="alert" className="rounded-xl bg-red-50 p-3 font-semibold text-red-900 md:col-span-2">{error}</p>}
       <div className="flex gap-3 md:col-span-2"><button disabled={busy} className={primary} type="submit">{busy ? 'Enviando…' : online ? 'Enviar para revisão' : 'Salvar no catálogo'}</button><button disabled={busy} type="button" className="rounded-xl border px-4 py-2" onClick={() => { setShowForm(false); setError(''); }}>Cancelar</button></div>
       <p className="text-sm text-slate-600 md:col-span-2">{online ? 'Os dados aprovados ficam disponíveis para todos. Não inclua informações pessoais de pacientes; use apenas contatos profissionais autorizados para publicação.' : 'Os dados ficam salvos neste navegador nesta demonstração. Não inclua informações pessoais de pacientes.'}</p>
-    </form></SignInGate>}
+    </form>}
     <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto]">
       <label className="relative"><Search className="absolute left-3 top-3 text-slate-500" size={19} /><input className={`${field} pl-10`} value={query} onChange={e => setQuery(e.target.value)} placeholder={section === 'routes' ? 'Buscar por cidade, trecho ou local' : 'Buscar por nome, especialidade ou cidade'} /></label>
       {section === 'professionals' && <select aria-label="Filtrar por necessidade atendida" className={field} value={need} onChange={e => setNeed(e.target.value as DisabilityType | '')}><option value="">Todas as necessidades</option>{needs.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}</select>}
@@ -126,6 +128,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
       {route.demonstracao && <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-teal-800">Demonstração · trajeto fictício</p>}
       <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex items-center gap-2 text-sm font-semibold text-teal-800"><MapPinned size={17}/>{route.cidade}</div><h2 className="mt-2 text-xl font-bold">{route.ponto_origem} <span aria-hidden="true">→</span> {route.ponto_destino}</h2></div>{route.demonstracao ? <span className="text-sm text-slate-600">Exemplo</span> : route.auditada ? <span className="flex items-center gap-1 text-sm text-emerald-800"><CheckCircle2 size={16}/>Conferido</span> : <span className="flex items-center gap-1 text-sm text-amber-800"><Clock3 size={16}/>{route.status === 'verificado' ? 'Relato aprovado' : route.status === 'rejeitado' ? 'Recusado' : 'Em verificação'}</span>}</div>
       <p className="mt-3 text-slate-700">{route.trecho_descricao}</p><div className="mt-4 flex flex-wrap gap-2">{route.tem_rampa && <span className="rounded-full bg-blue-50 px-3 py-1 text-sm">Rampas</span>}{route.tem_piso_tatil && <span className="rounded-full bg-blue-50 px-3 py-1 text-sm">Piso tátil</span>}{route.tem_semaforo_sonoro && <span className="rounded-full bg-blue-50 px-3 py-1 text-sm">Semáforo sonoro</span>}{!route.tem_rampa && !route.tem_piso_tatil && !route.tem_semaforo_sonoro && <span className="text-sm text-slate-600">Sem itens de acessibilidade confirmados</span>}</div>
+      {route.fonte_url&&<p className="mt-3 text-sm"><a className="underline" href={route.fonte_url} target="_blank" rel="noreferrer">Fonte dos endereços</a> · Consulta: {route.consultado_em}</p>}
       {route.status === 'verificado' && !route.auditada && <p className="mt-3 text-sm">Relato aprovado para publicação. O trecho ainda não foi auditado presencialmente.</p>}
       {route.status === 'rejeitado' && <p role="status" className="mt-3">Cadastro recusado: {route.motivo_rejeicao}</p>}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4"><span className="text-sm text-slate-600">{route.distancia_metros ? `${route.distancia_metros} m` : 'Distância não informada'} · {route.nivel_seguranca}</span>{!route.demonstracao && <a className="inline-flex items-center gap-1 font-semibold text-blue-900" target="_blank" rel="noreferrer" href={directions(route)}>Ver direções <ExternalLink size={15}/></a>}</div>
@@ -133,7 +136,10 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
       {person.demonstracao && <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-teal-800">Demonstração · profissional fictício</p>}
       <div className="flex gap-4"><div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-teal-50 text-teal-800"><Stethoscope/></div><div><h2 className="text-xl font-bold">{person.nome}</h2><p className="font-medium text-teal-800">{person.especialidade}</p><p className="mt-1 text-sm text-slate-600">{person.cidade} – {person.estado}{person.registro_profissional ? ` · ${person.registro_profissional}` : ''}</p></div></div>
       <p className="mt-4 text-slate-700">{person.descricao}</p>{person.endereco && <p className="mt-2 text-sm">📍 {person.endereco}</p>}
-      {!person.demonstracao && person.status && <p className="mt-3 text-sm font-semibold">{person.status === 'verificado' ? 'Conferido' : person.status === 'pendente' ? 'Em verificação' : `Cadastro recusado: ${person.motivo_rejeicao}`}</p>}
+      {!person.demonstracao && person.status && <p className="mt-3 text-sm font-semibold">{person.status === 'verificado' ? 'Publicado' : person.status === 'pendente' ? 'Em verificação' : `Cadastro recusado: ${person.motivo_rejeicao}`}</p>}
+      {person.fonte_url&&<p className="mt-3 text-sm"><a className="underline" href={person.fonte_url} target="_blank" rel="noreferrer">Fonte dos dados profissionais</a> · Consulta: {person.consultado_em}</p>}
+      {!person.atende_por_tipo.length&&<p className="mt-3 text-sm text-slate-600">Atendimento a necessidades específicas não informado publicamente. Confirme com o profissional.</p>}
+      {person.email&&!person.demonstracao&&<a href={`mailto:${person.email}`} className="mt-3 inline-flex min-h-11 items-center break-all underline">{person.email}</a>}
       <div className="mt-3 flex flex-wrap gap-2">{person.atende_por_tipo.map(type => <span key={type} className="rounded-full bg-slate-100 px-3 py-1 text-sm">{needs.find(n => n.id === type)?.label ?? type}</span>)}</div>
       <div className="mt-5 flex flex-wrap gap-3 border-t pt-4">{person.demonstracao ? <p className="text-sm text-slate-600">Contato ilustrativo · {person.email}</p> : <>{person.telefone && <a className={primary} href={`tel:${person.telefone.replace(/[^+\d]/g, '')}`}>Ligar · {person.telefone}</a>}{whatsappUrl(person.whatsapp) && <a className="rounded-xl border border-emerald-700 px-4 py-2.5 font-semibold text-emerald-900" target="_blank" rel="noreferrer" href={whatsappUrl(person.whatsapp) ?? undefined}>WhatsApp</a>}</>}</div>
     </article>)}</div>}
