@@ -3,7 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { getSupabase } from '../../lib/supabase';
 import { AdminAccessRequest } from './AdminAccessRequest';
 
-export function SignInGate({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
+export function SignInGate({ children, admin = false, onDemand = false }: { children: ReactNode; admin?: boolean; onDemand?: boolean }) {
   const client = getSupabase();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(Boolean(client));
@@ -12,6 +12,7 @@ export function SignInGate({ children, admin = false }: { children: ReactNode; a
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [showLogin, setShowLogin] = useState(false);
   const [useCode,setUseCode] = useState(false);
   const [access,setAccess] = useState<{id:string;allowed:boolean}|null>(null);
   useEffect(() => {
@@ -31,7 +32,8 @@ export function SignInGate({ children, admin = false }: { children: ReactNode; a
   if (loading) return <p role="status">Verificando acesso…</p>;
   if (user && admin && access?.id!==user.id) return <p role="status">Verificando acesso…</p>;
   if (user) return <Fragment key={user.id}>{admin && !access?.allowed ? <><p role="alert" className="mb-4">Acesso não autorizado.</p><AdminAccessRequest /></> : children}<button type="button" className="min-h-11 underline mt-4" onClick={async () => { const { error } = await client.auth.signOut(); if (error) setMessage('Não foi possível sair.'); }}>Sair da conta</button>{message && <p role="status">{message}</p>}</Fragment>;
-  return <form className="rounded-xl border bg-white p-5 space-y-4" onSubmit={async event => {
+  if (onDemand && !showLogin) return <button type="button" onClick={() => setShowLogin(true)} className="min-h-11 rounded-xl bg-blue-700 px-6 py-3 text-sm font-bold text-white hover:bg-blue-800">Publicar avaliação</button>;
+  return <form className={onDemand ? 'space-y-4' : 'rounded-xl border bg-white p-5 space-y-4'} onSubmit={async event => {
     event.preventDefault(); if (busy) return; setBusy(true); setMessage('');
     try {
       if (sent && useCode) {
@@ -52,7 +54,8 @@ export function SignInGate({ children, admin = false }: { children: ReactNode; a
     }
     finally { setBusy(false); }
   }}>
-    {!admin && <h2 className="text-xl font-bold">Entre para contribuir</h2>}
+    {!admin && !onDemand && <h2 className="text-xl font-bold">Entre para contribuir</h2>}
+    {onDemand && <p className="text-sm">Confirme seu e-mail para publicar a avaliação.</p>}
     <label className="block">E-mail<input className="block w-full rounded-lg border p-3" type="email" autoComplete="email" required value={email} disabled={sent} onChange={e => setEmail(e.target.value)} /></label>
     {sent && useCode && <label className="block">Código do e-mail<input className="block w-full rounded-lg border p-3" inputMode="numeric" autoComplete="one-time-code" required value={token} onChange={e => setToken(e.target.value)} /></label>}
     {(!sent || useCode) && <button className="min-h-11 rounded-lg bg-blue-700 px-4 text-white" disabled={busy}>{busy ? 'Aguarde…' : sent ? 'Confirmar código' : 'Receber link de acesso'}</button>}

@@ -436,7 +436,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             </div>
 
           </form>
-          <div className="mt-4"><SignInGate><button
+          <div className="mt-4"><SignInGate onDemand><button
               type="submit"
               form="place-review-form"
               disabled={isSubmittingReview}
