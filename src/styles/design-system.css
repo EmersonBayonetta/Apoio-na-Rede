@@ -328,4 +328,8 @@ body:is(.theme-high-contrast-dark, .theme-yellow-black) :is(.place-card-maps, .p
 .review-entry { border-left: 3px solid var(--ds-accent); }
 .review-star { border: 1px solid var(--ds-border); background: var(--ds-panel); }
 .review-star:hover, .review-star[aria-pressed="true"] { border-color: var(--ds-accent); background: var(--ds-raised); }
+.directory-actions a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.directory-contact, .review-expand { border-color: var(--ds-border); background: var(--ds-panel); color: var(--ds-text); }
+.online-appointment { background: var(--ds-raised); color: var(--ds-text); border: 1px solid var(--ds-border); }
+.review-expand:hover { border-color: var(--ds-accent); }
 @media(max-width: 480px) { .review-summary { gap: 16px; padding: 18px; } .review-summary-score { font-size: 2.25rem; } }

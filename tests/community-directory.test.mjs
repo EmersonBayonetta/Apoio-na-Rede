@@ -1,8 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { filterProfessionals, filterRoutes, validateProfessional, validateRoute, whatsappUrl } from '../src/utils/communityDirectory.ts';
+import { filterProfessionals, filterRoutes, validateProfessional, validateRoute, whatsappUrl, isOnlineOnly } from '../src/utils/communityDirectory.ts';
 
 const professional = { nome: 'Ana', especialidade: 'Fisioterapia', cidade: 'Cataguases', estado: 'MG', endereco: '', telefone: '', whatsapp: '', registro_profissional: '', descricao: '', atende_por_tipo: [] };
+
+test('directions distinguish online-only from mixed and unknown appointments', () => {
+  assert.equal(isOnlineOnly({ endereco: 'Atendimento online', descricao: '' }), true);
+  assert.equal(isOnlineOnly({ endereco: '', descricao: 'Atendimento exclusivamente online' }), true);
+  assert.equal(isOnlineOnly({ endereco: 'Rua A, 10', descricao: 'Atendimento presencial e online' }), false);
+  assert.equal(isOnlineOnly({ endereco: '', descricao: '' }), false);
+});
 const route = { origin: 'Praça Rui Barbosa', destination: 'Estação', city: 'Cataguases', description: 'Calçada regular', ramp: true, tactile: false, signal: false };
 
 test('professional registration rejects blank required fields', () => {

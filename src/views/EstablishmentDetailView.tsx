@@ -1,11 +1,10 @@
-import { ReportPanel } from '../components/contributions/ReportPanel';
 import { ApprovedReports } from '../components/contributions/ApprovedReports';
 import { localKey } from '../services/contributionService';
 import { SignInGate } from '../components/contributions/SignInGate';
 import { WalkingRoute } from '../components/establishments/WalkingRoute';
 import { whatsappUrl } from '../utils/communityDirectory';
 import { MAP_CATEGORIES } from '../data/mapCategories';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Establishment, DisabilityType } from '../types';
 import { StorageService } from '../services/storageService';
 import { useAccessibility } from '../context/AccessibilityContext';
@@ -42,6 +41,8 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
 }) => {
   const { accessibilityPreferences, requirements } = useAccessibility();
   const [reviewFilter, setReviewFilter] = useState<DisabilityType | 'todas'>('todas');
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  useEffect(() => setShowAllReviews(false), [establishment.id, reviewFilter]);
 
   // Form de Avaliação
   const [newRating, setNewRating] = useState(5);
@@ -180,8 +181,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         {establishment.demonstracao ? <p className="mt-4 rounded-xl border p-3 text-sm">Exemplo fictício para apresentação. Endereço, recursos e imagens são ilustrativos; este cadastro não representa um local real.</p> : <WalkingRoute destination={establishment} />}
         {establishment.status === 'verificado' && establishment.informado_responsavel && <p className="font-semibold mt-4">Informado pelo responsável</p>}
       </header>
-      {!establishment.demonstracao && <><ReportPanel place={establishment} onRefresh={onRefresh} />
-      <ApprovedReports placeKey={localKey(establishment)} /></>}
+      {!establishment.demonstracao && <ApprovedReports placeKey={localKey(establishment)} />}
 
       {/* Layout Grid: Informações Práticas + Checklist */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
@@ -315,7 +315,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           </div>
         ) : (
           <div className="space-y-4 mb-8">
-            {filteredReviews.map((rev) => (
+            {(showAllReviews ? filteredReviews : filteredReviews.slice(0, 5)).map((rev) => (
               <div
                 key={rev.id}
                 className="review-entry p-5 rounded-2xl border border-slate-200"
@@ -354,6 +354,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                 <p className="text-sm text-slate-700 leading-relaxed">{rev.comentario}</p>
               </div>
             ))}
+            {filteredReviews.length > 5 && <button type="button" aria-expanded={showAllReviews} onClick={() => setShowAllReviews(value => !value)} className="review-expand min-h-11 rounded-xl border px-5 py-3 font-semibold">{showAllReviews ? 'Mostrar menos comentários' : `Ver mais comentários (${filteredReviews.length - 5})`}</button>}
           </div>
         )}
 
@@ -361,7 +362,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         <div className="review-compose rounded-2xl p-5 sm:p-6 border border-slate-200">
           <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
             <Sparkles size={18} className="text-blue-600" aria-hidden="true" />
-            Compartilhe sua experiência de acessibilidade
+            Avalie este local
           </h3>
           <p className="text-xs text-slate-500 mb-4">
             Sua avaliação será publicada como <strong>Visitante da comunidade</strong>
@@ -374,9 +375,9 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             </div>
           )}
 
-          <SignInGate><form onSubmit={handleAddReview} className="space-y-4">
+          <form id="place-review-form" onSubmit={handleAddReview} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+              <div className="order-2">
                 <label htmlFor="review-disability" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Qual acessibilidade você avaliou?
                 </label>
@@ -394,11 +395,11 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                 </select>
               </div>
 
-              <div>
+              <div className="order-1">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Sua Nota (1 a 5 estrelas)
                 </label>
-                <div className="flex items-center gap-1 py-1.5">
+                <div className="flex flex-wrap items-center gap-1 py-1.5">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
@@ -421,7 +422,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
 
             <div>
               <label htmlFor="review-comment" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Seu Relato Detalhado (Como foi a circulação, atendimento e recursos?)
+                Seu comentário
               </label>
               <textarea
                 id="review-comment"
@@ -429,20 +430,21 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                 required
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Exemplo: Fui com cadeira de rodas e o acesso foi excelente, sem degraus. Os atendentes foram muito atenciosos..."
+                placeholder="Conte como foi sua experiência com o acesso e o atendimento neste local."
                 className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
               />
             </div>
 
-            <button
+          </form>
+          <div className="mt-4"><SignInGate><button
               type="submit"
+              form="place-review-form"
               disabled={isSubmittingReview}
               className="px-6 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
               <Send size={16} aria-hidden="true" />
               <span>{isSubmittingReview ? 'Enviando avaliação...' : 'Publicar Avaliação'}</span>
-            </button>
-          </form></SignInGate>
+            </button></SignInGate></div>
         </div>
       </section>}
     </article>

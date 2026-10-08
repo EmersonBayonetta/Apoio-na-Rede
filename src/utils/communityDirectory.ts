@@ -16,6 +16,12 @@ export function whatsappUrl(value?: string): string | null {
   return number ? `https://wa.me/${number}` : null;
 }
 
+export function isOnlineOnly(person: Pick<Professional, 'endereco' | 'descricao'>): boolean {
+  const address = normalizeSearchText(person.endereco ?? '').trim();
+  return /^(atendimento )?(exclusivamente |somente |apenas )?(online|on-line|virtual|remoto)$/.test(address)
+    || /atendimento (exclusivamente|somente|apenas) (online|on-line|virtual|remoto)/.test(normalizeSearchText(person.descricao));
+}
+
 export function validateProfessional(data: Omit<Professional, 'id'>): Omit<Professional, 'id'> {
   const trimmed = {
     nome: data.nome.trim(), especialidade: data.especialidade.trim(), cidade: data.cidade.trim(), estado: data.estado.trim().toUpperCase(),

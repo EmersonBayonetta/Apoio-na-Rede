@@ -129,6 +129,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const hasEssentials = Object.values(requirements).includes('indispensavel');
   const [hideUnmetEssentials, setHideUnmetEssentials] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAllPlaces, setShowAllPlaces] = useState(false);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -749,7 +750,10 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         </div>
         </div>
       </section>
-      <ExploreCategories selected={selectedCategory} onSelect={chooseCategory} />
+      <ExploreCategories selected={selectedCategory} onSelect={chooseCategory} onViewAll={() => {
+        handleResetFilters(); chooseCategory('todas'); setHideUnmetEssentials(false); setIncludeUnknownPlaces(true); setShowAllPlaces(true);
+        requestAnimationFrame(() => document.querySelector('[aria-label="Locais sugeridos"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      }} />
       <label className="mb-4 flex items-start gap-2 text-sm">
         <input type="checkbox" checked={includeUnknownPlaces} disabled={onlyVerified} onChange={event => setIncludeUnknownPlaces(event.target.checked)} />
         <span>Incluir lugares sem informações de acessibilidade. Seus recursos precisam ser consultados; a exibição não confirma que atendem às suas preferências.</span>
@@ -814,7 +818,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           </button>
         </section>
       ) : (
-        <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={5} showDistance={hasUserLocation} onOpenPlace={onSelectEstablishment} />
+        <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={showAllPlaces ? undefined : 5} showDistance={hasUserLocation} onOpenPlace={onSelectEstablishment} />
       )}
     </div>
   );

@@ -4,7 +4,7 @@ import type { AccessibleRoute, DisabilityType, Professional } from '../types';
 import { StorageService } from '../services/storageService';
 import { getSupabase } from '../lib/supabase';
 import { submitPublicDirectory } from '../services/publicRegistrationService';
-import { filterProfessionals, filterRoutes, validateProfessional, validateRoute, whatsappUrl } from '../utils/communityDirectory';
+import { filterProfessionals, filterRoutes, validateProfessional, validateRoute, whatsappUrl, isOnlineOnly } from '../utils/communityDirectory';
 
 const needs: { id: DisabilityType; label: string }[] = [
   { id: 'mobilidade', label: 'Mobilidade' }, { id: 'visual', label: 'Visual' },
@@ -22,6 +22,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
   const [query, setQuery] = useState('');
   const [need, setNeed] = useState<DisabilityType | ''>('');
   const [showForm, setShowForm] = useState(false);
+  const [onlineAppointment, setOnlineAppointment] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -74,7 +75,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
     try {
       professional = validateProfessional({
         nome: String(data.get('name')), especialidade: String(data.get('specialty')), cidade: String(data.get('city')),
-        estado: String(data.get('state')), endereco: String(data.get('address')), telefone: String(data.get('phone')),
+        estado: String(data.get('state')), endereco: onlineAppointment ? 'Atendimento online' : String(data.get('address') ?? ''), telefone: String(data.get('phone')),
         whatsapp: String(data.get('whatsapp')), registro_profissional: String(data.get('registry')),
         email:String(data.get('email')??''),
         atende_por_tipo: needs.filter(n => data.get(`need-${n.id}`) === 'on').map(n => n.id), descricao: String(data.get('description')),
@@ -111,7 +112,8 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
       </> : <>
         <label className="grid gap-1">Nome<input className={field} name="name" required /></label><label className="grid gap-1">Especialidade<input className={field} name="specialty" required placeholder="Ex.: fisioterapia, odontologia" /></label>
         <label className="grid gap-1">Cidade<input className={field} name="city" defaultValue="Cataguases" required /></label><label className="grid gap-1">Estado<input className={field} name="state" defaultValue="MG" required maxLength={2} /></label>
-        <label className="grid gap-1">Endereço<input className={field} name="address" /></label><label className="grid gap-1">Telefone<input className={field} name="phone" type="tel" placeholder="(32) 3422-1234" /></label><label className="grid gap-1">WhatsApp<input className={field} name="whatsapp" type="tel" placeholder="Opcional, com DDD" /></label>
+        <label className="flex items-center gap-2 md:col-span-2"><input type="checkbox" checked={onlineAppointment} onChange={event => setOnlineAppointment(event.target.checked)} />Atendimento exclusivamente online</label>
+        {!onlineAppointment && <label className="grid gap-1">Endereço de atendimento<input className={field} name="address" /></label>}<label className="grid gap-1">Telefone<input className={field} name="phone" type="tel" placeholder="(32) 3422-1234" /></label><label className="grid gap-1">WhatsApp<input className={field} name="whatsapp" type="tel" placeholder="Opcional, com DDD" /></label>
         <label className="grid gap-1">E-mail profissional<input className={field} name="email" type="email" placeholder="Opcional" /></label>
         <label className="grid gap-1">Registro profissional<input className={field} name="registry" placeholder="Opcional" /></label><label className="grid gap-1">Sobre o atendimento<textarea className={field} name="description" rows={2} /></label>
         <fieldset className="flex flex-wrap gap-4 md:col-span-2"><legend className="mb-2 font-semibold">Necessidades atendidas</legend>{needs.map(n => <label key={n.id} className="flex items-center gap-2"><input type="checkbox" name={`need-${n.id}`} />{n.label}</label>)}</fieldset>
@@ -131,17 +133,17 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
       {route.fonte_url&&<p className="mt-3 text-sm"><a className="underline" href={route.fonte_url} target="_blank" rel="noreferrer">Fonte dos endereços</a> · Consulta: {route.consultado_em}</p>}
       {route.status === 'verificado' && !route.auditada && <p className="mt-3 text-sm">Relato aprovado para publicação. O trecho ainda não foi auditado presencialmente.</p>}
       {route.status === 'rejeitado' && <p role="status" className="mt-3">Cadastro recusado: {route.motivo_rejeicao}</p>}
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4"><span className="text-sm text-slate-600">{route.distancia_metros ? `${route.distancia_metros} m` : 'Distância não informada'} · {route.nivel_seguranca}</span>{!route.demonstracao && <a className="inline-flex items-center gap-1 font-semibold text-blue-900" target="_blank" rel="noreferrer" href={directions(route)}>Ver direções <ExternalLink size={15}/></a>}</div>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4"><div><p className="font-semibold">Trajeto a pé{route.distancia_metros ? ` · ${route.distancia_metros} m` : ''}</p><p className="mt-1 text-sm text-slate-600">{route.distancia_metros ? '' : 'Distância e duração disponíveis no Google Maps. '}{route.nivel_seguranca}</p></div>{!route.demonstracao && <a className={primary} target="_blank" rel="noreferrer" href={directions(route)}>Como chegar <ExternalLink size={16} aria-hidden="true"/><span className="sr-only">(abre em nova aba)</span></a>}</div>
     </article>)}</div> : <div className="grid gap-4 lg:grid-cols-2">{filteredProfessionals.map(person => <article key={person.id} className={panel}>
       {person.demonstracao && <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-teal-800">Demonstração · profissional fictício</p>}
       <div className="flex gap-4"><div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-teal-50 text-teal-800"><Stethoscope/></div><div><h2 className="text-xl font-bold">{person.nome}</h2><p className="font-medium text-teal-800">{person.especialidade}</p><p className="mt-1 text-sm text-slate-600">{person.cidade} – {person.estado}{person.registro_profissional ? ` · ${person.registro_profissional}` : ''}</p></div></div>
-      <p className="mt-4 text-slate-700">{person.descricao}</p>{person.endereco && <p className="mt-2 text-sm">📍 {person.endereco}</p>}
+      <p className="mt-4 text-slate-700">{person.descricao}</p>{isOnlineOnly(person) ? <p className="online-appointment mt-3 rounded-xl px-4 py-3 text-sm font-semibold">Atendimento online · entre em contato para agendar sua consulta.</p> : person.endereco ? <p className="mt-2 text-sm">📍 {person.endereco}</p> : <p className="mt-2 text-sm">Endereço de atendimento não informado. Confirme com o profissional.</p>}
       {!person.demonstracao && person.status && <p className="mt-3 text-sm font-semibold">{person.status === 'verificado' ? 'Publicado' : person.status === 'pendente' ? 'Em verificação' : `Cadastro recusado: ${person.motivo_rejeicao}`}</p>}
       {person.fonte_url&&<p className="mt-3 text-sm"><a className="underline" href={person.fonte_url} target="_blank" rel="noreferrer">Fonte dos dados profissionais</a> · Consulta: {person.consultado_em}</p>}
       {!person.atende_por_tipo.length&&<p className="mt-3 text-sm text-slate-600">Atendimento a necessidades específicas não informado publicamente. Confirme com o profissional.</p>}
       {person.email&&!person.demonstracao&&<a href={`mailto:${person.email}`} className="mt-3 inline-flex min-h-11 items-center break-all underline">{person.email}</a>}
       <div className="mt-3 flex flex-wrap gap-2">{person.atende_por_tipo.map(type => <span key={type} className="rounded-full bg-slate-100 px-3 py-1 text-sm">{needs.find(n => n.id === type)?.label ?? type}</span>)}</div>
-      <div className="mt-5 flex flex-wrap gap-3 border-t pt-4">{person.demonstracao ? <p className="text-sm text-slate-600">Contato ilustrativo · {person.email}</p> : <>{person.telefone && <a className={primary} href={`tel:${person.telefone.replace(/[^+\d]/g, '')}`}>Ligar · {person.telefone}</a>}{whatsappUrl(person.whatsapp) && <a className="rounded-xl border border-emerald-700 px-4 py-2.5 font-semibold text-emerald-900" target="_blank" rel="noreferrer" href={whatsappUrl(person.whatsapp) ?? undefined}>WhatsApp</a>}</>}</div>
+      <div className="directory-actions mt-5 flex flex-wrap gap-3 border-t pt-4">{person.demonstracao ? <p className="text-sm text-slate-600">Contato ilustrativo · {person.email}</p> : <>{!isOnlineOnly(person) && person.endereco?.trim() && <a className={primary} target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${person.endereco}, ${person.cidade}, ${person.estado}`)}`}><MapPinned size={18} aria-hidden="true"/>Como chegar<span className="sr-only">(abre em nova aba)</span></a>}{person.telefone && <a className="directory-contact rounded-xl border px-4 py-2.5 font-semibold" href={`tel:${person.telefone.replace(/[^+\d]/g, '')}`}>Ligar · {person.telefone}</a>}{whatsappUrl(person.whatsapp) && <a className="rounded-xl border border-emerald-700 px-4 py-2.5 font-semibold text-emerald-900" target="_blank" rel="noreferrer" href={whatsappUrl(person.whatsapp) ?? undefined}>WhatsApp</a>}</>}</div>
     </article>)}</div>}
     {!loading && !error && ((section === 'routes' && !filteredRoutes.length) || (section === 'professionals' && !filteredProfessionals.length)) && <div className={`${panel} empty-state py-12 text-center`}>{(section === 'routes' ? !routes.length : !professionals.length) && !query.trim() && !need
       ? <><p className="text-lg font-semibold">{section === 'routes' ? 'Ainda não há trechos compartilhados.' : 'Ainda não há profissionais cadastrados.'}</p><p className="mt-2 text-slate-600">{section === 'routes' ? 'Conte como é um caminho que você conhece: rampas, piso tátil, travessias e obstáculos.' : 'Indique um profissional que atende bem pessoas com deficiência.'}</p><button type="button" className={`${primary} mt-5`} onClick={() => { setShowForm(true); setNotice(''); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}><Plus size={18} aria-hidden="true" />{section === 'routes' ? 'Compartilhar um trecho' : 'Cadastrar profissional'}</button></>
