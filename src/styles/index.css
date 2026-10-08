@@ -136,6 +136,28 @@ body.theme-yellow-black *:focus-visible {
   outline: 4px solid #ffff00 !important;
 }
 
+body.theme-high-contrast-dark .accessibility-onboarding-dialog :focus-visible {
+  outline-color: #ffffff !important;
+}
+
+body.theme-yellow-black .accessibility-onboarding-dialog :focus-visible {
+  outline-color: #ffff00 !important;
+}
+
+body.theme-high-contrast-dark .accessibility-onboarding-dialog .accessibility-onboarding-choice,
+body.theme-high-contrast-dark .accessibility-onboarding-dialog :where(.bg-blue-700, .bg-slate-300, .bg-slate-100) {
+  background-color: #121212 !important;
+}
+
+body.theme-high-contrast-dark .accessibility-onboarding-dialog button {
+  color: #ffffff !important;
+}
+
+body.theme-yellow-black .accessibility-onboarding-dialog .accessibility-onboarding-choice,
+body.theme-yellow-black .accessibility-onboarding-dialog :where(.bg-blue-700, .bg-slate-300, .bg-slate-100) {
+  background-color: #0a0a0a !important;
+}
+
 /* Modo Redução de Estímulos Sensoriais (Neurodivergência / Autismo) */
 body.reduced-sensory * {
   animation: none !important;

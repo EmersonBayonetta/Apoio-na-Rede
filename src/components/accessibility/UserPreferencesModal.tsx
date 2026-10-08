@@ -106,7 +106,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100"
+          className="absolute top-4 right-4 grid h-11 w-11 place-items-center text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100"
           aria-label="Fechar janela de preferências"
         >
           <X size={20} aria-hidden="true" />
@@ -178,7 +178,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
                 <legend className="px-1 text-sm font-semibold text-slate-900">{resource.label}</legend>
                 <div className="flex flex-wrap gap-3 text-xs">
                   {REQUIREMENT_LEVELS.map((level) => (
-                    <label key={level.label} className="flex items-center gap-1.5">
+                    <label key={level.label} className="flex min-h-11 items-center gap-1.5">
                       <input
                         type="radio"
                         name={`requirement-${resource.id}`}
@@ -197,7 +197,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
               </fieldset>
             ))}
           </div>
-          <button type="button" onClick={() => setDraftRequirements({})} className="mt-3 text-sm font-semibold text-blue-700 underline">
+          <button type="button" onClick={() => setDraftRequirements({})} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">
             Limpar requisitos
           </button>
         </section>
@@ -214,7 +214,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-100"
+            className="min-h-11 flex-1 border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-100"
           >
             Cancelar
           </button>
@@ -222,7 +222,7 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ isOp
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex-1 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow-md transition-colors"
+            className="min-h-11 flex-1 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow-md transition-colors"
           >
             {isSaving ? 'Salvando...' : 'Salvar Preferências'}
           </button>

@@ -70,7 +70,7 @@ export const AccessibilityToolbar: React.FC = () => {
             <button
               type="button"
               onClick={stopSpeaking}
-              className="ml-2 bg-blue-900 hover:bg-blue-950 text-white px-2 py-0.5 rounded-full text-xs"
+              className="ml-2 min-h-11 bg-blue-900 hover:bg-blue-950 text-white px-3 rounded-full text-xs"
               aria-label="Parar leitura em voz alta"
             >
               Parar
@@ -108,7 +108,7 @@ export const AccessibilityToolbar: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+              className="grid h-11 w-11 shrink-0 place-items-center text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
               aria-label="Fechar menu de acessibilidade"
             >
               <X size={20} aria-hidden="true" />
@@ -123,7 +123,7 @@ export const AccessibilityToolbar: React.FC = () => {
             Minhas necessidades
           </button>
           <div className="space-y-5 text-sm">
-            <label className="flex items-center gap-3 font-bold">
+            <label className="flex min-h-11 items-center gap-3 font-bold">
               <input type="checkbox" checked={settings.voiceReadingEnabled} onChange={event => applySettings({ voiceReadingEnabled: event.target.checked })} />
               Leitura em voz alta
             </label>
@@ -134,7 +134,7 @@ export const AccessibilityToolbar: React.FC = () => {
                   if (isSpeaking) stopSpeaking();
                   else speakText(document.getElementById('main-content')?.innerText ?? '');
                 }}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-700 text-white px-4 py-2 font-bold"
+                className="min-h-11 w-full flex items-center justify-center gap-2 rounded-xl bg-blue-700 text-white px-4 font-bold"
               >
                 <Volume2 size={18} aria-hidden="true" />
                 {isSpeaking ? 'Parar leitura' : 'Ouvir página'}
@@ -153,7 +153,7 @@ export const AccessibilityToolbar: React.FC = () => {
                     type="button"
                     onClick={() => setFontSize(size)}
                     aria-pressed={settings.fontSize === size}
-                    className={`py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                    className={`min-h-11 text-xs font-bold rounded-lg transition-colors ${
                       settings.fontSize === size
                         ? 'bg-blue-700 text-white shadow-xs'
                         : 'text-slate-700 hover:bg-slate-200'
@@ -179,7 +179,7 @@ export const AccessibilityToolbar: React.FC = () => {
                   type="button"
                   onClick={() => setHighContrast('default')}
                   aria-pressed={settings.highContrast === 'default'}
-                  className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all ${
+                  className={`min-h-11 px-2 text-xs font-bold rounded-xl border transition-all ${
                     settings.highContrast === 'default'
                       ? 'border-blue-600 bg-blue-50 text-blue-900 ring-2 ring-blue-500'
                       : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
@@ -191,7 +191,7 @@ export const AccessibilityToolbar: React.FC = () => {
                   type="button"
                   onClick={() => setHighContrast('dark')}
                   aria-pressed={settings.highContrast === 'dark'}
-                  className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all bg-slate-950 text-white ${
+                  className={`min-h-11 px-2 text-xs font-bold rounded-xl border transition-all bg-slate-950 text-white ${
                     settings.highContrast === 'dark'
                       ? 'border-white ring-2 ring-white'
                       : 'border-slate-700 hover:bg-black'
@@ -203,7 +203,7 @@ export const AccessibilityToolbar: React.FC = () => {
                   type="button"
                   onClick={() => setHighContrast('yellow-black')}
                   aria-pressed={settings.highContrast === 'yellow-black'}
-                  className={`py-2 px-2 text-xs font-bold rounded-xl border transition-all bg-black text-yellow-300 ${
+                  className={`min-h-11 px-2 text-xs font-bold rounded-xl border transition-all bg-black text-yellow-300 ${
                     settings.highContrast === 'yellow-black'
                       ? 'border-yellow-300 ring-2 ring-yellow-300'
                       : 'border-yellow-500/50 hover:bg-slate-900'
@@ -228,16 +228,18 @@ export const AccessibilityToolbar: React.FC = () => {
                 role="switch"
                 aria-checked={settings.dyslexicFont}
                 onClick={toggleDyslexicFont}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                  settings.dyslexicFont ? 'bg-blue-700' : 'bg-slate-300'
-                }`}
+                className="grid h-11 w-11 shrink-0 place-items-center"
                 aria-label="Ativar fonte amigável para dislexia"
               >
-                <div
-                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                    settings.dyslexicFont ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <div aria-hidden="true" className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                  settings.dyslexicFont ? 'bg-blue-700' : 'bg-slate-300'
+                }`}>
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      settings.dyslexicFont ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
               </button>
             </div>
 
@@ -255,16 +257,18 @@ export const AccessibilityToolbar: React.FC = () => {
                 role="switch"
                 aria-checked={settings.reducedSensory}
                 onClick={toggleReducedSensory}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                  settings.reducedSensory ? 'bg-emerald-600' : 'bg-slate-300'
-                }`}
+                className="grid h-11 w-11 shrink-0 place-items-center"
                 aria-label="Ativar modo de baixo estímulo sensorial"
               >
-                <div
-                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                    settings.reducedSensory ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <div aria-hidden="true" className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                  settings.reducedSensory ? 'bg-emerald-600' : 'bg-slate-300'
+                }`}>
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      settings.reducedSensory ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
               </button>
             </div>
 
@@ -276,7 +280,7 @@ export const AccessibilityToolbar: React.FC = () => {
                   setIsOpen(false);
                   window.dispatchEvent(new Event('open-accessibility-onboarding'));
                 }}
-                className="w-full flex items-center justify-center gap-2 py-2 mb-2 text-xs font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+                className="min-h-11 w-full flex items-center justify-center gap-2 mb-2 text-xs font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
               >
                 <Sliders size={14} aria-hidden="true" />
                 <span>Refazer configuração guiada</span>
@@ -284,7 +288,7 @@ export const AccessibilityToolbar: React.FC = () => {
               <button
                 type="button"
                 onClick={resetAll}
-                className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                className="min-h-11 w-full flex items-center justify-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
               >
                 <RotateCcw size={14} aria-hidden="true" />
                 <span>Restaurar configurações padrão</span>

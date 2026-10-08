@@ -531,7 +531,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <select id={`crit-${idx}`} value={crit.presente === true ? 'sim' : crit.presente === false ? 'nao' : 'desconhecido'} onChange={event => updateCriteriaPresent(idx, event.target.value)} className="max-w-[135px] rounded-lg border border-slate-300 bg-white p-2 text-xs">
+                      <select id={`crit-${idx}`} value={crit.presente === true ? 'sim' : crit.presente === false ? 'nao' : 'desconhecido'} onChange={event => updateCriteriaPresent(idx, event.target.value)} className="min-h-11 max-w-[135px] rounded-lg border border-slate-300 bg-white p-2 text-xs">
                         <option value="desconhecido">Não verificado</option><option value="sim">Sim</option><option value="nao">Não</option>
                       </select>
                       <div className="flex-1">
@@ -545,12 +545,14 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
 
                         {crit.presente && (
                           <div className="mt-2.5">
+                            <label className="sr-only" htmlFor={`crit-observation-${idx}`}>Observação sobre: {crit.criterio}</label>
                             <input
+                              id={`crit-observation-${idx}`}
                               type="text"
                               value={crit.observacao}
                               onChange={(e) => updateCriteriaObservacao(idx, e.target.value)}
                               placeholder="Observação livre (ex: 'Rampa de 8% de inclinação', 'Equipe fez curso em 2024')..."
-                              className="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-600"
+                              className="min-h-11 w-full p-2 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
                             />
                           </div>
                         )}
@@ -576,7 +578,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
+              <label htmlFor="photo-url" className="block text-xs font-bold text-slate-700 uppercase mb-2">
                 Adicionar URL da Foto:
               </label>
               <div className="flex flex-col sm:flex-row gap-2 mb-4">
@@ -606,10 +608,10 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                     <button
                       type="button"
                       onClick={() => handleRemovePhoto(idx)}
-                      className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-full opacity-90 hover:opacity-100 transition-opacity"
-                      aria-label="Remover foto"
+                      className="absolute top-2 right-2 grid h-11 w-11 place-items-center bg-rose-600 text-white rounded-full opacity-90 hover:opacity-100 transition-opacity"
+                      aria-label={`Remover foto ${idx + 1}`}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={14} aria-hidden="true" />
                     </button>
                   </div>
                 ))}

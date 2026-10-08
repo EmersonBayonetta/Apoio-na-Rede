@@ -75,7 +75,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID',
         colorScheme: 'DARK',
         mapTypeControl: false, streetViewControl: false, clickableIcons: false,
-        gestureHandling: 'greedy',
+        gestureHandling: 'cooperative',
       });
       setMap(instance);
     }).catch(() => {
