@@ -1,6 +1,7 @@
 import { ApprovedReports } from '../components/contributions/ApprovedReports';
 import { localKey } from '../services/contributionService';
-import { SignInGate } from '../components/contributions/SignInGate';
+import { locallyReviewed, reviewRequest } from '../services/visitorReviewService';
+import { getSupabase } from '../lib/supabase';
 import { WalkingRoute } from '../components/establishments/WalkingRoute';
 import { whatsappUrl } from '../utils/communityDirectory';
 import { MAP_CATEGORIES } from '../data/mapCategories';
@@ -42,6 +43,12 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const { accessibilityPreferences, requirements } = useAccessibility();
   const [reviewFilter, setReviewFilter] = useState<DisabilityType | 'todas'>('todas');
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(() => locallyReviewed(establishment.id));
+  useEffect(() => {
+    let active=true;setAlreadyReviewed(locallyReviewed(establishment.id));
+    if(getSupabase())void reviewRequest({establishment_id:establishment.id,checkOnly:true}).then(result=>{if(active)setAlreadyReviewed(locallyReviewed(establishment.id)||result.reviewed===true);}).catch(()=>{});
+    return()=>{active=false;};
+  },[establishment.id]);
   useEffect(() => setShowAllReviews(false), [establishment.id, reviewFilter]);
 
   // Form de Avaliação
@@ -63,7 +70,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
 
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || alreadyReviewed || isSubmittingReview) return;
 
     setIsSubmittingReview(true);
     try {
@@ -76,10 +83,12 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
       });
 
       setNewComment('');
+      setAlreadyReviewed(true);
       setReviewSuccessMsg(true);
       setTimeout(() => setReviewSuccessMsg(false), 4000);
       onRefresh();
     } catch (err) {
+      setAlreadyReviewed(locallyReviewed(establishment.id));
       setActionMessage((err as Error).message);
     } finally {
       setIsSubmittingReview(false);
@@ -436,7 +445,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             </div>
 
           </form>
-          <div className="mt-4"><SignInGate onDemand><button
+          <div className="mt-4">{alreadyReviewed ? <p role="status" className="text-sm font-semibold">Você já avaliou este local. É permitida uma avaliação por identificador.</p> : <button
               type="submit"
               form="place-review-form"
               disabled={isSubmittingReview}
@@ -444,7 +453,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
             >
               <Send size={16} aria-hidden="true" />
               <span>{isSubmittingReview ? 'Enviando avaliação...' : 'Publicar Avaliação'}</span>
-            </button></SignInGate></div>
+            </button>}</div>
         </div>
       </section>}
     </article>

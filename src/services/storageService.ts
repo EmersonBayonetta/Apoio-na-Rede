@@ -4,6 +4,7 @@ import { ContributionService, confirmedCriteria, localKey, PUBLIC_PLACE_COLUMNS,
 import { normalizeSearchText } from '../utils/normalizeSearchText';
 import { validateRegistration } from '../utils/registrationValidation';
 import { browserStorage, readStoredArray } from '../lib/browserStorage';
+import { locallyReviewed, markReviewed, reviewRequest } from './visitorReviewService';
 import {
   Establishment,
   AccessibilityCriteria,
@@ -197,11 +198,11 @@ export const StorageService = {
   }): Promise<Review> => {
     const client = getSupabase();
     if (client) {
-      await requireUser();
-      const { data, error } = await client.from('reviews').insert({ establishment_id: reviewData.establishment_id, tipo_deficiencia_avaliada: reviewData.tipo_deficiencia_avaliada, nota: reviewData.nota, comentario: reviewData.comentario }).select().single();
-      if (error) throw new Error(error.message);
+      const data = await reviewRequest(reviewData);
+      markReviewed(reviewData.establishment_id);
       return data as Review;
     }
+    if(locallyReviewed(reviewData.establishment_id))throw new Error('Você já publicou uma avaliação para este local.');
     const reviews = readStoredArray<Review>(STORAGE_KEYS.REVIEWS, []);
 
     const newReview: Review = {
@@ -213,6 +214,7 @@ export const StorageService = {
 
     reviews.unshift(newReview);
     browserStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
+    markReviewed(reviewData.establishment_id);
 
     // Recalcular nota média e total no estabelecimento
     const establishments = readStoredArray<Establishment>(STORAGE_KEYS.ESTABLISHMENTS, []);

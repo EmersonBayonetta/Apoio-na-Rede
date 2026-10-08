@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+const tabs=await(await fetch('http://127.0.0.1:9223/json/list')).json();const socket=new WebSocket(tabs.find(tab=>tab.type==='page').webSocketDebuggerUrl);await new Promise(resolve=>socket.onopen=resolve);
+let id=0;const pending=new Map();socket.onmessage=({data})=>{const event=JSON.parse(data);if(pending.has(event.id)){pending.get(event.id)(event.result);pending.delete(event.id);}};
+const send=(method,params={})=>new Promise(resolve=>{const key=++id;pending.set(key,resolve);socket.send(JSON.stringify({id:key,method,params}));});
+const evaluate=async expression=>{const result=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});assert.equal(result.exceptionDetails,undefined);return result.result.value;};
+const place={id:'00000000-0000-4000-8000-000000000099',nome:'Fixture de avaliação',categoria:'servico_publico',endereco:'Rua de teste, 10',cidade:'Cataguases',estado:'MG',latitude:-21.39,longitude:-42.69,coordenadas_confirmadas:false,descricao:'Teste isolado',status:'verificado',fotos:[],criteria:[],reviews:[]};
+let injection;
+try{
+ await send('Page.enable');await send('Network.enable');await send('Network.setBlockedURLs',{urls:['https://*']});
+ injection=await send('Page.addScriptToEvaluateOnNewDocument',{source:`localStorage.setItem('apoio_accessibility_onboarding_v1','completed');localStorage.removeItem('apoio_reviewed_places_v1');const fixture=${JSON.stringify(place)};const original=window.fetch;window.fetch=(url,options)=>{const value=String(url);if(value==='/api/review'){const body=JSON.parse(options.body);window.lastReviewVisitor=body.visitorId;const key='visitor-review-test-published';if(body.checkOnly)return Promise.resolve(new Response(JSON.stringify({reviewed:sessionStorage.getItem(key)==='true'}),{headers:{'Content-Type':'application/json'}}));sessionStorage.setItem(key,'true');window.reviewPosts=(window.reviewPosts||0)+1;return Promise.resolve(new Response(JSON.stringify({id:'saved'}),{status:201,headers:{'Content-Type':'application/json'}}));}if(value.includes('/rest/v1/'))return Promise.resolve(new Response(JSON.stringify(value.includes('/establishments')?[fixture]:[]),{headers:{'Content-Type':'application/json'}}));return original(url,options);};`});
+ const open=async()=>{await send('Page.navigate',{url:'http://127.0.0.1:4176/?local='+place.id});await new Promise(resolve=>setTimeout(resolve,1200));};
+ await open();await evaluate(`sessionStorage.removeItem('visitor-review-test-published')`);await open();
+ assert.equal(await evaluate(`document.querySelectorAll('input[type=email]').length`),0);
+ assert.equal(await evaluate(`document.querySelectorAll('.review-star').length`),5);
+ const identity=await evaluate(`window.lastReviewVisitor`);assert.match(identity,/^[a-f0-9-]{36}$/);
+ await evaluate(`(()=>{const input=document.querySelector('#review-comment');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(input,'Avaliação de teste sem e-mail');input.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+ await evaluate(`document.querySelector('#place-review-form').requestSubmit()`);await new Promise(resolve=>setTimeout(resolve,500));
+ assert.equal(await evaluate(`window.reviewPosts`),1);assert.equal(await evaluate(`document.querySelector('button[form="place-review-form"]')===null`),true);
+ await evaluate(`document.querySelector('#place-review-form').requestSubmit()`);assert.equal(await evaluate(`window.reviewPosts`),1);
+ await open();assert.equal(await evaluate(`window.lastReviewVisitor`),identity);
+ assert.equal(await evaluate(`document.querySelector('button[form="place-review-form"]')===null`),true);
+ assert.equal(await evaluate(`document.body.textContent.includes('Você já avaliou este local')`),true);
+ await evaluate(`sessionStorage.removeItem('visitor-review-test-published');localStorage.removeItem('apoio_reviewed_places_v1')`);
+ console.log('visitor review browser checks passed: no email, direct publication, repeated submit blocked and same identity across reload with server status');
+}finally{if(injection)await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});socket.close();}
