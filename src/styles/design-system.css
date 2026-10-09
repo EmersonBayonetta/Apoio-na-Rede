@@ -309,3 +309,21 @@ body:is(.theme-high-contrast-dark, .theme-yellow-black) :is(.place-card-maps, .p
 .category-tile:focus-visible { outline: 3px solid var(--ds-accent); outline-offset: 3px; }
 .category-section .section-heading { flex-wrap: wrap; gap: 12px; }
 .category-section .section-heading button { min-height: 44px; font-size: .8125rem; white-space: nowrap; }
+
+/* Avoid stacking desktop section margins and floating-control clearance on phones. */
+@media (max-width: 600px) {
+  .explorer-shell { padding: 12px 20px 16px; }
+  .hero-copy { padding-top: 0; }
+  .explorer-search.premium-surface, .category-section { margin-bottom: 20px; }
+  .explorer-search > p { margin-top: 12px; }
+  .category-section .section-heading { margin-bottom: 12px; }
+  .category-grid { gap: 10px; }
+  .category-tile { min-height: 96px; padding: 12px 10px; gap: 8px; }
+  #results-section { padding-top: 12px; margin-bottom: 16px; }
+  .explorer-shell > section.mb-12 { margin-bottom: 16px; }
+  .explorer-shell > button[aria-expanded] { margin-top: 0; margin-bottom: 16px; }
+  body { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+  footer.bg-blue-950 { margin-top: 24px; padding-top: 24px; padding-bottom: 72px; }
+  footer.bg-blue-950 > div:first-child { gap: 16px; }
+  footer.bg-blue-950 > div:last-child { margin-top: 16px; padding-top: 16px; gap: 12px; }
+}
