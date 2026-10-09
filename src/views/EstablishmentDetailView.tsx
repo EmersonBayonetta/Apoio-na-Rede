@@ -6,7 +6,7 @@ import { WalkingRoute } from '../components/establishments/WalkingRoute';
 import { whatsappUrl } from '../utils/communityDirectory';
 import { MAP_CATEGORIES } from '../data/mapCategories';
 import React, { useState, useEffect } from 'react';
-import { Establishment, DisabilityType } from '../types';
+import { Establishment, DisabilityType, Review } from '../types';
 import { StorageService } from '../services/storageService';
 import { useAccessibility } from '../context/AccessibilityContext';
 import {
@@ -58,9 +58,17 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const [newComment, setNewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [publishedReviews, setPublishedReviews] = useState<Review[]>([]);
+  useEffect(() => {
+    setReviewSuccessMsg(false);
+    setReviewError('');
+    setPublishedReviews([]);
+    setNewComment('');
+  }, [establishment.id]);
   const [actionMessage, setActionMessage] = useState('');
 
-  const reviews = establishment.reviews || [];
+  const reviews = [...new Map([...publishedReviews, ...(establishment.reviews || [])].map(review => [review.id, review])).values()];
   const criteria = establishment.criteria || [];
 
   const filteredReviews = reviews.filter((r) =>
@@ -69,11 +77,22 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
 
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || alreadyReviewed || isSubmittingReview) return;
+    if (alreadyReviewed || isSubmittingReview) return;
+    setReviewError('');
+    setReviewSuccessMsg(false);
+    if (!newComment.trim()) {
+      setReviewError('Escreva um comentário sobre sua experiência antes de publicar.');
+      document.getElementById('review-comment')?.focus();
+      return;
+    }
+    if (establishment.external && getSupabase()) {
+      setReviewError('Este local ainda não tem cadastro no Apoio na rede para receber avaliações. Cadastre o local para que ele possa ser avaliado. Seu comentário não foi publicado.');
+      return;
+    }
 
     setIsSubmittingReview(true);
     try {
-      await StorageService.addReview({
+      const publishedReview = await StorageService.addReview({
         establishment_id: establishment.id,
         user_nome: 'Visitante da comunidade',
         tipo_deficiencia_avaliada: newDisability,
@@ -81,14 +100,15 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         comentario: newComment,
       });
 
+      setPublishedReviews(current => [publishedReview, ...current]);
+      setReviewFilter('todas');
       setNewComment('');
       setAlreadyReviewed(true);
       setReviewSuccessMsg(true);
-      setTimeout(() => setReviewSuccessMsg(false), 4000);
       onRefresh();
     } catch (err) {
       setAlreadyReviewed(locallyReviewed(establishment.id));
-      setActionMessage((err as Error).message);
+      setReviewError(err instanceof Error ? err.message : 'Não foi possível publicar a avaliação. Tente novamente.');
     } finally {
       setIsSubmittingReview(false);
     }
@@ -362,14 +382,8 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         <div className="review-compose rounded-2xl p-5 sm:p-6 border border-slate-200">
           <h3 className="text-base font-bold text-slate-900 mb-4">Avalie este local</h3>
 
-          {reviewSuccessMsg && (
-            <div role="status" className="p-3 mb-4 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-2 text-sm font-semibold">
-              <CheckCircle size={18} aria-hidden="true" />
-              <span>Avaliação publicada. Obrigado!</span>
-            </div>
-          )}
-
-          <form id="place-review-form" onSubmit={handleAddReview} className="space-y-4">
+          <form id="place-review-form" onSubmit={handleAddReview} aria-busy={isSubmittingReview}>
+            <fieldset disabled={isSubmittingReview || alreadyReviewed} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="order-2">
                 <label htmlFor="review-disability" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -422,6 +436,8 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                 id="review-comment"
                 rows={3}
                 required
+                maxLength={5000}
+                aria-describedby={reviewError ? 'review-feedback' : undefined}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Conte como foi sua experiência com o acesso e o atendimento neste local."
@@ -429,6 +445,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               />
             </div>
 
+            </fieldset>
           </form>
           <div className="mt-4">{alreadyReviewed ? <p role="status" className="text-sm font-semibold">Você já avaliou este local. É permitida uma avaliação por identificador.</p> : <button
               type="submit"
@@ -439,6 +456,11 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               <Send size={16} aria-hidden="true" />
               <span>{isSubmittingReview ? 'Enviando avaliação...' : 'Publicar Avaliação'}</span>
             </button>}</div>
+          {reviewSuccessMsg && <div id="review-feedback" role="status" aria-live="polite" className="mt-4 p-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-start gap-2 text-sm font-semibold">
+            <CheckCircle size={18} className="shrink-0" aria-hidden="true" />
+            <span>Avaliação publicada com sucesso. Seu comentário já está na lista de avaliações deste local.</span>
+          </div>}
+          {reviewError && <p id="review-feedback" role="alert" className="mt-4 p-3 rounded-xl bg-rose-50 text-rose-800 border border-rose-300 text-sm font-semibold">{reviewError}</p>}
         </div>
       </section>}
     </article>

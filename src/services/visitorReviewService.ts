@@ -9,7 +9,12 @@ export function reviewVisitorId(): string {
 export const locallyReviewed=(placeId:string)=>readStoredArray<string>(reviewedKey).includes(placeId);
 export function markReviewed(placeId:string){browserStorage.setItem(reviewedKey,JSON.stringify([...new Set([...readStoredArray<string>(reviewedKey),placeId])]));}
 export async function reviewRequest(details:Record<string,unknown>){
- const response=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...details,visitorId:reviewVisitorId()})});
+ let response: Response;
+ try {
+  response=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...details,visitorId:reviewVisitorId()}),signal:AbortSignal.timeout(15000)});
+ } catch {
+  throw Error('Não foi possível confirmar o envio da avaliação. Confira sua conexão e tente novamente; se ela já foi recebida, o site impedirá um envio duplicado.');
+ }
  if(!response.headers.get('content-type')?.includes('application/json'))throw Error('Avaliações indisponíveis neste ambiente.');
  const result=await response.json();
  if(!response.ok){if(response.status===409)markReviewed(String(details.establishment_id));throw Error(result.error||'Não foi possível enviar a avaliação.');}
