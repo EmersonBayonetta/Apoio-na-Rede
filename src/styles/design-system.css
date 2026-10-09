@@ -333,3 +333,13 @@ body:is(.theme-high-contrast-dark, .theme-yellow-black) :is(.place-card-maps, .p
 .online-appointment { background: var(--ds-raised); color: var(--ds-text); border: 1px solid var(--ds-border); }
 .review-expand:hover { border-color: var(--ds-accent); }
 @media(max-width: 480px) { .review-summary { gap: 16px; padding: 18px; } .review-summary-score { font-size: 2.25rem; } }
+
+/* Category shortcuts wrap within the available width, including enlarged text. */
+.category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr)); gap: 12px; overflow: visible; padding-bottom: 0; }
+.category-tile { min-width: 0; min-height: 112px; padding: 16px 10px; gap: 12px; border-radius: 18px; box-shadow: 0 4px 12px #0000000a; }
+.category-tile[hidden] { display: none; }
+.category-tile span { width: 100%; font-size: .8125rem; font-weight: 600; line-height: 1.4; text-align: center; overflow-wrap: anywhere; }
+.category-tile svg { flex-shrink: 0; width: 29px; height: 29px; }
+.category-tile:focus-visible { outline: 3px solid var(--ds-accent); outline-offset: 3px; }
+.category-section .section-heading { flex-wrap: wrap; gap: 12px; }
+.category-section .section-heading button { min-height: 44px; font-size: .8125rem; white-space: nowrap; }

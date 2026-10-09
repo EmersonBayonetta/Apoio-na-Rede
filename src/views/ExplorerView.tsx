@@ -750,10 +750,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         </div>
         </div>
       </section>
-      <ExploreCategories selected={selectedCategory} onSelect={chooseCategory} onViewAll={() => {
-        handleResetFilters(); chooseCategory('todas'); setHideUnmetEssentials(false); setIncludeUnknownPlaces(true); setShowAllPlaces(true);
-        requestAnimationFrame(() => document.querySelector('[aria-label="Locais sugeridos"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-      }} />
+      <ExploreCategories selected={selectedCategory} onSelect={chooseCategory} />
       <label className="mb-4 flex items-start gap-2 text-sm">
         <input type="checkbox" checked={includeUnknownPlaces} disabled={onlyVerified} onChange={event => setIncludeUnknownPlaces(event.target.checked)} />
         <span>Incluir lugares sem informações de acessibilidade. Seus recursos precisam ser consultados; a exibição não confirma que atendem às suas preferências.</span>
