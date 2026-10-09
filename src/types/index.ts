@@ -25,7 +25,8 @@ export interface AccessibilityCriteria {
 
 export interface Review {
   id: string;
-  establishment_id: string;
+  establishment_id: string | null;
+  external_place_id?: string | null;
   user_id?: string;
   user_nome: string;
   tipo_deficiencia_avaliada: DisabilityType;

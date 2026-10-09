@@ -15,3 +15,20 @@ test('duplicate is 409; status reads do not submit another review',async()=>{
 test('invalid review identity is rejected before database access',async()=>{
  const result=await invoke({...body,visitorId:'invalid'},async()=>{throw Error('Unexpected call');});assert.equal(result.code,400);
 });
+
+test('map places publish without a registered establishment and use the external identity for status',async()=>{
+ const calls=[];
+ const external={...body,establishment_id:'external-google-ChIJtest',external_place_id:'ChIJtest'};
+ const saved=await invoke(external,async(url,options)=>{calls.push({url,body:JSON.parse(options.body)});return new Response(JSON.stringify({id:'saved',external_place_id:'ChIJtest'}));});
+ assert.equal(saved.code,201);
+ assert.match(calls[0].url,/submit_external_visitor_review$/);
+ assert.equal(calls[0].body.details.external_place_id,'ChIJtest');
+ assert.equal(Object.hasOwn(calls[0].body.details,'establishment_id'),false);
+ const status=await invoke({...external,checkOnly:true},async(url,options)=>{assert.match(url,/has_external_visitor_review$/);assert.equal(JSON.parse(options.body).place_id,'ChIJtest');return new Response('true');});
+ assert.deepEqual(status.data,{reviewed:true});
+});
+
+test('map review identifiers are validated before database access',async()=>{
+ const result=await invoke({...body,external_place_id:'bad/id?query'},async()=>{throw Error('Unexpected call');});
+ assert.equal(result.code,400);
+});

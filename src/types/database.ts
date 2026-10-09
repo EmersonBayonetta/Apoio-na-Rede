@@ -317,7 +317,8 @@ export type Database = {
           comentario: string
           data: string | null
           denunciada: boolean | null
-          establishment_id: string
+          establishment_id: string | null
+          external_place_id: string | null
           fotos: string[] | null
           id: string
           motivo_denuncia: string | null
@@ -330,7 +331,8 @@ export type Database = {
           comentario: string
           data?: string | null
           denunciada?: boolean | null
-          establishment_id: string
+          establishment_id?: string | null
+          external_place_id?: string | null
           fotos?: string[] | null
           id?: string
           motivo_denuncia?: string | null
@@ -343,7 +345,8 @@ export type Database = {
           comentario?: string
           data?: string | null
           denunciada?: boolean | null
-          establishment_id?: string
+          establishment_id?: string | null
+          external_place_id?: string | null
           fotos?: string[] | null
           id?: string
           motivo_denuncia?: string | null

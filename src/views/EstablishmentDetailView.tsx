@@ -1,6 +1,6 @@
 import { ApprovedReports } from '../components/contributions/ApprovedReports';
 import { localKey } from '../services/contributionService';
-import { locallyReviewed, reviewRequest } from '../services/visitorReviewService';
+import { locallyReviewed, mapPlaceReviews, reviewRequest } from '../services/visitorReviewService';
 import { getSupabase } from '../lib/supabase';
 import { WalkingRoute } from '../components/establishments/WalkingRoute';
 import { whatsappUrl } from '../utils/communityDirectory';
@@ -45,7 +45,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const [alreadyReviewed, setAlreadyReviewed] = useState(() => locallyReviewed(establishment.id));
   useEffect(() => {
     let active=true;setAlreadyReviewed(locallyReviewed(establishment.id));
-    if(getSupabase())void reviewRequest({establishment_id:establishment.id,checkOnly:true}).then(result=>{if(active)setAlreadyReviewed(locallyReviewed(establishment.id)||result.reviewed===true);}).catch(()=>{});
+    if(getSupabase())void reviewRequest({establishment_id:establishment.id,...(establishment.external?{external_place_id:localKey(establishment)}:{}),checkOnly:true}).then(result=>{if(active)setAlreadyReviewed(locallyReviewed(establishment.id)||result.reviewed===true);}).catch(()=>{});
     return()=>{active=false;};
   },[establishment.id]);
   useEffect(() => setShowAllReviews(false), [establishment.id, reviewFilter]);
@@ -60,6 +60,19 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   const [reviewSuccessMsg, setReviewSuccessMsg] = useState(false);
   const [reviewError, setReviewError] = useState('');
   const [publishedReviews, setPublishedReviews] = useState<Review[]>([]);
+  const [mapReviews, setMapReviews] = useState<Review[]>([]);
+  const [reviewLoadError, setReviewLoadError] = useState('');
+  const [reviewLoadAttempt, setReviewLoadAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setMapReviews([]);
+    setReviewLoadError('');
+    const key = establishment.place_id || (establishment.external ? establishment.id : undefined);
+    if (key) void mapPlaceReviews(key).then(reviews => {
+      if (active) setMapReviews(reviews);
+    }).catch(error => { if (active) setReviewLoadError((error as Error).message); });
+    return () => { active = false; };
+  }, [establishment.id, establishment.place_id, establishment.external, reviewLoadAttempt]);
   useEffect(() => {
     setReviewSuccessMsg(false);
     setReviewError('');
@@ -68,7 +81,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   }, [establishment.id]);
   const [actionMessage, setActionMessage] = useState('');
 
-  const reviews = [...new Map([...publishedReviews, ...(establishment.reviews || [])].map(review => [review.id, review])).values()];
+  const reviews = [...new Map([...publishedReviews, ...mapReviews, ...(establishment.reviews || [])].map(review => [review.id, review])).values()];
   const criteria = establishment.criteria || [];
 
   const filteredReviews = reviews.filter((r) =>
@@ -85,15 +98,11 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
       document.getElementById('review-comment')?.focus();
       return;
     }
-    if (establishment.external && getSupabase()) {
-      setReviewError('Este local ainda não tem cadastro no Apoio na rede para receber avaliações. Cadastre o local para que ele possa ser avaliado. Seu comentário não foi publicado.');
-      return;
-    }
-
     setIsSubmittingReview(true);
     try {
       const publishedReview = await StorageService.addReview({
         establishment_id: establishment.id,
+        ...(establishment.external ? { external_place_id: localKey(establishment) } : {}),
         user_nome: 'Visitante da comunidade',
         tipo_deficiencia_avaliada: newDisability,
         nota: newRating,
@@ -324,6 +333,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           </div>}
         </div>
 
+        {reviewLoadError && <p role="status" className="mb-4 text-sm">{reviewLoadError} <button type="button" className="min-h-11 underline font-semibold" onClick={() => setReviewLoadAttempt(value => value + 1)}>Tentar novamente</button></p>}
         {reviews.length > 0 && <div className="review-summary" aria-label="Resumo das avaliações">
           <div><p className="review-summary-score">{reviews.length?(reviews.reduce((sum,review)=>sum+review.nota,0)/reviews.length).toFixed(1).replace('.',','):'—'}</p><p className="mt-2 text-sm text-slate-600">{reviews.length} {reviews.length===1?'avaliação':'avaliações'}</p></div>
           <div className="review-distribution">{[5,4,3,2,1].map(rating=>{const count=reviews.filter(review=>review.nota===rating).length;return <div key={rating} className="review-distribution-row"><span>{rating} ★</span><progress aria-label={`${rating} estrelas: ${count} avaliações`} value={count} max={Math.max(reviews.length,1)}/><span>{count}</span></div>;})}</div>

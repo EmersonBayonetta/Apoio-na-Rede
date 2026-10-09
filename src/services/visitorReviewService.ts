@@ -1,4 +1,6 @@
 import { browserStorage, readStoredArray } from '../lib/browserStorage';
+import { getSupabase } from '../lib/supabase';
+import type { Review } from '../types';
 const identityKey='apoio_review_visitor_v1';
 const reviewedKey='apoio_reviewed_places_v1';
 export function reviewVisitorId(): string {
@@ -8,6 +10,13 @@ export function reviewVisitorId(): string {
 }
 export const locallyReviewed=(placeId:string)=>readStoredArray<string>(reviewedKey).includes(placeId);
 export function markReviewed(placeId:string){browserStorage.setItem(reviewedKey,JSON.stringify([...new Set([...readStoredArray<string>(reviewedKey),placeId])]));}
+export async function mapPlaceReviews(placeId: string): Promise<Review[]> {
+ const client = getSupabase();
+ if (!client) return readStoredArray<Review>('acessacidade_reviews').filter(review => review.external_place_id === placeId);
+ const { data, error } = await client.from('reviews').select('*').eq('external_place_id',placeId).eq('denunciada',false).order('data',{ascending:false});
+ if (error) throw Error('Não foi possível carregar as avaliações deste local. Tente novamente.');
+ return data as unknown as Review[];
+}
 export async function reviewRequest(details:Record<string,unknown>){
  let response: Response;
  try {

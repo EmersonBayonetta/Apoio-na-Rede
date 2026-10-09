@@ -190,6 +190,7 @@ export const StorageService = {
   // REVIEWS
   addReview: async (reviewData: {
     establishment_id: string;
+    external_place_id?: string;
     user_id?: string;
     user_nome: string;
     tipo_deficiencia_avaliada: DisabilityType;
