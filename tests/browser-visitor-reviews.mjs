@@ -13,8 +13,17 @@ try{
  await open();await evaluate(`sessionStorage.removeItem('visitor-review-test-published')`);await open();
  assert.equal(await evaluate(`document.querySelectorAll('input[type=email]').length`),0);
  assert.equal(await evaluate(`document.querySelectorAll('.review-star').length`),5);
+ assert.equal(await evaluate(`document.querySelectorAll('.review-star[aria-pressed="true"], .review-star .fill-amber-400').length`),0);
  const identity=await evaluate(`window.lastReviewVisitor`);assert.match(identity,/^[a-f0-9-]{36}$/);
  await evaluate(`(()=>{const input=document.querySelector('#review-comment');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(input,'Avaliação de teste sem e-mail');input.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+ await evaluate(`document.querySelector('#place-review-form').requestSubmit()`);await new Promise(resolve=>setTimeout(resolve,100));
+ assert.equal(await evaluate(`document.querySelector('#review-feedback').textContent.includes('Selecione uma nota')`),true);
+ assert.equal(await evaluate(`window.reviewPosts || 0`),0);
+ await evaluate(`document.querySelector('#review-rating-3').click()`);
+ assert.equal(await evaluate(`document.querySelectorAll('.review-star .fill-amber-400').length`),3);
+ await evaluate(`document.querySelector('#review-rating-1').click()`);
+ assert.equal(await evaluate(`document.querySelectorAll('.review-star .fill-amber-400').length`),1);
+ await evaluate(`document.querySelector('#review-rating-3').click()`);
  await evaluate('window.reviewTestFail=true');
  await evaluate(`document.querySelector('#place-review-form').requestSubmit()`);await new Promise(resolve=>setTimeout(resolve,200));
  assert.equal(await evaluate(`document.querySelector('.review-compose [role="alert"]').textContent.includes('Não foi possível publicar')`),true);

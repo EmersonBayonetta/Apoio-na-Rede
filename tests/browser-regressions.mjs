@@ -44,7 +44,7 @@ try {
  await send('Page.reload');await pause(1200);await check('Recarregar preserva detalhes',`!!document.querySelector('#review-comment')`);
  await evaluate(`window.__shared=null;Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.__shared=data}});document.querySelector('[aria-label="Compartilhar localização"]').click()`);await pause(100);
  await check('Compartilhamento identifica destino',`new URL(window.__shared.url).searchParams.get('query')==='-21.4,-42.7'`);
- await fill('#review-comment','Avaliação de regressão.');await click('Publicar Avaliação');await check('Avaliação ainda funciona',`JSON.parse(localStorage.getItem('acessacidade_reviews')).length===1`);
+ await fill('#review-comment','Avaliação de regressão.');await evaluate(`document.querySelector('#review-rating-5').click()`);await click('Publicar Avaliação');await check('Avaliação ainda funciona',`JSON.parse(localStorage.getItem('acessacidade_reviews')).length===1`);
  await resize(1366,600);await evaluate(`document.querySelector('.accessibility-launcher button').click()`);await click('Extra');
  await check('Painel Extra cabe no desktop baixo',`document.querySelector('#accessibility-menu').getBoundingClientRect().top>=0`);
  await click('Amarelo/Preto');await pause(500);await check('Alto contraste usa fundo preto',`getComputedStyle([...document.querySelectorAll('#accessibility-menu button')].find(e=>e.textContent.includes('Restaurar'))).backgroundColor==='rgb(0, 0, 0)'`);

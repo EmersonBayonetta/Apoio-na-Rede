@@ -51,7 +51,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
   useEffect(() => setShowAllReviews(false), [establishment.id, reviewFilter]);
 
   // Form de Avaliação
-  const [newRating, setNewRating] = useState(5);
+  const [newRating, setNewRating] = useState(0);
   const [newDisability, setNewDisability] = useState<DisabilityType>(
     accessibilityPreferences[0] || 'mobilidade'
   );
@@ -78,6 +78,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
     setReviewError('');
     setPublishedReviews([]);
     setNewComment('');
+    setNewRating(0);
   }, [establishment.id]);
   const [actionMessage, setActionMessage] = useState('');
 
@@ -93,6 +94,11 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
     if (alreadyReviewed || isSubmittingReview) return;
     setReviewError('');
     setReviewSuccessMsg(false);
+    if (newRating === 0) {
+      setReviewError('Selecione uma nota de 1 a 5 estrelas antes de publicar.');
+      document.getElementById('review-rating-1')?.focus();
+      return;
+    }
     if (!newComment.trim()) {
       setReviewError('Escreva um comentário sobre sua experiência antes de publicar.');
       document.getElementById('review-comment')?.focus();
@@ -417,14 +423,15 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Sua Nota (1 a 5 estrelas)
                 </label>
-                <div className="flex flex-wrap items-center gap-1 py-1.5">
+                <div role="group" aria-label="Escolha sua nota de 1 a 5 estrelas" className="flex flex-wrap items-center gap-1 py-1.5">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
+                      id={`review-rating-${star}`}
                       type="button"
-                      onClick={() => setNewRating(star)}
+                      onClick={() => { setNewRating(star); setReviewError(''); }}
                       aria-pressed={newRating === star}
-                      className="review-star grid h-11 w-11 place-items-center rounded-xl text-amber-400 transition-colors"
+                      className="review-star grid h-11 w-11 place-items-center rounded-xl transition-colors"
                       aria-label={`Avaliar com ${star} estrelas`}
                     >
                       <Star
@@ -433,7 +440,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                       />
                     </button>
                   ))}
-                  <span className="text-xs font-black text-slate-600 ml-2">{newRating} de 5</span>
+                  <span aria-live="polite" className="text-xs font-black text-slate-600 ml-2">{newRating ? `${newRating} de 5` : 'Selecione sua nota'}</span>
                 </div>
               </div>
             </div>
