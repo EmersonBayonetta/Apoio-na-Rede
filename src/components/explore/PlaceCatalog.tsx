@@ -10,7 +10,6 @@ export function PlaceCatalog({ entries, center, limit, showDistance = false, onO
   };
   const results = [...entries].sort((a, b) => distance(a) - distance(b)).slice(0, limit);
   return <section className="mb-12" aria-label="Locais sugeridos">
-    <p role="status" className="mb-4 text-sm">{results.length} {results.length === 1 ? 'local disponível' : 'locais disponíveis'}.</p>
     <ul className={`place-catalog-row${results.length === 1 ? ' is-single' : ''}`}>{results.map(entry => {
       const meters = distance(entry);
       return <li key={(entry.establishment ?? entry.place)?.id ?? entry.addressLabel}>

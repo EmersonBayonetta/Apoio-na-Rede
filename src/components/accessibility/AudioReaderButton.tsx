@@ -45,7 +45,7 @@ export const AudioReaderButton: React.FC<AudioReaderButtonProps> = ({
     >
       {isCurrentText ? (
         <>
-          <VolumeX size={isSmall ? 14 : 16} className="text-white animate-pulse" aria-hidden="true" />
+          <VolumeX size={isSmall ? 14 : 16} className="text-white" aria-hidden="true" />
           <span>Parar áudio</span>
         </>
       ) : (

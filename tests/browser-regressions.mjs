@@ -21,7 +21,7 @@ try {
  await resize(320,800);await send('Page.navigate',{url:'http://127.0.0.1:4173/'});await pause(1500);
  // Only this isolated test origin is reset.
  await evaluate('localStorage.clear()');await send('Page.reload');await pause(1200);
- await evaluate(`document.querySelector('[aria-label="Continuar com configuração padrão"]').click()`);await click('Contribuir');
+ await click('Cadastrar local');
  await check('Educação disponível',`[...document.querySelector('#est-categoria').options].some(e=>e.value==='educacao')`);
  await click('Próxima Etapa');await check('Nome obrigatório e foco',`document.activeElement.id==='est-nome'`);
  await fill('#est-nome','Café de Regressão');await click('Próxima Etapa');await check('Descrição obrigatória',`document.activeElement.id==='est-desc'&&!!document.querySelector('#step1-heading')`);
@@ -47,11 +47,10 @@ try {
  await fill('#review-comment','Avaliação de regressão.');await click('Publicar Avaliação');await check('Avaliação ainda funciona',`JSON.parse(localStorage.getItem('acessacidade_reviews')).length===1`);
  await resize(1366,600);await evaluate(`document.querySelector('.accessibility-launcher button').click()`);await click('Extra');
  await check('Painel Extra cabe no desktop baixo',`document.querySelector('#accessibility-menu').getBoundingClientRect().top>=0`);
- await click('Amarelo/Preto');await pause(500);await check('Alto contraste usa fundo preto',`getComputedStyle([...document.querySelectorAll('#accessibility-menu button')].find(e=>e.textContent.includes('Refazer'))).backgroundColor==='rgb(0, 0, 0)'`);
+ await click('Amarelo/Preto');await pause(500);await check('Alto contraste usa fundo preto',`getComputedStyle([...document.querySelectorAll('#accessibility-menu button')].find(e=>e.textContent.includes('Restaurar'))).backgroundColor==='rgb(0, 0, 0)'`);
  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});await pause(100);await check('Escape fecha painel e restaura foco',`!document.querySelector('#accessibility-menu')&&document.activeElement===document.querySelector('.accessibility-launcher button')`);
- await evaluate(`document.querySelector('.accessibility-launcher button').click()`);await click('Restaurar configurações padrão');await click('Refazer configuração guiada');
- await evaluate(`document.querySelector('[role="dialog"] [role="checkbox"]').click()`);await pause(100);await click('Aplicar 1 preferência');
- await check('Preferência sem voz oculta leitura',`JSON.parse(localStorage.getItem('acessacidade_accessibility_settings')).voiceReadingEnabled===false&&document.querySelectorAll('[aria-label^="Ouvir em voz alta"]').length===0`);
+ await evaluate(`document.querySelector('.accessibility-launcher button').click()`);await click('Restaurar configurações padrão');await pause(100);
+ await check('Leitura em voz alta começa desligada',`JSON.parse(localStorage.getItem('acessacidade_accessibility_settings')).voiceReadingEnabled===false&&document.querySelectorAll('[aria-label^="Ouvir em voz alta"]').length===0`);
  await evaluate(`document.querySelector('.accessibility-launcher button').click();`);await pause(100);await evaluate(`document.querySelector('#accessibility-menu input[type="checkbox"]').click()`);await pause(100);
  await check('Voz pode ser reativada',`JSON.parse(localStorage.getItem('acessacidade_accessibility_settings')).voiceReadingEnabled===true&&document.querySelectorAll('[aria-label^="Ouvir em voz alta"]').length>0`);
  await evaluate(`document.querySelector('[aria-label="Fechar menu de acessibilidade"]').click()`);

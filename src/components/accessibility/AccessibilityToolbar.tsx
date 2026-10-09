@@ -47,8 +47,7 @@ export const AccessibilityToolbar: React.FC = () => {
       highContrast: 'default',
       dyslexicFont: false,
       reducedSensory: false,
-      voiceReadingEnabled: true,
-      preferredView: 'map',
+      voiceReadingEnabled: false,
       enhancedFocus: false,
     });
     stopSpeaking();
@@ -115,13 +114,6 @@ export const AccessibilityToolbar: React.FC = () => {
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => { setIsOpen(false); window.dispatchEvent(new Event('apoio:open-needs')); }}
-            className="mb-4 min-h-11 text-sm font-semibold text-blue-700 underline"
-          >
-            Minhas necessidades
-          </button>
           <div className="space-y-5 text-sm">
             <label className="flex items-center gap-3 font-bold">
               <input type="checkbox" checked={settings.voiceReadingEnabled} onChange={event => applySettings({ voiceReadingEnabled: event.target.checked })} />
@@ -270,17 +262,6 @@ export const AccessibilityToolbar: React.FC = () => {
 
             {/* Botão de Reset */}
             <div className="pt-3 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  window.dispatchEvent(new Event('open-accessibility-onboarding'));
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2 mb-2 text-xs font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
-              >
-                <Sliders size={14} aria-hidden="true" />
-                <span>Refazer configuração guiada</span>
-              </button>
               <button
                 type="button"
                 onClick={resetAll}

@@ -29,7 +29,7 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --------------------- | -------------- | --------- | ---------- |
 | Título principal | "Saiba se um lugar é acessível para você antes de sair." | Diz o valor em uma frase | y (pedido: proposta de valor clara) |
-| Como funciona | Faixa com 3 passos: "Diga do que você precisa", "Encontre o local", "Veja como chegar" | Mostra o fluxo inteiro sem texto longo | y |
+| Como funciona | Removida: o hero já resume o fluxo e o botão "Informar minhas necessidades" abre o primeiro passo | A faixa repetia o hero e afastava os resultados da busca | n |
 | Rota no app | Botão "Calcular rota a pé" na página do local, usando a localização autorizada e `fetchWalkingRoute` (OpenStreetMap); mostra distância, tempo e aviso de rota não verificada | Reaproveita código existente e testado | y |
 | Link externo | "Abrir no Google Maps" com `travelmode=walking` | O link atual não define modo; o padrão pode ser carro | y |
 | Dois menus | "Ajustes" vira "Minhas necessidades" (requisitos e perfil). O botão flutuante "Acessibilidade" segue para exibição e leitura. Cada um tem um link para o outro | Separa "o que eu preciso dos lugares" de "como o site aparece" | y |
@@ -52,7 +52,7 @@ A auditoria de 2026-10-05 mostrou que o app promete "trace sua rota", mas não t
 **Acceptance Criteria**:
 
 1. The system SHALL exibir como título principal (h1) da tela Explorar "Saiba se um lugar é acessível para você antes de sair." <!-- PRES-01 -->
-2. The system SHALL exibir na tela Explorar uma seção "Como funciona" com os 3 passos "Diga do que você precisa", "Encontre o local" e "Veja como chegar". <!-- PRES-02 -->
+2. The system SHALL oferecer no hero do Explorar um botão "Informar minhas necessidades" que abre "Minhas necessidades"; a faixa "Como funciona" foi removida por repetir o hero. <!-- PRES-02 -->
 3. WHILE a largura da tela é de até 600 px the system SHALL mostrar o campo de busca inteiro dentro da primeira tela (sem rolar), em uma tela de 360×780. <!-- PRES-03 -->
 4. The system SHALL não exibir o texto "Trace sua rota" em nenhuma tela. <!-- PRES-04 -->
 5. The system SHALL ter um README que começa pela proposta de valor e lista só recursos existentes, sem as seções do modelo Vite. <!-- PRES-05 -->

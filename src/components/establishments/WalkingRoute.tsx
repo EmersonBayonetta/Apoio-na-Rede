@@ -38,7 +38,7 @@ export function WalkingRoute({ destination }: { destination: RouteDestination & 
     <h2 id="walking-route-title" className="flex items-center gap-2 text-lg font-bold text-slate-900"><Footprints size={20} aria-hidden="true" />Como chegar a pé</h2>
     <div className="mt-3 flex flex-wrap gap-3">
       <a href={directionsUrl(destination)} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-800">
-        Como chegar <ExternalLink size={15} aria-hidden="true" /><span className="sr-only">(abre em nova aba no Google Maps)</span>
+        Abrir no Google Maps <ExternalLink size={15} aria-hidden="true" /><span className="sr-only">(abre em nova aba no Google Maps)</span>
       </a>
     </div>
     {destination.coordenadas_confirmadas===false&&<p className="mt-3 text-sm text-slate-600">Abra o endereço no Google Maps para escolher o acesso correto ao local.</p>}

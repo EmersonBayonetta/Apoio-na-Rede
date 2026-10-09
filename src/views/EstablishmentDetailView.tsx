@@ -17,7 +17,6 @@ import {
   MessageCircle,
   Globe,
   Star,
-  Sparkles,
   Share2,
   Flag,
   Send,
@@ -130,7 +129,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               if (establishment.place_id) url.searchParams.set('query_place_id', establishment.place_id);
               try {
                 if (navigator.share) await navigator.share({ title: establishment.nome, text: `Localização de ${establishment.nome}`, url: url.href });
-                else if (navigator.clipboard) { await navigator.clipboard.writeText(url.href); setActionMessage('Link da localização copiado. Os recursos cadastrados ficam neste navegador.'); }
+                else if (navigator.clipboard) { await navigator.clipboard.writeText(url.href); setActionMessage('Link da localização copiado.'); }
                 else setActionMessage(`Copie o link da localização: ${url.href}`);
               } catch (error) {
                 if ((error as Error).name !== 'AbortError') setActionMessage(`Não foi possível compartilhar. Copie o link da localização: ${url.href}`);
@@ -160,14 +159,6 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               verificadoEm={establishment.verificado_em}
               motivoRejeicao={establishment.motivo_rejeicao}
             />}
-          </div>
-
-          <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full text-amber-900 font-black text-sm">
-            <Star size={18} className="fill-amber-400 text-amber-500" aria-hidden="true" />
-            <span>{establishment.total_avaliacoes > 0 ? establishment.nota_media : 'Sem avaliações'}</span>
-            <span className="text-xs text-amber-700 font-semibold">
-              ({establishment.total_avaliacoes} {establishment.total_avaliacoes === 1 ? 'avaliação' : 'avaliações'})
-            </span>
           </div>
         </div>
 
@@ -279,7 +270,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           <div>
             <h2 id="reviews-heading" className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               <Star size={24} className="fill-amber-400 text-amber-500" aria-hidden="true" />
-              Avaliações da Comunidade PCD
+              Avaliações
             </h2>
             <p className="text-xs text-slate-500">
               Experiências da comunidade sobre circulação, atendimento e recursos
@@ -287,7 +278,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           </div>
 
           {/* Filtro de avaliações por tipo de deficiência */}
-          <div className="flex flex-wrap items-center gap-1.5">
+          {reviews.length >= 5 && <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs font-bold text-slate-500 mr-1">Filtrar por:</span>
             <button
               type="button"
@@ -310,17 +301,17 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
                 onClick={() => setReviewFilter(type)}
               />
             ))}
-          </div>
+          </div>}
         </div>
 
-        <div className="review-summary" aria-label="Resumo das avaliações">
+        {reviews.length > 0 && <div className="review-summary" aria-label="Resumo das avaliações">
           <div><p className="review-summary-score">{reviews.length?(reviews.reduce((sum,review)=>sum+review.nota,0)/reviews.length).toFixed(1).replace('.',','):'—'}</p><p className="mt-2 text-sm text-slate-600">{reviews.length} {reviews.length===1?'avaliação':'avaliações'}</p></div>
           <div className="review-distribution">{[5,4,3,2,1].map(rating=>{const count=reviews.filter(review=>review.nota===rating).length;return <div key={rating} className="review-distribution-row"><span>{rating} ★</span><progress aria-label={`${rating} estrelas: ${count} avaliações`} value={count} max={Math.max(reviews.length,1)}/><span>{count}</span></div>;})}</div>
-        </div>
+        </div>}
         {/* Lista de Avaliações */}
         {filteredReviews.length === 0 ? (
           <div className="p-8 text-center bg-slate-50 rounded-2xl text-slate-500 text-sm mb-8">
-            Nenhuma avaliação encontrada para o filtro selecionado. Seja a primeira pessoa a avaliar!
+            {reviews.length ? 'Nenhuma avaliação para o filtro selecionado.' : 'Ainda não há avaliações. Seja a primeira pessoa a avaliar.'}
           </div>
         ) : (
           <div className="space-y-4 mb-8">
@@ -331,7 +322,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               >
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="font-bold text-sm text-slate-900">{rev.user_nome}</div>
+                    {rev.user_nome !== 'Visitante da comunidade' && <div className="font-bold text-sm text-slate-900">{rev.user_nome}</div>}
                     <DisabilityBadge type={rev.tipo_deficiencia_avaliada} size="sm" />
                   </div>
 
@@ -369,18 +360,12 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
 
         {/* Formulário: Adicionar Avaliação */}
         <div className="review-compose rounded-2xl p-5 sm:p-6 border border-slate-200">
-          <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-            <Sparkles size={18} className="text-blue-600" aria-hidden="true" />
-            Avalie este local
-          </h3>
-          <p className="text-xs text-slate-500 mb-4">
-            Sua avaliação será publicada como <strong>Visitante da comunidade</strong>
-          </p>
+          <h3 className="text-base font-bold text-slate-900 mb-4">Avalie este local</h3>
 
           {reviewSuccessMsg && (
-            <div className="p-3 mb-4 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-2 text-sm font-semibold animate-fadeIn">
-              <CheckCircle size={18} />
-              <span>Avaliação enviada com sucesso! Obrigado por fortalecer a acessibilidade.</span>
+            <div role="status" className="p-3 mb-4 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-2 text-sm font-semibold">
+              <CheckCircle size={18} aria-hidden="true" />
+              <span>Avaliação publicada. Obrigado!</span>
             </div>
           )}
 

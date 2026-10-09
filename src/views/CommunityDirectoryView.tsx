@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Accessibility, MapPinned, Plus, Search, Stethoscope, ExternalLink, CheckCircle2, Clock3 } from 'lucide-react';
+import { MapPin, MapPinned, Plus, Search, Stethoscope, ExternalLink, CheckCircle2, Clock3 } from 'lucide-react';
 import type { AccessibleRoute, DisabilityType, Professional } from '../types';
 import { StorageService } from '../services/storageService';
 import { getSupabase } from '../lib/supabase';
@@ -94,7 +94,6 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
 
   return <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
     <div className="mb-7 rounded-3xl bg-gradient-to-br from-blue-950 to-teal-800 p-7 text-white sm:p-10">
-      <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-teal-200"><Accessibility size={18} /> Apoio na rede · Catálogo comunitário</div>
       <h1 className="text-3xl font-bold sm:text-4xl">{section === 'routes' ? 'Trechos e rotas acessíveis' : 'Profissionais preparados para atender'}</h1>
       <p className="mt-3 max-w-2xl text-blue-100">{section === 'routes' ? 'Consulte informações sobre rampas, piso tátil e travessias. Os trajetos precisam ser conferidos presencialmente.' : 'Encontre profissionais por especialidade e necessidades atendidas. As informações são colaborativas e devem ser confirmadas com o consultório.'}</p>
       <button className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 font-semibold text-blue-950" onClick={() => { setShowForm(v => !v); setNotice(''); setError(''); }}><Plus size={18} />{section === 'routes' ? 'Compartilhar um trecho' : 'Cadastrar profissional'}</button>
@@ -137,7 +136,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
     </article>)}</div> : <div className="grid gap-4 lg:grid-cols-2">{filteredProfessionals.map(person => <article key={person.id} className={panel}>
       {person.demonstracao && <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-teal-800">Demonstração · profissional fictício</p>}
       <div className="flex gap-4"><div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-teal-50 text-teal-800"><Stethoscope/></div><div><h2 className="text-xl font-bold">{person.nome}</h2><p className="font-medium text-teal-800">{person.especialidade}</p><p className="mt-1 text-sm text-slate-600">{person.cidade} – {person.estado}{person.registro_profissional ? ` · ${person.registro_profissional}` : ''}</p></div></div>
-      <p className="mt-4 text-slate-700">{person.descricao}</p>{isOnlineOnly(person) ? <p className="online-appointment mt-3 rounded-xl px-4 py-3 text-sm font-semibold">Atendimento online · entre em contato para agendar sua consulta.</p> : person.endereco ? <p className="mt-2 text-sm">📍 {person.endereco}</p> : <p className="mt-2 text-sm">Endereço de atendimento não informado. Confirme com o profissional.</p>}
+      <p className="mt-4 text-slate-700">{person.descricao}</p>{isOnlineOnly(person) ? <p className="online-appointment mt-3 rounded-xl px-4 py-3 text-sm font-semibold">Atendimento online · entre em contato para agendar sua consulta.</p> : person.endereco ? <p className="mt-2 flex items-start gap-1.5 text-sm"><MapPin size={16} className="mt-0.5 shrink-0" aria-hidden="true" />{person.endereco}</p> : <p className="mt-2 text-sm">Endereço de atendimento não informado. Confirme com o profissional.</p>}
       {!person.demonstracao && person.status && <p className="mt-3 text-sm font-semibold">{person.status === 'verificado' ? 'Publicado' : person.status === 'pendente' ? 'Em verificação' : `Cadastro recusado: ${person.motivo_rejeicao}`}</p>}
       {person.fonte_url&&<p className="mt-3 text-sm"><a className="underline" href={person.fonte_url} target="_blank" rel="noreferrer">Fonte dos dados profissionais</a> · Consulta: {person.consultado_em}</p>}
       {!person.atende_por_tipo.length&&<p className="mt-3 text-sm text-slate-600">Atendimento a necessidades específicas não informado publicamente. Confirme com o profissional.</p>}
@@ -148,6 +147,5 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
     {!loading && !error && ((section === 'routes' && !filteredRoutes.length) || (section === 'professionals' && !filteredProfessionals.length)) && <div className={`${panel} empty-state py-12 text-center`}>{(section === 'routes' ? !routes.length : !professionals.length) && !query.trim() && !need
       ? <><p className="text-lg font-semibold">{section === 'routes' ? 'Ainda não há trechos compartilhados.' : 'Ainda não há profissionais cadastrados.'}</p><p className="mt-2 text-slate-600">{section === 'routes' ? 'Conte como é um caminho que você conhece: rampas, piso tátil, travessias e obstáculos.' : 'Indique um profissional que atende bem pessoas com deficiência.'}</p><button type="button" className={`${primary} mt-5`} onClick={() => { setShowForm(true); setNotice(''); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}><Plus size={18} aria-hidden="true" />{section === 'routes' ? 'Compartilhar um trecho' : 'Cadastrar profissional'}</button></>
       : <><p className="text-lg font-semibold">Nenhum resultado para essa busca.</p><p className="mt-2 text-slate-600">Tente outro termo ou compartilhe uma informação para ampliar o catálogo.</p></>}</div>}
-    <p className="mt-6 text-sm text-slate-600">Informações comunitárias podem mudar. Confirme acessibilidade e disponibilidade diretamente com o local ou profissional antes de sair.</p>
   </section>;
 }

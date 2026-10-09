@@ -31,8 +31,7 @@ const DEFAULT_SETTINGS: AccessibilitySettings = {
   highContrast: 'default',
   dyslexicFont: false,
   reducedSensory: false,
-  voiceReadingEnabled: true,
-  preferredView: 'map',
+  voiceReadingEnabled: false,
   enhancedFocus: false,
 };
 

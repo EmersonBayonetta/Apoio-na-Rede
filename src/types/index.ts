@@ -139,7 +139,6 @@ export interface AccessibilitySettings {
   dyslexicFont: boolean;
   reducedSensory: boolean;
   voiceReadingEnabled: boolean;
-  preferredView: 'map' | 'list';
   enhancedFocus: boolean;
 }
 

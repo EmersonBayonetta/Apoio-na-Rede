@@ -93,7 +93,7 @@ export const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({
               <p>As condições podem mudar. Em caso de dúvida, confirme diretamente com o local antes da visita.</p>
               {verificadoEm && (
                 <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500">
-                  📅 <strong>Data da última verificação:</strong> {verificadoEm}
+                  <strong>Data da última verificação:</strong> {verificadoEm}
                 </div>
               )}
             </div>

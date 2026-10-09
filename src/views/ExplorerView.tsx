@@ -10,13 +10,12 @@ import { browserStorage } from '../lib/browserStorage';
 import { ExplorerHero } from '../components/explore/ExplorerHero';
 import { ExploreCategories } from '../components/explore/ExploreCategories';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Establishment, FilterState, DisabilityType, EstablishmentCategory, NearbyPlace } from '../types';
+import { Establishment, FilterState, EstablishmentCategory, NearbyPlace } from '../types';
 import { MAP_CATEGORIES } from '../data/mapCategories';
 import { PlacesService } from '../services/placesService';
 import { locateAddress } from '../services/addressService';
 import { StorageService } from '../services/storageService';
 import { useAccessibility } from '../context/AccessibilityContext';
-import { DisabilityBadge } from '../components/accessibility/DisabilityBadge';
 import { VoiceSearchButton } from '../components/accessibility/VoiceSearchButton';
 import {
   Search,
@@ -146,7 +145,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const [selectedAddressLabel, setSelectedAddressLabel] = useState('');
   const [addressFilter, setAddressFilter] = useState<string | null>(null);
   const [placesSearchCenter, setPlacesSearchCenter] = useState<[number, number]>(CATAGUASES_CENTER);
-  const [locationNotice, setLocationNotice] = useState('Permita sua localização para ordenar os locais próximos. Sem ela, usamos o centro de Cataguases.');
+  const [locationNotice, setLocationNotice] = useState('');
   const hasLocation = useRef(false);
   const [selectedPlace, setSelectedPlace] = useState<NearbyPlace | null>(null);
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
@@ -159,9 +158,9 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   // Filtros
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<EstablishmentCategory | 'todas'>('todas');
-  const [selectedCity, setSelectedCity] = useState<string>('Cataguases');
+  const selectedCity = 'Cataguases';
   const [onlyVerified, setOnlyVerified] = useState(false);
-  const [selectedDisabilities, setSelectedDisabilities] = useState<DisabilityType[]>(accessibilityPreferences);
+  const selectedDisabilities = accessibilityPreferences;
   const [includeUnknownPlaces, setIncludeUnknownPlaces] = useState(true);
   const visibleNearbyPlaces = useMemo(() => {
     const googlePlaces = searchQuery.trim().length >= 3 ? searchedPlaces : nearbyPlaces;
@@ -185,7 +184,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     setSelectedAddressLabel(''); setAddressFilter(null);
     skipAddressLookupRef.current = false;
     setSearchQuery(''); setSearchedPlaces([]); setAddressSuggestions([]); setSearchedAddress(null);
-    setAddressMessage(''); setSelectedCategory(category);
+    setAddressMessage(''); setSelectedCategory(category); setShowAllPlaces(false);
   };
 
   useEffect(() => {
@@ -197,10 +196,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     
   }, [selectedCategory, onlyVerified, selectedDisabilities, includeUnknownPlaces]);
 
-  // Reaplica as preferências persistidas neste navegador.
-  useEffect(() => {
-    setSelectedDisabilities(accessibilityPreferences);
-  }, [accessibilityPreferences]);
 
 
 
@@ -249,7 +244,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           && nextLocation.longitude >= -42.90 && nextLocation.longitude <= -42.50;
         
         if (insideCataguases) {
-          setLocationNotice('Sugestões ordenadas pela proximidade da sua localização.');
+          setLocationNotice('');
           const firstLocation = !hasLocation.current;
           setPlacesSearchCenter((previous) => firstLocation || distanceInMeters(previous, [nextLocation.latitude, nextLocation.longitude]) > 350
             ? [nextLocation.latitude, nextLocation.longitude]
@@ -257,7 +252,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           hasLocation.current = true;
           setHasUserLocation(true);
         } else {
-          setLocationNotice('Você está fora da área atendida. As sugestões usam o centro de Cataguases.');
+          setLocationNotice('Você está fora de Cataguases; mostramos locais a partir do centro da cidade.');
         }
       },
       () => {},
@@ -491,12 +486,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     };
   }, [cityAddressIndex, searchQuery]);
 
-  const toggleDisabilityFilter = (type: DisabilityType) => {
-    setSelectedDisabilities((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  };
-
   const handleResetFilters = () => {
     addressSelectionRef.current++;
     skipAddressLookupRef.current = false;
@@ -509,15 +498,12 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     
     setSearchQuery('');
     setSelectedCategory('todas');
-    setSelectedCity('Cataguases');
     setOnlyVerified(false);
-    setSelectedDisabilities([]);
     setAddressSuggestions([]);
     setSearchedAddress(null);
     setAddressMessage('');
   };
 
-  const disabilityKeys: DisabilityType[] = ['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'];
   const selectPlace = (place: NearbyPlace) => {
     routeRequestRef.current++;
     setSelectedPlace(place);
@@ -660,128 +646,36 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             className="voice-search-control py-4 px-5"
           />
         </div>
-        <p role="status" aria-live="polite" className="text-xs text-slate-500">
-          {addressMessage || 'A busca inclui endereços, empresas, comércio, serviços e espaços públicos de Cataguases.'}
-        </p>
-        <p className="text-[11px] text-slate-400">Locais: Google Maps. Endereços: ViaCEP e OpenStreetMap.</p>
+        <p role="status" aria-live="polite" className="text-xs text-slate-500 empty:hidden">{addressMessage}</p>
 
-        <div id="advanced-search-filters" hidden={!showFilters} className="advanced-search-filters space-y-5">
-        {/* Chips de Filtros Multi-Seleção por Deficiência */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <SlidersHorizontal size={14} className="text-blue-700" aria-hidden="true" />
-              Recursos importantes para você
-            </span>
-            {selectedDisabilities.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setSelectedDisabilities([])}
-                className="text-xs font-bold text-blue-700 hover:underline"
-              >
-                Limpar necessidades
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {disabilityKeys.map((type) => {
-              const isSelected = selectedDisabilities.includes(type);
-              return (
-                <DisabilityBadge
-                  key={type}
-                  type={type}
-                  size="md"
-                  active={isSelected}
-                  onClick={() => toggleDisabilityFilter(type)}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Filtros Secundários: Categoria, Cidade, Verificados */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
-          <div>
-            <label htmlFor="category-select" className="block text-xs font-bold text-slate-600 uppercase mb-1">
-              Categoria
-            </label>
-            <select
-              id="category-select"
-              value={selectedCategory}
-              onChange={(e) => chooseCategory(e.target.value as EstablishmentCategory | 'todas')}
-              className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-600"
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="city-select" className="block text-xs font-bold text-slate-600 uppercase mb-1">
-              Cidade
-            </label>
-            <select
-              id="city-select"
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-600"
-            >
-              <option value="Cataguases">Cataguases (MG)</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <label className="flex items-center gap-2.5 p-2.5 w-full bg-slate-50 border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
-              <input
-                type="checkbox"
-                checked={onlyVerified}
-                onChange={(e) => setOnlyVerified(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded-md focus:ring-blue-500"
-              />
-              <span className="text-xs font-bold text-slate-800">
-                Somente locais verificados
-              </span>
-            </label>
-          </div>
-        </div>
+        <div id="advanced-search-filters" hidden={!showFilters} className="advanced-search-filters space-y-3">
+          <label className="flex items-center gap-2.5 text-sm">
+            <input type="checkbox" checked={onlyVerified} onChange={(e) => setOnlyVerified(e.target.checked)} className="w-4 h-4" />
+            Somente locais conferidos
+          </label>
+          <label className="flex items-center gap-2.5 text-sm">
+            <input type="checkbox" checked={includeUnknownPlaces} disabled={onlyVerified} onChange={event => setIncludeUnknownPlaces(event.target.checked)} className="w-4 h-4" />
+            Incluir locais sem informações de acessibilidade
+          </label>
+          {hasEssentials && <label className="flex items-center gap-2.5 text-sm">
+            <input type="checkbox" checked={hideUnmetEssentials} onChange={event => setHideUnmetEssentials(event.target.checked)} className="w-4 h-4" />
+            Ocultar locais com requisito indispensável não atendido
+          </label>}
         </div>
       </section>
       <ExploreCategories selected={selectedCategory} onSelect={chooseCategory} />
-      <label className="mb-4 flex items-start gap-2 text-sm">
-        <input type="checkbox" checked={includeUnknownPlaces} disabled={onlyVerified} onChange={event => setIncludeUnknownPlaces(event.target.checked)} />
-        <span>Incluir lugares sem informações de acessibilidade. Seus recursos precisam ser consultados; a exibição não confirma que atendem às suas preferências.</span>
-      </label>
-      {Object.keys(requirements).length > 0 && <p className="requirements-note mb-4 text-xs text-slate-500">Comparação com as informações cadastradas. Não é uma certificação de acessibilidade.</p>}
-      {hasEssentials && <label className="mb-4 flex items-start gap-2 text-sm">
-        <input type="checkbox" checked={hideUnmetEssentials} onChange={event => setHideUnmetEssentials(event.target.checked)} />
-        <span>Ocultar locais com requisito indispensável não atendido</span>
-      </label>}
 
-
-
-      {/* Resultados do cat?logo */}
-      <div id="results-section" tabIndex={-1} className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div role="status" aria-live="polite" className="text-sm font-bold text-slate-700">
-          {isLoading ? (
-            <span>Carregando estabelecimentos...</span>
-          ) : (
-            <span>
-              {searchQuery.trim() ? 'Resultados da busca' : 'Até 5 sugestões próximas'}
-              {selectedCategory !== 'todas' ? ` · ${MAP_CATEGORIES[selectedCategory].label}` : ''}
-              {searchQuery ? ` para "${searchQuery}"` : ''}
-            </span>
-          )}
-        </div>
-
+      {/* Resultados do catálogo: uma única linha de status */}
+      <div id="results-section" tabIndex={-1} role="status" aria-live="polite" className="mb-6 text-sm">
+        <strong className="text-slate-700">
+          {searchQuery.trim() ? `Resultados para "${searchQuery}"` : hasUserLocation ? 'Locais perto de você' : 'Locais no centro de Cataguases'}
+          {selectedCategory !== 'todas' ? ` · ${MAP_CATEGORIES[selectedCategory].label}` : ''}
+        </strong>
+        {(isLoading || (isLoadingPlaces && !selectedPlace && !selectedAddressLabel)) && catalogEntries.length > 0 && <span className="text-slate-500"> · buscando mais locais…</span>}
+        {!searchQuery.trim() && locationNotice && <span className="block text-xs text-slate-500">{locationNotice}</span>}
       </div>
+      {Object.keys(requirements).length > 0 && <p className="requirements-note -mt-4 mb-4 text-xs text-slate-500">Comparação com as informações cadastradas. Não é uma certificação de acessibilidade.</p>}
 
-      {/* Cartões do catálogo */}
-      {!searchQuery.trim() && <p className="mb-4 text-sm" role="status">{locationNotice}</p>}
-      {isLoadingPlaces && !isLoading && catalogEntries.length > 0 && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">Buscando locais…</p>}
       {placesError && catalogEntries.length > 0 && !selectedPlace && !selectedAddressLabel && <p role="status" className="mb-4 text-sm">{placesQuotaExceeded ? 'O limite de consultas do Google foi atingido. As sugestões próximas voltarão quando a cota for renovada. Os cadastros disponíveis no catálogo continuam acessíveis.' : <>Não foi possível carregar locais do Google Maps. <button type="button" className="inline-flex min-h-11 items-center px-1 font-semibold underline" onClick={() => setPlacesAttempt(value => value + 1)}>Tentar novamente</button></>}</p>}
       {loadError && catalogEntries.length === 0 ? (
         <section role="alert" className="bg-white border border-rose-200 rounded-2xl px-6 py-10 text-center mb-12">
@@ -815,7 +709,12 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
           </button>
         </section>
       ) : (
-        <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={showAllPlaces ? undefined : 5} showDistance={hasUserLocation} onOpenPlace={onSelectEstablishment} />
+        <>
+          <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={showAllPlaces ? undefined : 5} showDistance={hasUserLocation} onOpenPlace={onSelectEstablishment} />
+          {catalogEntries.length > 5 && <button type="button" aria-expanded={showAllPlaces} onClick={() => setShowAllPlaces(value => !value)} className="-mt-8 mb-12 min-h-11 rounded-xl border px-5 py-3 text-sm font-semibold">
+            {showAllPlaces ? 'Mostrar menos locais' : `Ver todos os ${catalogEntries.length} locais`}
+          </button>}
+        </>
       )}
     </div>
   );

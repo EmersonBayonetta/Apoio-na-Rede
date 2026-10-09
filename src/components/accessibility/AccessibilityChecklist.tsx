@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AccessibilityCriteria, DisabilityType } from '../../types';
 import { DISABILITY_INFO } from './DisabilityBadge';
-import { CheckCircle2, XCircle, Info, Sparkles } from 'lucide-react';
+import { CheckCircle2, XCircle, Info } from 'lucide-react';
 
 interface AccessibilityChecklistProps {
   criteria: AccessibilityCriteria[];
@@ -19,19 +19,12 @@ export const AccessibilityChecklist: React.FC<AccessibilityChecklistProps> = ({ 
   }, {} as Record<DisabilityType, AccessibilityCriteria[]>);
 
   const currentList = grouped[selectedTab] || [];
-  const currentInfo = DISABILITY_INFO[selectedTab];
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Sparkles size={20} className="text-blue-600" aria-hidden="true" />
-            Checklist de Critérios de Acessibilidade
-          </h3>
-          <p className="text-xs text-slate-500">
-            Informações cadastradas por tipo de necessidade
-          </p>
+          <h3 className="text-lg font-bold text-slate-900">Recursos por tipo de necessidade</h3>
         </div>
       </div>
 
@@ -44,7 +37,6 @@ export const AccessibilityChecklist: React.FC<AccessibilityChecklistProps> = ({ 
         {disabilityTypes.map((type) => {
           const info = DISABILITY_INFO[type];
           const Icon = info.icon;
-          const count = grouped[type]?.filter((c) => c.presente).length || 0;
           const isSelected = selectedTab === type;
 
           return (
@@ -63,13 +55,6 @@ export const AccessibilityChecklist: React.FC<AccessibilityChecklistProps> = ({ 
             >
               <Icon size={16} aria-hidden="true" />
               <span>{info.shortLabel}</span>
-              <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-                  isSelected ? 'bg-blue-900 text-blue-100' : 'bg-slate-200 text-slate-700'
-                }`}
-              >
-                {count}
-              </span>
             </button>
           );
         })}
@@ -80,14 +65,7 @@ export const AccessibilityChecklist: React.FC<AccessibilityChecklistProps> = ({ 
         id={`panel-${selectedTab}`}
         role="tabpanel"
         aria-labelledby={`tab-${selectedTab}`}
-        className="animate-fadeIn"
       >
-        <div className="p-3 bg-slate-50 rounded-2xl mb-4 border border-slate-100">
-          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-            Foco de Atendimento: {currentInfo.label}
-          </h4>
-          <p className="text-xs text-slate-600">{currentInfo.description}</p>
-        </div>
 
         {currentList.length === 0 ? (
           <div className="text-center py-6 text-slate-400 text-sm">

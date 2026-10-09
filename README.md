@@ -15,7 +15,7 @@ O Apoio na Rede reúne os recursos de acessibilidade dos locais de Cataguases (M
 - **Explorar:** busca de locais e endereços, categorias, compatibilidade com suas necessidades e página de cada local com recursos, fotos, avaliações e rota a pé.
 - **Rotas acessíveis:** relatos da comunidade sobre trechos da cidade (rampas, piso tátil, semáforo sonoro), sempre marcados como relato até serem conferidos.
 - **Profissionais:** catálogo de profissionais que atendem pessoas com deficiência, com filtro por necessidade atendida.
-- **Cadastrar:** formulário público de locais, disponível no menu e no rodapé. Cada envio fica pendente até revisão do titular por link do Supabase. Veja o [fluxo atual de cadastro](docs/cadastro-revisao-supabase.md).
+- **Cadastrar:** formulário público de locais, disponível no menu. Cada envio fica pendente até revisão do titular por link do Supabase. Veja o [fluxo atual de cadastro](docs/cadastro-revisao-supabase.md).
 - **Avaliar:** comentários sem login ou confirmação de e-mail, limitados a uma avaliação por local e identificador do navegador. Veja [regras e limites](docs/avaliacoes-sem-email.md).
 - **Acessibilidade da interface:** alto contraste, fonte para dislexia, texto ampliado, menos estímulos, leitura em voz alta, VLibras, busca por voz e navegação completa por teclado.
 

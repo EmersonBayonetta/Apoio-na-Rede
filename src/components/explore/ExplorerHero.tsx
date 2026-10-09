@@ -1,4 +1,4 @@
-import { ArrowUpRight, MapPin, Navigation, Accessibility, Building2, Coffee, Trees } from 'lucide-react';
+import { ArrowUpRight, MapPin, Accessibility, Building2, Coffee, Trees } from 'lucide-react';
 
 export function ExplorerHero() {
   return <header className="explorer-hero">
@@ -6,8 +6,8 @@ export function ExplorerHero() {
       <p className="hero-location"><MapPin size={14} aria-hidden="true" /> CATAGUASES, MINAS GERAIS</p>
       <h1>Descubra se um lugar é acessível <span>para você</span> antes de sair.</h1>
       <div className="hero-rule" />
-      <p>Veja rampas, banheiros adaptados, Libras e outros recursos dos locais de Cataguases. Compare com o que você precisa e calcule a rota a pé.</p>
-      <a href="#search-filter-section" className="hero-link">Encontrar um lugar <ArrowUpRight size={18} aria-hidden="true" /></a>
+      <p>Veja rampas, banheiros adaptados, Libras e outros recursos dos locais de Cataguases. Informe o que você precisa, encontre o local e veja como chegar a pé.</p>
+      <button type="button" onClick={() => window.dispatchEvent(new Event('apoio:open-needs'))} className="hero-link">Informar minhas necessidades <ArrowUpRight size={18} aria-hidden="true" /></button>
     </div>
     <div className="hero-art" aria-hidden="true">
       <div className="city-disc">
@@ -21,7 +21,6 @@ export function ExplorerHero() {
         <span className="art-pin pin-coffee"><Coffee size={25} /></span><span className="art-pin pin-tree"><Trees size={25} /></span>
         <span className="art-pin pin-building"><Building2 size={24} /></span><span className="art-pin pin-destination"><Accessibility size={38} /></span>
       </div>
-      <div className="hero-art-label"><span><Navigation size={17} /></span><div>Seu próximo destino<strong>Uma cidade para todos.</strong></div></div>
     </div>
   </header>;
 }

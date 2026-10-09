@@ -26,6 +26,7 @@ export function PlaceResultCard({ place, establishment, addressLabel, distance, 
   const canOpen = Boolean((establishment || place) && onOpenPlace);
   const { requirements } = useAccessibility();
   // A searched address is not a place, so it gets no badge.
+  // A searched address is not a place, so it gets no badge.
   const match = addressLabel ? null : compareRequirements(establishment?.criteria, requirements);
 
   return <article className="place-card premium-card rounded-2xl border" aria-label={addressLabel ? 'Endereço selecionado' : name}>
@@ -46,8 +47,7 @@ export function PlaceResultCard({ place, establishment, addressLabel, distance, 
         {establishment ? compatibilityLabel(match) : 'Sem informações para seus requisitos'}
         {match.indispensaveisNaoAtendidos.length > 0 && <span className="text-rose-800">· Indispensável não atendido</span>}
       </p>}
-      {establishment ? <AccessibilityIcons establishment={establishment} /> : !addressLabel && <p className="text-sm text-slate-600">Acessibilidade ainda não informada</p>}
-      {place?.fonte === 'osm' && <p className="text-xs text-slate-500">Dados: <a className="underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a></p>}
+      {establishment && <AccessibilityIcons establishment={establishment} />}
       <div className="place-card-actions">
         {canOpen
           ? <button type="button" onClick={() => onOpenPlace?.(establishment ?? {

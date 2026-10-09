@@ -35,8 +35,7 @@ try {
  assert.equal(await evaluate(`window.scrollY`), 0);
  assert.ok(await evaluate(`(()=>{const r=document.querySelector('#main-search-input').getBoundingClientRect();return r.top>=0&&r.bottom<=780-80})()`), 'search fits the first mobile screen above the bottom bar');
  await shot('mobile-home');
- assert.deepEqual(await evaluate(`[...document.querySelectorAll('section[aria-labelledby="how-it-works-title"] li strong')].map(e=>e.textContent)`), ['Diga do que você precisa', 'Encontre o local', 'Veja como chegar']);
- assert.equal(await evaluate(`document.querySelector('#how-it-works-title').textContent`), 'Como funciona');
+ assert.equal(await evaluate(`document.querySelector('.hero-link').textContent.trim()`), 'Informar minhas necessidades');
  assert.equal(await evaluate(`document.body.innerText.includes('Trace sua rota')`), false);
 
  // PRES-06, PRES-07, PRES-08, PRES-09: walking route on the place page

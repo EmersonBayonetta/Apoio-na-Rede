@@ -56,7 +56,6 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
           title={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
         >
           {theme === 'dark' ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />}
-          <span>{theme === 'dark' ? 'Modo claro' : 'Modo escuro'}</span>
         </button>
       </div>
     </header>
