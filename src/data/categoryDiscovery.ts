@@ -4,7 +4,7 @@ import type { EstablishmentCategory } from '../types';
 export const CATEGORY_QUERIES: Record<EstablishmentCategory, string[]> = {
   alimentacao: ['restaurantes', 'lanchonetes e padarias', 'cafeterias e sorveterias'],
   saude: ['hospitais e postos de saúde', 'clínicas e consultórios', 'farmácias e laboratórios'],
-  lazer_cultura: ['praças e parques', 'museus e centros culturais', 'cinemas e espaços esportivos'],
+  lazer_cultura: ['teatros', 'museus e centros culturais', 'cinemas e ginásios'],
   comercio_loja: ['lojas e supermercados', 'comércio e mercados', 'oficinas e concessionárias'],
   servico_publico: ['serviços públicos e prefeitura', 'correios e delegacias'],
   banheiro_adaptado: ['banheiros públicos', 'sanitários públicos'],

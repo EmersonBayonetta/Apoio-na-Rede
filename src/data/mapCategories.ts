@@ -4,7 +4,7 @@ import type { EstablishmentCategory } from '../types';
 export const MAP_CATEGORIES = {
   alimentacao: { label: 'Alimentação', color: '#c2410c', icon: Utensils, types: ['restaurant', 'cafe', 'bakery', 'bar', 'meal_takeaway', 'coffee_shop', 'ice_cream_shop'] },
   saude: { label: 'Saúde & Clínicas', color: '#0369a1', icon: Stethoscope, types: ['hospital', 'pharmacy', 'doctor', 'dentist'] },
-  lazer_cultura: { label: 'Lazer & Cultura', color: '#7e22ce', icon: Landmark, types: ['park', 'museum', 'movie_theater', 'tourist_attraction', 'art_gallery', 'cultural_center', 'sports_complex'] },
+  lazer_cultura: { label: 'Lazer & Cultura', color: '#7e22ce', icon: Landmark, types: ['museum', 'movie_theater', 'art_gallery', 'cultural_center', 'sports_complex'] },
   comercio_loja: { label: 'Comércio & Lojas', color: '#047857', icon: ShoppingBag, types: ['supermarket', 'shopping_mall', 'store'] },
   servico_publico: { label: 'Serviço Público', color: '#334155', icon: Building2, types: ['city_hall', 'post_office', 'police', 'courthouse'] },
   banheiro_adaptado: { label: 'Banheiros (adaptação a verificar)', color: '#0e7490', icon: Bath, types: ['public_bathroom'] },

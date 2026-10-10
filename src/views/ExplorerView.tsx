@@ -1,4 +1,5 @@
 import { useVisibleSearch } from '../hooks/useVisibleSearch';
+import { isIndoorPlace } from '../utils/indoorPlaces';
 import { categoryForActivity } from '../data/categoryDiscovery';
 import { CatalogSkeleton } from '../components/explore/CatalogSkeleton';
 import { PlaceCatalog, type CatalogEntry } from '../components/explore/PlaceCatalog';
@@ -81,7 +82,7 @@ const CATEGORIES: { id: EstablishmentCategory | 'todas'; label: string }[] = [
 ];
 
 const CATAGUASES_CENTER: [number, number] = [-21.3924, -42.6896];
-const ADDRESS_INDEX_CACHE_KEY = 'apoio_cataguases_urban_index_v4';
+const ADDRESS_INDEX_CACHE_KEY = 'apoio_cataguases_urban_index_v5';
 
 
 const categoryIcons: Record<EstablishmentCategory, React.ElementType> = {
@@ -97,6 +98,7 @@ const categoryIcons: Record<EstablishmentCategory, React.ElementType> = {
 };
 
 const inferCategory = (tags: Record<string, string>): EstablishmentCategory | undefined => {
+  if (!isIndoorPlace({ nome: tags.name ?? '' }, [], tags)) return undefined;
   if (tags.amenity === 'toilets' && ['private', 'no', 'customers', 'permit'].includes(tags.access)) return undefined;
   if (tags.shop === 'chemist') return 'saude';
   if (['bakery', 'confectionery', 'pastry'].includes(tags.shop)) return 'alimentacao';
@@ -213,7 +215,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       };
       const list = await StorageService.getEstablishments(filters);
       if (requestId !== localRequestRef.current) return;
-      setEstablishments(list);
+      setEstablishments(list.filter(establishment => isIndoorPlace(establishment)));
     } catch (err) {
       console.error(err);
       if (requestId === localRequestRef.current) setLoadError(true);
@@ -332,6 +334,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
         const addresses = (payload.elements || []).flatMap((element) => {
           const tags = element.tags || {};
+          if (!isIndoorPlace({ nome: tags.name ?? '' }, [], tags)) return [];
           const category = inferCategory(tags);
           const isPlace = Boolean(category);
           const isAddress = !isPlace;
@@ -449,6 +452,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
             const insideCity = latitude >= -21.47 && latitude <= -21.31 && longitude >= -42.78 && longitude <= -42.61;
             if (!properties.name || !Number.isFinite(latitude) || !Number.isFinite(longitude) || (!cityText.includes('cataguases') && !insideCity)) return [];
             const tags = properties.osm_key ? { [properties.osm_key]: properties.osm_value || 'yes' } : {};
+            if (!isIndoorPlace({ nome: properties.name }, [], tags)) return [];
             const category = inferCategory(tags);
             return [{
               cep: properties.postcode || '',
@@ -468,6 +472,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
 
         const combined = [...googleSuggestions, ...photonSuggestions, ...localMatches, ...viaCepSuggestions].filter((item, index, items) => {
           if (!item.logradouro) return false;
+          if (item.kind === 'place' && !isIndoorPlace({ nome: item.logradouro })) return false;
           const identity = (entry: AddressSuggestion) => entry.externalPlace?.id ?? `${entry.logradouro}|${entry.complemento}|${entry.bairro}`.toLowerCase();
           return items.findIndex(candidate => identity(candidate) === identity(item)) === index;
         });
@@ -608,7 +613,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
               value={searchQuery}
               onChange={(e) => { addressSelectionRef.current++; skipAddressLookupRef.current = false; setSelectedAddressLabel(''); setAddressFilter(null); routeRequestRef.current++; setSearchQuery(e.target.value); setSearchedAddress(null); setSelectedPlace(null); setSearchedPlaces([]); }}
               onKeyDown={handleAddressKeyDown}
-              placeholder="Busque ruas, lojas, empresas, praças, serviços ou CEPs"
+              placeholder="Busque lojas, clínicas, escolas, serviços ou endereços"
               role="combobox"
               aria-label="Buscar endereços, empresas, comércio, serviços e espaços públicos em Cataguases"
               aria-autocomplete="list"
@@ -649,6 +654,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         <p role="status" aria-live="polite" className="text-xs text-slate-500 empty:hidden">{addressMessage}</p>
 
         <div id="advanced-search-filters" hidden={!showFilters} className="advanced-search-filters space-y-3">
+          <p className="text-sm text-slate-600">Somente estabelecimentos em locais fechados. Praças e espaços ao ar livre ficam fora dos resultados.</p>
           <label className="flex items-center gap-2.5 text-sm">
             <input type="checkbox" checked={onlyVerified} onChange={(e) => setOnlyVerified(e.target.checked)} className="w-4 h-4" />
             Somente locais conferidos

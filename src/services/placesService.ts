@@ -1,4 +1,5 @@
 import { loadGoogleMaps } from '../lib/googleMaps';
+import { isIndoorPlace } from '../utils/indoorPlaces';
 import { categoryForTypes, MAP_CATEGORIES } from '../data/mapCategories';
 import { CATEGORY_QUERIES, categoryForActivity } from '../data/categoryDiscovery';
 import type { EstablishmentCategory, NearbyPlace } from '../types';
@@ -8,6 +9,7 @@ const bounds = { south: -21.47, north: -21.31, west: -42.78, east: -42.61 };
 
 function convert(place: google.maps.places.Place): NearbyPlace[] {
   if (!place.id || !place.location || !place.displayName) return [];
+  if (!isIndoorPlace({ nome: place.displayName }, place.types ?? [])) return [];
   const latitude = place.location.lat();
   const longitude = place.location.lng();
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return [];

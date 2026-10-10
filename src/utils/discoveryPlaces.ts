@@ -1,8 +1,9 @@
 import type { Establishment, EstablishmentCategory, NearbyPlace } from '../types';
+import { isIndoorPlace } from './indoorPlaces.ts';
 
 export function externalDiscoveryPlaces(places: NearbyPlace[], locals: Establishment[], category: EstablishmentCategory | 'todas', onlyVerified: boolean, includeUnknown: boolean): NearbyPlace[] {
   if (onlyVerified || !includeUnknown) return [];
-  return places.filter(place => (category === 'todas' || place.categoria === category)
+  return places.filter(place => isIndoorPlace(place) && (category === 'todas' || place.categoria === category)
     && !locals.some(local => !!place.place_id && local.place_id === place.place_id));
 }
 
