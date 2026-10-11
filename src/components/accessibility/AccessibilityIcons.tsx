@@ -1,45 +1,33 @@
-import { Accessibility, ArrowUpDown, Clock3, DoorOpen, Fence, Footprints, Hand, ParkingSquare, Sofa, SunDim, Toilet, TrendingUp } from 'lucide-react';
-import type { Establishment } from '../../types';
+﻿import type { DisabilityType, Establishment } from '../../types';
 import { ACCESSIBILITY_RESOURCES, resourceState } from '../../data/accessibilityResources';
 import { DISABILITY_INFO } from './DisabilityBadge';
 
-const resourceIcons = {
-  libras: Hand,
-  entrada_acessivel: DoorOpen,
-  rampa: TrendingUp,
-  elevador: ArrowUpDown,
-  corrimao: Fence,
-  banheiro_pcd: Toilet,
-  vaga_pcd: ParkingSquare,
-  piso_tatil: Footprints,
-  cadeira_rodas: Accessibility,
-  area_descanso: Sofa,
-  iluminacao_ajustavel: SunDim,
-  horario_tranquilo: Clock3,
-};
-
-const MAX_VISIBLE = 4;
-const tile = 'flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800';
+const MAIN_CATEGORIES: DisabilityType[] = ['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'];
 
 export function AccessibilityIcons({ establishment }: { establishment: Establishment }) {
   const criteria = establishment.criteria ?? [];
-  const resources = ACCESSIBILITY_RESOURCES.filter(resource => resourceState(criteria, resource.id) === 'sim')
-    .map(resource => ({ id: resource.id, label: resource.label, Icon: resourceIcons[resource.id] }));
-  // Older records describe criteria in free text, so fall back to the needs they cover.
-  const items = resources.length ? resources : [...new Set(criteria.filter(item => item.presente).map(item => item.tipo_deficiencia))]
-    .map(type => ({ id: type, label: DISABILITY_INFO[type].label, Icon: DISABILITY_INFO[type].icon }));
+  const supported = new Set<DisabilityType>();
 
-  if (!items.length) return <p className="text-sm text-slate-600">Recursos ainda não informados</p>;
+  for (const resource of ACCESSIBILITY_RESOURCES) {
+    if (resourceState(criteria, resource.id) === 'sim') supported.add(resource.tipo);
+  }
+  // Keep older free-text categories alongside structured resources.
+  for (const criterion of criteria) {
+    const isResource = criterion.recurso || ACCESSIBILITY_RESOURCES.some(resource =>
+      resource.legacy === criterion.criterio || (resource.id === 'libras' && criterion.criterio === 'Atendente capacitado em Libras'));
+    if (!isResource && criterion.presente === true) supported.add(criterion.tipo_deficiencia);
+  }
 
-  const hidden = items.slice(MAX_VISIBLE);
-  return <ul className="flex flex-wrap gap-1.5" aria-label={resources.length ? 'Recursos de acessibilidade cadastrados como disponíveis' : 'Necessidades atendidas segundo o cadastro'}>
-    {items.slice(0, MAX_VISIBLE).map(({ id, label, Icon }) => <li key={id} title={label} className={tile}>
-      <Icon size={18} aria-hidden="true" />
-      <span className="sr-only">{label}</span>
-    </li>)}
-    {hidden.length > 0 && <li title={hidden.map(item => item.label).join(', ')} className={`${tile} text-xs font-bold`}>
-      <span aria-hidden="true">+{hidden.length}</span>
-      <span className="sr-only">{hidden.map(item => item.label).join(', ')}</span>
-    </li>}
+  const categories = MAIN_CATEGORIES.filter(type => supported.has(type));
+  if (!categories.length) return <p className="text-sm text-slate-600">Recursos ainda não informados</p>;
+
+  return <ul className="flex flex-wrap gap-2" aria-label="Categorias com recursos de acessibilidade informados">
+    {categories.map(type => {
+      const { icon: Icon, shortLabel, label } = DISABILITY_INFO[type];
+      return <li key={type} title={`${label}: recursos informados no cadastro`} className="place-card-accessibility-badge">
+        <Icon size={16} aria-hidden="true" />
+        <span>{shortLabel}</span>
+      </li>;
+    })}
   </ul>;
 }
