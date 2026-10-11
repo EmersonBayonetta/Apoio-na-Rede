@@ -24,12 +24,13 @@ try {
  await click('Cadastrar local');
  await check('Educação disponível',`[...document.querySelector('#est-categoria').options].some(e=>e.value==='educacao')`);
  await click('Próxima Etapa');await check('Nome obrigatório e foco',`document.activeElement.id==='est-nome'`);
- await fill('#est-nome','Café de Regressão');await click('Próxima Etapa');await check('Descrição obrigatória',`document.activeElement.id==='est-desc'&&!!document.querySelector('#step1-heading')`);
+ await fill('#est-nome','Café de Regressão');await click('Próxima Etapa');await check('Categoria obrigatória sem valor pré-selecionado',`document.activeElement.id==='est-categoria'`);
+ await fill('#est-categoria','alimentacao');await click('Próxima Etapa');await check('Descrição obrigatória',`document.activeElement.id==='est-desc'&&!!document.querySelector('#step1-heading')`);
  await fill('#est-desc','Descrição do local de teste');await click('Próxima Etapa');
  await fill('#est-end','Rua de Teste, 123');await fill('#est-cidade','');await click('Próxima Etapa');await check('Cidade obrigatória',`document.activeElement.id==='est-cidade'`);
  await fill('#est-cidade','Cataguases');await fill('#est-estado','ZZ');await click('Próxima Etapa');await check('UF válida obrigatória',`document.activeElement.id==='est-estado'`);
- await fill('#est-estado','MG');await click('Próxima Etapa');await check('Localização exige confirmação',`document.activeElement.id==='manual-latitude'&&!!document.querySelector('#step2-heading')`);
- await fill('#manual-latitude','-21.4');await fill('#manual-longitude','-42.7');await click('Confirmar coordenadas');await click('Próxima Etapa');
+ await fill('#est-estado','MG');await click('Próxima Etapa');await check('Localização exige confirmação',`document.activeElement.id==='locate-address'&&!!document.querySelector('#step2-heading')`);
+ await evaluate(`document.querySelector('section[aria-labelledby="step2-heading"] details').open=true`);await fill('#manual-latitude','-21.4');await fill('#manual-longitude','-42.7');await click('Confirmar coordenadas');await click('Próxima Etapa');
  await check('Progresso ARIA consistente',`(()=>{const e=document.querySelector('[role="progressbar"]');return Number(e.getAttribute('aria-valuenow'))<=Number(e.getAttribute('aria-valuemax'))})()`);
  await fill('#crit-0','sim');await click('Próxima Etapa');
  await check('Fotos cabem em 320 px',`document.documentElement.scrollWidth<=document.documentElement.clientWidth`);

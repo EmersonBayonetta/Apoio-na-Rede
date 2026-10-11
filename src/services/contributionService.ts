@@ -1,6 +1,6 @@
 import { getSupabase } from '../lib/supabase';
 import { browserStorage, readStoredArray } from '../lib/browserStorage';
-import { ACCESSIBILITY_RESOURCES } from '../data/accessibilityResources';
+import { CONTRIBUTION_RESOURCES } from '../data/accessibilityResources';
 import type { Establishment } from '../types';
 import type { Json } from '../types/database';
 
@@ -12,7 +12,7 @@ export interface PlaceReport {
 }
 const REPORTS = 'apoio_reports_v1';
 export const PUBLIC_PLACE_COLUMNS = 'id,place_id,nome,categoria,endereco,bairro,cidade,estado,cep,latitude,longitude,descricao,fotos,status,telefone,whatsapp,email_contato,horario_funcionamento,website,nota_media,total_avaliacoes,verificado_em,criado_em,informado_responsavel,fonte_url,consultado_em,coordenadas_confirmadas';
-export const emptyAnswers = (): Answers => Object.fromEntries(ACCESSIBILITY_RESOURCES.map(r => [r.id, 'nao_sei']));
+export const emptyAnswers = (): Answers => Object.fromEntries(CONTRIBUTION_RESOURCES.map(r => [r.id, 'nao_sei']));
 export const localKey = (place: Pick<Establishment, 'id' | 'place_id'>) => place.place_id || place.id;
 
 export async function requireUser() {

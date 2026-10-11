@@ -1,9 +1,9 @@
-import { ACCESSIBILITY_RESOURCES } from '../data/accessibilityResources.ts';
+import { CONTRIBUTION_RESOURCES } from '../data/accessibilityResources.ts';
 import type { AccessibilityCriteria } from '../types';
 
 export interface ConfirmationReport { status: string; respostas: Record<string, string> }
 export function confirmedCriteria(reports: ConfirmationReport[], establishmentId: string): AccessibilityCriteria[] {
-  return ACCESSIBILITY_RESOURCES.flatMap(resource => {
+  return CONTRIBUTION_RESOURCES.flatMap(resource => {
     const values = reports.filter(r => r.status === 'aprovado').map(r => r.respostas[resource.id]);
     const yes = values.filter(v => v === 'sim').length;
     const no = values.filter(v => v === 'nao').length;

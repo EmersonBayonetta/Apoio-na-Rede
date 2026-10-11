@@ -205,7 +205,7 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
           <MapPin size={18} className="text-blue-600 shrink-0 mt-0.5" aria-hidden="true" />
           <span>
             {establishment.endereco} - {establishment.bairro ? `${establishment.bairro}, ` : ''}
-            {establishment.cidade}, {establishment.estado}
+            {establishment.cidade}, {establishment.estado}{establishment.cep ? `, ${establishment.cep}` : ''}
           </span>
         </div>
 

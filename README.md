@@ -62,6 +62,7 @@ Em um banco novo, execute nesta ordem:
 11. `database/registration_email_review.sql`
 12. `database/directory_email_review.sql`
 13. `database/registration_shared_limits.sql`
+14. `database/registration_review_location.sql`
 
 O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto. A carga opcional pesquisada está em `database/public_catalog_cataguases.sql` e depende do titular já autorizado.
 

@@ -1,5 +1,5 @@
 ﻿import type { DisabilityType, Establishment } from '../../types';
-import { ACCESSIBILITY_RESOURCES, resourceState } from '../../data/accessibilityResources';
+import { ACCESSIBILITY_RESOURCES, resourceForCriterion, resourceState } from '../../data/accessibilityResources';
 import { DISABILITY_INFO } from './DisabilityBadge';
 
 const MAIN_CATEGORIES: DisabilityType[] = ['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'];
@@ -13,9 +13,7 @@ export function AccessibilityIcons({ establishment }: { establishment: Establish
   }
   // Keep older free-text categories alongside structured resources.
   for (const criterion of criteria) {
-    const isResource = criterion.recurso || ACCESSIBILITY_RESOURCES.some(resource =>
-      resource.legacy === criterion.criterio || (resource.id === 'libras' && criterion.criterio === 'Atendente capacitado em Libras'));
-    if (!isResource && criterion.presente === true) supported.add(criterion.tipo_deficiencia);
+    if (!criterion.recurso && !resourceForCriterion(criterion) && criterion.presente === true) supported.add(criterion.tipo_deficiencia);
   }
 
   const categories = MAIN_CATEGORIES.filter(type => supported.has(type));

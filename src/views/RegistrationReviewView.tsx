@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { getSupabase } from '../lib/supabase';
 import type { Establishment } from '../types';
+import { MAP_CATEGORIES } from '../data/mapCategories';
 
-type Registration = Pick<Establishment,'id'|'nome'|'endereco'|'cidade'|'estado'|'descricao'|'telefone'|'whatsapp'|'horario_funcionamento'|'fotos'|'status'|'motivo_rejeicao'> & {kind?:string;especialidade?:string;registro_profissional?:string;atende_por_tipo?:string[];email?:string;criteria:{criterio:string;presente:boolean|null;observacao_livre?:string}[]};
+type Registration = Pick<Establishment,'id'|'nome'|'endereco'|'cidade'|'estado'|'descricao'|'telefone'|'whatsapp'|'horario_funcionamento'|'fotos'|'status'|'motivo_rejeicao'> & Partial<Pick<Establishment,'categoria'|'bairro'|'cep'|'latitude'|'longitude'>> & {kind?:string;especialidade?:string;registro_profissional?:string;atende_por_tipo?:string[];email?:string;criteria:{criterio:string;presente:boolean|null;observacao_livre?:string}[]};
 
 export function RegistrationReviewView() {
   const [registration,setRegistration]=useState<Registration|null>(null);
@@ -52,7 +53,9 @@ export function RegistrationReviewView() {
     {message&&<p role="status" className="mb-4 rounded-xl border p-4">{message}</p>}
     {registration&&<article className="space-y-4 rounded-2xl border bg-white p-5">
       <h2 className="text-2xl font-bold">{registration.nome}</h2>
-      <p>{registration.endereco} · {registration.cidade} – {registration.estado}</p>
+      {registration.categoria&&<p>Categoria: {MAP_CATEGORIES[registration.categoria]?.label??registration.categoria}</p>}
+      <p>{registration.endereco}{registration.bairro?` · ${registration.bairro}`:''} · {registration.cidade} – {registration.estado}{registration.cep?` · CEP ${registration.cep}`:''}</p>
+      {Number.isFinite(registration.latitude)&&Number.isFinite(registration.longitude)&&<p><a className="underline" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${registration.latitude},${registration.longitude}`}>Conferir ponto no mapa<span className="sr-only"> (abre em nova aba)</span></a></p>}
       <p className="whitespace-pre-wrap">{registration.descricao}</p>
       {registration.especialidade&&<p>Especialidade: {registration.especialidade} · Registro: {registration.registro_profissional||'Não informado'}</p>}
       {registration.atende_por_tipo&&<p>Necessidades atendidas informadas: {registration.atende_por_tipo.join(', ')||'Não informadas'}</p>}

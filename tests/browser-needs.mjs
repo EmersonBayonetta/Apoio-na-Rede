@@ -1,6 +1,7 @@
 // Run against an isolated Chrome profile (CDP :9223) and Vite preview (:4176).
 // Covers requirement profile editing and place compatibility.
 import assert from 'node:assert/strict';
+import { ACCESSIBILITY_RESOURCES } from '../src/data/accessibilityResources.ts';
 const targets = await (await fetch('http://127.0.0.1:9223/json/list')).json();
 const ws = new WebSocket(targets.find(t => t.type === 'page').webSocketDebuggerUrl);
 await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
@@ -38,10 +39,10 @@ try {
  await evaluate(`localStorage.clear();localStorage.setItem('apoio_accessibility_onboarding_v1','completed')`);
  await reload();
 
- // COMP-01, COMP-05: 12 resources, 3 levels, "Não preciso" by default, no disability question
+ // COMP-01, COMP-05: every resource, 3 levels, "Não preciso" by default, no disability question
  await openSettings();
  const defaults = await checkedLevels();
- assert.equal(Object.keys(defaults).length, 12);
+ assert.equal(Object.keys(defaults).length, ACCESSIBILITY_RESOURCES.length);
  assert.ok(Object.values(defaults).every(level => level === 'Não preciso'));
  assert.equal(await evaluate(`[...${section}.querySelectorAll('fieldset')].every(f=>[...f.querySelectorAll('label')].map(l=>l.textContent.trim()).join('|')==='Indispensável|Desejável|Não preciso')`), true);
  assert.equal(await evaluate(`[...${section}.querySelectorAll('input')].every(input=>input.type==='radio'&&input.name.startsWith('requirement-'))`), true);
@@ -53,7 +54,7 @@ try {
   await evaluate(`localStorage.setItem('apoio_requirements_v1', ${JSON.stringify(stored)})`); await reload(); await openSettings();
   const levels = await checkedLevels();
   assert.equal(levels['Rampa'], 'Não preciso', stored);
-  assert.equal(Object.values(levels).filter(level => level === 'Não preciso').length, stored.includes('elevador') ? 11 : 12, stored);
+  assert.equal(Object.values(levels).filter(level => level === 'Não preciso').length, stored.includes('elevador') ? ACCESSIBILITY_RESOURCES.length - 1 : ACCESSIBILITY_RESOURCES.length, stored);
   if (stored.includes('elevador')) assert.equal(levels['Elevador'], 'Desejável');
   await clickButton('Cancelar'); await pause(200);
  }
@@ -68,7 +69,7 @@ try {
  const restored = await checkedLevels();
  assert.equal(restored['Banheiro PCD'], 'Indispensável');
  assert.equal(restored['Área de descanso ou espaço tranquilo'], 'Desejável');
- assert.equal(Object.values(restored).filter(level => level === 'Não preciso').length, 10);
+ assert.equal(Object.values(restored).filter(level => level === 'Não preciso').length, ACCESSIBILITY_RESOURCES.length - 2);
 
  // COMP-03: clearing returns every resource to "Não preciso"
  await clickButton('Limpar requisitos'); await pause(200);
@@ -81,7 +82,7 @@ try {
  // COMP-06, COMP-07, COMP-10, COMP-12: comparison on the place page
  await seed(profile); await openPlace('est-a');
  assert.equal(await evaluate(`${match}.querySelector('p').textContent`), 'Atende 4 de 5 requisitos');
- assert.deepEqual(await matchGroup('Atendidos'), ['Atendimento em Libras', 'Rampa (indispensável)', 'Elevador', 'Corrimão']);
+ assert.deepEqual(await matchGroup('Atendidos'), ['Rampa (indispensável)', 'Elevador', 'Corrimão', 'Atendimento em Libras']);
  assert.deepEqual(await matchGroup('Sem informação'), ['Banheiro PCD (indispensável)']);
  assert.equal(await matchGroup('Não atendidos'), null);
  assert.equal(await evaluate(`${match}.textContent.includes('Requisito indispensável não atendido')`), false);
@@ -127,9 +128,9 @@ try {
  await evaluate(`localStorage.removeItem('acessacidade_establishments');localStorage.removeItem('acessacidade_criteria')`);
  await send('Page.navigate',{url:'http://127.0.0.1:4176/'}); await pause(2000);
  await clickButton('Cadastrar local'); await pause(300);
- await fillField('#est-nome','Sala Tranquila'); await fillField('#est-desc','Local de teste'); await clickButton('Próxima Etapa'); await pause(200);
+ await fillField('#est-nome','Sala Tranquila'); await fillField('#est-categoria','lazer_cultura'); await fillField('#est-desc','Local de teste'); await clickButton('Próxima Etapa'); await pause(200);
  await fillField('#est-end','Rua Teste, 2'); await fillField('#est-cidade','Cataguases'); await fillField('#est-estado','MG'); await clickButton('Próxima Etapa'); await pause(200);
- await fillField('#manual-latitude','-21.4'); await fillField('#manual-longitude','-42.7'); await clickButton('Confirmar coordenadas'); await pause(200); await clickButton('Próxima Etapa'); await pause(200);
+ await evaluate(`document.querySelector('section[aria-labelledby="step2-heading"] details').open=true`); await fillField('#manual-latitude','-21.4'); await fillField('#manual-longitude','-42.7'); await clickButton('Confirmar coordenadas'); await pause(200); await clickButton('Próxima Etapa'); await pause(200);
  // PRES-24 (presentation-readiness): the old combined noise and lighting item is gone
  assert.equal(await evaluate(`[...document.querySelectorAll('label[for^="crit-"]')].some(l=>l.textContent.includes('Espaço com baixo ruído sonoro'))`), false);
  const restSelect = await evaluate(`[...document.querySelectorAll('label[for^="crit-"]')].find(l=>l.textContent.includes('Área de descanso ou espaço tranquilo para pausas')).htmlFor`);
