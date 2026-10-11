@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Compass, HeartHandshake, Route, Stethoscope, Building2, Sun, Moon, type LucideIcon } from 'lucide-react';
+import { Compass, HeartHandshake, Stethoscope, Building2, Sun, Moon, type LucideIcon } from 'lucide-react';
 import { browserStorage } from '../../lib/browserStorage';
 import { UserPreferencesModal } from '../accessibility/UserPreferencesModal';
 import type { AppTab } from '../../utils/appTabs';
@@ -11,7 +11,6 @@ interface NavbarProps {
 
 const DESTINATIONS: { tab: AppTab; label: string; desktopLabel: string; icon: LucideIcon }[] = [
   { tab: 'explorer', label: 'Explorar', desktopLabel: 'Explorar', icon: Compass },
-  { tab: 'routes', label: 'Rotas', desktopLabel: 'Rotas acessíveis', icon: Route },
   { tab: 'professionals', label: 'Profissionais', desktopLabel: 'Profissionais', icon: Stethoscope },
   { tab: 'register', label: 'Cadastrar', desktopLabel: 'Cadastrar local', icon: Building2 },
 ];
@@ -32,7 +31,8 @@ export function Navbar({ currentTab, onSelectTab }: NavbarProps) {
   }, []);
   const destinationButton = (destination: typeof DESTINATIONS[number], mobile: boolean) => {
     const Icon = destination.icon;
-    return <button key={destination.tab} type="button" aria-current={currentTab === destination.tab ? 'page' : undefined} onClick={() => onSelectTab(destination.tab)}>
+    const inactive = destination.tab === 'routes';
+    return <button key={destination.tab} type="button" disabled={inactive} title={inactive ? 'Rotas acessíveis temporariamente indisponíveis' : undefined} aria-label={inactive ? 'Rotas acessíveis — temporariamente indisponíveis' : undefined} aria-current={!inactive && currentTab === destination.tab ? 'page' : undefined} onClick={() => onSelectTab(destination.tab)}>
       <Icon size={mobile ? 22 : 17} aria-hidden="true" />{mobile ? <span>{destination.label}</span> : destination.desktopLabel}
     </button>;
   };
