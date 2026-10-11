@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import sections from '../../data/registrationGuidelines.json';
 
 const PDF_URL = '/documents/diretrizes-de-cadastro-apoio-na-rede.pdf';
@@ -6,6 +6,8 @@ const PDF_URL = '/documents/diretrizes-de-cadastro-apoio-na-rede.pdf';
 export function RegistrationGuidelines({ accepted, onChange }: { accepted: boolean; onChange: (accepted: boolean) => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const link = useRef<HTMLAnchorElement>(null);
+  const [attemptedCheck, setAttemptedCheck] = useState(false);
+  const showAcceptanceHint = attemptedCheck && !accepted;
   useEffect(() => {
     const modal = dialog.current;
     const restoreFocus = () => { document.body.style.overflow = previousOverflow; link.current?.focus(); };
@@ -16,11 +18,11 @@ export function RegistrationGuidelines({ accepted, onChange }: { accepted: boole
   return <>
     <div className="rounded-2xl border border-slate-200 p-4 text-sm">
       <div className="flex items-start gap-3">
-        <input id="registration-guidelines" type="checkbox" required checked={accepted} aria-readonly="true" aria-describedby="registration-guidelines-hint" onClick={event => event.preventDefault()} onChange={() => {}} className="mt-1 h-5 w-5 shrink-0 accent-[var(--ds-accent)]" />
+        <input id="registration-guidelines" type="checkbox" required checked={accepted} aria-readonly="true" aria-invalid={showAcceptanceHint || undefined} aria-describedby="registration-guidelines-hint" onClick={event => { event.preventDefault(); if (!accepted) setAttemptedCheck(true); }} onChange={() => {}} className="mt-1 h-5 w-5 shrink-0 accent-[var(--ds-accent)]" />
         <div>
           <label htmlFor="registration-guidelines">Atesto a conformidade do cadastro com as </label>
           <a ref={link} href={PDF_URL} className="font-semibold text-blue-700 underline" aria-haspopup="dialog" onClick={event => { event.preventDefault(); dialog.current?.showModal(); document.body.style.overflow = 'hidden'; }}>Diretrizes da comunidade do Apoio na Rede</a>.
-          <p id="registration-guidelines-hint" className="mt-2 text-xs text-slate-600">Abra as diretrizes e clique em “Li e aceito” para marcar este campo obrigatório.</p>
+          <p id="registration-guidelines-hint" className={`mt-2 text-xs ${showAcceptanceHint ? 'text-rose-600 font-semibold' : 'text-slate-600'}`}>Abra as diretrizes e clique em “Li e aceito” para marcar este campo obrigatório.</p>
         </div>
       </div>
     </div>
