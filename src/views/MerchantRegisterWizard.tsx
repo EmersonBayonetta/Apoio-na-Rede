@@ -1,4 +1,5 @@
 import { imageFallback } from '../utils/imageFallback';
+import { RegistrationGuidelines } from '../components/accessibility/RegistrationGuidelines';
 import React, { useState } from 'react';
 import { MAP_CATEGORIES } from '../data/mapCategories';
 import { validCoordinates, validPhotoUrl, validUf, validateRegistration } from '../utils/registrationValidation';
@@ -42,6 +43,7 @@ const phoneDigits = (value: string) => value.replace(/\D/g, '');
 export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ onSuccess }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
 
   // Step 1: Dados Básicos
   const [linkedPlace, setLinkedPlace] = useState<NearbyPlace | null>(null);
@@ -217,6 +219,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   };
   const validateStep = (step: number) => {
     if (step === 1) {
+      if (!guidelinesAccepted) return failField(1, 'registration-guidelines', 'Confirme o atestado de conformidade com as Diretrizes da comunidade do Apoio na Rede.');
       if (!nome.trim()) return failField(1, 'est-nome', 'Informe o nome do estabelecimento.');
       if (!categoria) return failField(1, 'est-categoria', 'Selecione a categoria do estabelecimento.');
       if (!descricao.trim()) return failField(1, 'est-desc', 'Informe a descrição do estabelecimento.');
@@ -421,6 +424,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 <p id="est-desc-hint" className="mt-1 text-xs text-slate-500">Os recursos de acessibilidade são informados na Etapa 3.</p>
               </div>
             </div>
+            <RegistrationGuidelines accepted={guidelinesAccepted} onChange={setGuidelinesAccepted} />
           </section>
         )}
 

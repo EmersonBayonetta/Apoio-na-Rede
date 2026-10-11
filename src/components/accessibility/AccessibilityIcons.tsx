@@ -4,8 +4,8 @@ import { DISABILITY_INFO } from './DisabilityBadge';
 
 const MAIN_CATEGORIES: DisabilityType[] = ['mobilidade', 'visual', 'auditiva', 'intelectual', 'invisivel'];
 
-export function AccessibilityIcons({ establishment }: { establishment: Establishment }) {
-  const criteria = establishment.criteria ?? [];
+export function AccessibilityIcons({ establishment }: { establishment?: Establishment }) {
+  const criteria = establishment?.criteria ?? [];
   const supported = new Set<DisabilityType>();
 
   for (const resource of ACCESSIBILITY_RESOURCES) {
@@ -16,15 +16,13 @@ export function AccessibilityIcons({ establishment }: { establishment: Establish
     if (!criterion.recurso && !resourceForCriterion(criterion) && criterion.presente === true) supported.add(criterion.tipo_deficiencia);
   }
 
-  const categories = MAIN_CATEGORIES.filter(type => supported.has(type));
-  if (!categories.length) return <p className="text-sm text-slate-600">Recursos ainda não informados</p>;
-
-  return <ul className="flex flex-wrap gap-2" aria-label="Categorias com recursos de acessibilidade informados">
-    {categories.map(type => {
-      const { icon: Icon, shortLabel, label } = DISABILITY_INFO[type];
-      return <li key={type} title={`${label}: recursos informados no cadastro`} className="place-card-accessibility-badge">
-        <Icon size={16} aria-hidden="true" />
-        <span>{shortLabel}</span>
+  return <ul className="flex flex-wrap gap-2" aria-label="Modalidades de acessibilidade">
+    {MAIN_CATEGORIES.map(type => {
+      const { icon: Icon, shortLabel } = DISABILITY_INFO[type];
+      const state = supported.has(type) ? 'Recursos disponíveis' : criteria.some(criterion => criterion.tipo_deficiencia === type && criterion.presente === false) ? 'Recursos não atendidos' : 'Sem recursos confirmados';
+      return <li key={type} title={`${shortLabel}: ${state}`} className={`place-card-accessibility-badge ${supported.has(type) ? 'is-supported' : 'is-unavailable'}`}>
+        <Icon size={20} aria-hidden="true" />
+        <span className="sr-only">{shortLabel}: {state}</span>
       </li>;
     })}
   </ul>;

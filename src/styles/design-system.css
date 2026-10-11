@@ -10,6 +10,8 @@
   --ds-accent-ink: #022f30;
   --ds-radius: 20px;
 }
+.registration-guidelines-dialog { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow-y: auto; border: 1px solid var(--ds-border); border-radius: 20px; background: var(--ds-surface); color: var(--ds-text); }
+.registration-guidelines-dialog::backdrop { background: rgb(0 0 0 / 0.72); }
 
 body { background: var(--ds-background); color: var(--ds-text); }
 body:not(.theme-high-contrast-dark):not(.theme-yellow-black) {
@@ -269,7 +271,12 @@ footer.bg-blue-950 { padding-bottom: 104px; }
 .place-card-address svg { flex-shrink: 0; margin-top: 2px; }
 .place-card-address span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden; overflow-wrap: anywhere; }
 .place-card-actions { margin-top: auto; padding-top: 4px; }
-.place-card-accessibility-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--ds-raised); color: var(--ds-text); font-size: 0.8125rem; font-weight: 700; line-height: 1.3; }
+.place-card-accessibility-badge { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: var(--ds-raised); color: var(--ds-muted); }
+.place-card-accessibility-badge.is-supported { color: var(--ds-accent); }
+.place-card-accessibility-badge.is-unavailable { opacity: 0.4; }
+.place-card-clickable { cursor: pointer; }
+.place-card-clickable:hover, .place-card-clickable:focus-within { border-color: var(--ds-accent); }
+.place-card-open { text-align: left; color: inherit; cursor: pointer; }
 .place-card-accessibility-badge svg { flex-shrink: 0; }
 .place-card-action { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 12px; font-size: 0.875rem; font-weight: 700; line-height: 1.2; text-align: center; }
 @media (max-width: 1023px) {

@@ -215,19 +215,13 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
         {establishment.fonte_url&&<p className="mt-3 text-sm text-slate-600"><a href={establishment.fonte_url} target="_blank" rel="noopener noreferrer" className="underline">Fonte dos dados de contato</a>{establishment.consultado_em&&` · Consultado em ${new Date(establishment.consultado_em+'T12:00:00').toLocaleDateString('pt-BR')}`}. Os recursos de acessibilidade ainda precisam ser confirmados.</p>}
         {establishment.demonstracao ? <p className="mt-4 rounded-xl border p-3 text-sm">Exemplo fictício para apresentação. Endereço, recursos e imagens são ilustrativos; este cadastro não representa um local real.</p> : <WalkingRoute destination={establishment} />}
         {establishment.status === 'verificado' && establishment.informado_responsavel && <p className="font-semibold mt-4">Informado pelo responsável</p>}
-      </header>
-      {!establishment.demonstracao && <ApprovedReports placeKey={localKey(establishment)} />}
-
-      {/* Layout Grid: Informações Práticas + Checklist */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        {/* Coluna Esquerda: Informações de Contato e Horários */}
-        <aside className="space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-            <h2 className="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
+        <section aria-labelledby="place-contact-heading" className="mt-6 border-t border-slate-200 pt-6">
+          <div>
+            <h2 id="place-contact-heading" className="text-base font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
               Informações de Contato & Horários
             </h2>
 
-            <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               {establishment.horario_funcionamento && (
                 <div className="flex items-start gap-3">
                   <Clock size={18} className="text-slate-400 shrink-0 mt-0.5" aria-hidden="true" />
@@ -290,10 +284,17 @@ export const EstablishmentDetailView: React.FC<EstablishmentDetailViewProps> = (
               )}
             </div>
           </div>
-        </aside>
+        </section>
+      </header>
+      {!establishment.demonstracao && <ApprovedReports placeKey={localKey(establishment)} />}
 
-        {/* Coluna Direita: Checklist de Critérios de Acessibilidade */}
-        <div className="lg:col-span-2">
+      {/* Critérios de acessibilidade */}
+      <div className="mb-10">
+        
+
+
+        
+        <div className="w-full">
           <div className="mb-4"><RequirementsMatch criteria={criteria} requirements={requirements} /></div>
           <AccessibilityChecklist criteria={criteria} />
         </div>
