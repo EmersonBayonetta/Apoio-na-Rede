@@ -130,7 +130,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
   const hasEssentials = Object.values(requirements).includes('indispensavel');
   const [hideUnmetEssentials, setHideUnmetEssentials] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showAllPlaces, setShowAllPlaces] = useState(false);
   const [establishments, setEstablishments] = useState<Establishment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -186,7 +185,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
     setSelectedAddressLabel(''); setAddressFilter(null);
     skipAddressLookupRef.current = false;
     setSearchQuery(''); setSearchedPlaces([]); setAddressSuggestions([]); setSearchedAddress(null);
-    setAddressMessage(''); setSelectedCategory(category); setShowAllPlaces(false);
+    setAddressMessage(''); setSelectedCategory(category);
   };
 
   useEffect(() => {
@@ -273,7 +272,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
       try {
         const places = await PlacesService.nearby(placesSearchCenter, selectedCategory);
         if (controller.signal.aborted) return;
-        setNearbyPlaces(places.slice(0, 500));
+        setNearbyPlaces(places);
         setPlacesQuotaExceeded(false);
         
       } catch (error) {
@@ -716,10 +715,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({ onSelectEstablishmen
         </section>
       ) : (
         <>
-          <PlaceCatalog entries={catalogEntries} center={placesSearchCenter} limit={showAllPlaces ? undefined : 5} showDistance={hasUserLocation} onOpenPlace={onSelectEstablishment} />
-          {catalogEntries.length > 5 && <button type="button" aria-expanded={showAllPlaces} onClick={() => setShowAllPlaces(value => !value)} className="-mt-8 mb-12 min-h-11 rounded-xl border px-5 py-3 text-sm font-semibold">
-            {showAllPlaces ? 'Mostrar menos locais' : `Ver todos os ${catalogEntries.length} locais`}
-          </button>}
+          <PlaceCatalog key={JSON.stringify([searchQuery, selectedCategory, onlyVerified, includeUnknownPlaces, hideUnmetEssentials, requirements, placesSearchCenter, selectedPlace?.id, selectedAddressLabel])} entries={catalogEntries} center={placesSearchCenter} showDistance={hasUserLocation} onOpenPlace={onSelectEstablishment} />
         </>
       )}
     </div>

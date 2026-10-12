@@ -256,11 +256,10 @@ body.reduced-sensory .explorer-shell .premium-card:hover, body.reduced-sensory .
 footer.bg-blue-950 { padding-bottom: 104px; }
 @media (max-width: 1023px) { body { padding-bottom: calc(150px + env(safe-area-inset-bottom)); } }
 
-/* Place suggestions: one row of five cards. Below desktop the row scrolls sideways with snap,
-   so the list never adds more than one card's height to the page. */
-.place-catalog-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
-.place-catalog-row.is-single { grid-template-columns: minmax(0, 340px); }
-.place-catalog-row > li { display: flex; min-width: 0; }
+/* Place suggestions stay in one horizontal scrolling row at every screen size. */
+.place-catalog-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; padding-bottom: 12px; scrollbar-width: thin; scrollbar-color: #36544e transparent; }
+.place-catalog-row > li { display: flex; min-width: 0; flex: 0 0 300px; scroll-snap-align: start; }
+.place-catalog-row.is-single > li { flex-basis: 340px; max-width: 100%; }
 .explorer-shell article.place-card { display: flex; flex-direction: column; width: 100%; padding: 0; overflow: hidden; }
 .place-card-media { position: relative; height: 128px; flex-shrink: 0; display: grid; place-items: center; overflow: hidden; color: #edfcf9; background: linear-gradient(140deg, color-mix(in srgb, var(--place-color) 55%, #171919), #202221); }
 .place-card-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -287,7 +286,7 @@ footer.bg-blue-950 { padding-bottom: 104px; }
   .place-catalog-row > li { flex: 0 0 260px; scroll-snap-align: start; }
 }
 @media (max-width: 600px) { .place-catalog-row > li { flex-basis: 78%; } }
-/* Larger text does not fit five columns; keep the single scrolling row instead. */
+/* Keep cards readable when the user increases text size. */
 html:is(.font-size-lg, .font-size-xl) .place-catalog-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px; padding-bottom: 12px; }
 html:is(.font-size-lg, .font-size-xl) .place-catalog-row > li { flex: 0 0 300px; max-width: 85%; scroll-snap-align: start; }
 body:is(.theme-high-contrast-dark, .theme-yellow-black) .place-card-media { background: #000; border-bottom: 1px solid currentColor; }
