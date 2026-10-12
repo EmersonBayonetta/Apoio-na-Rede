@@ -3,7 +3,7 @@ import { readLocalPhoto } from '../utils/localPhoto';
 import { RegistrationGuidelines } from '../components/accessibility/RegistrationGuidelines';
 import React, { useState } from 'react';
 import { MAP_CATEGORIES } from '../data/mapCategories';
-import { validCoordinates, validPhotoUrl, validUf, validateRegistration } from '../utils/registrationValidation';
+import { registrationTextSchema, registrationTextError, validCoordinates, validPhotoUrl, validUf, validateRegistration } from '../utils/registrationValidation';
 import {
   EstablishmentCategory,
   DisabilityType,
@@ -236,15 +236,19 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   const validateStep = (step: number) => {
     if (step === 1) {
       if (!guidelinesAccepted) return failField(1, 'registration-guidelines', 'Confirme o atestado de conformidade com as Diretrizes da comunidade do Apoio na Rede.');
-      if (!nome.trim()) return failField(1, 'est-nome', 'Informe o nome do estabelecimento.');
+      const nameError = registrationTextError('nome', nome);
+      if (nameError) return failField(1, 'est-nome', nameError);
       if (!categoria) return failField(1, 'est-categoria', 'Selecione a categoria do estabelecimento.');
-      if (!descricao.trim()) return failField(1, 'est-desc', 'Informe a descrição do estabelecimento.');
+      const descriptionError = registrationTextError('descricao', descricao);
+      if (descriptionError) return failField(1, 'est-desc', descriptionError);
       if (telefone.trim() && ![10, 11].includes(phoneDigits(telefone).length)) return failField(1, 'est-tel', 'Informe o telefone com DDD, por exemplo (32) 3421-0011.');
       if (whatsapp.trim() && !whatsappUrl(whatsapp)) return failField(1, 'est-zap', 'Informe o WhatsApp com DDD, por exemplo (32) 98765-4321.');
     }
     if (step === 2) {
-      if (!endereco.trim()) return failField(2, 'est-end', 'Informe o endereço do estabelecimento.');
-      if (!cidade.trim()) return failField(2, 'est-cidade', 'Informe a cidade.');
+      const addressError = registrationTextError('endereco', endereco);
+      if (addressError) return failField(2, 'est-end', addressError);
+      const cityError = registrationTextError('cidade', cidade);
+      if (cityError) return failField(2, 'est-cidade', cityError);
       if (!validUf(estado)) return failField(2, 'est-estado', 'Informe uma UF válida.');
       if (cep.trim() && !/^\d{5}-?\d{3}$/.test(cep.trim())) return failField(2, 'est-cep', 'Informe o CEP com 8 dígitos, por exemplo 36770-000.');
       if (!coords) return failField(2, 'locate-address', 'Localize o endereço no mapa ou informe as coordenadas do local.');
@@ -345,12 +349,16 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 <input
                   id="est-nome"
                   type="text"
+                  minLength={registrationTextSchema.nome.min}
+                  maxLength={registrationTextSchema.nome.max}
+                  aria-describedby="est-nome-hint"
                   required
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="Ex: Livraria & Café Acessível"
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
                 />
+                <p id="est-nome-hint" className="mt-1 text-xs text-slate-500">Mínimo de {registrationTextSchema.nome.min} caracteres, sem contar espaços nas pontas.</p>
                 <button type="button" disabled={nome.trim().length < 3 || placeSearchStatus === 'Buscando locais…'} className="mt-2 rounded-xl border border-blue-700 px-3 py-2 text-xs font-bold text-blue-800 disabled:opacity-50" onClick={async () => {
                   setPlaceSearchStatus('Buscando locais…');
                   setPlaceResults([]);
@@ -430,6 +438,8 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 <textarea
                   id="est-desc"
                   rows={3}
+                  minLength={registrationTextSchema.descricao.min}
+                  maxLength={registrationTextSchema.descricao.max}
                   required
                   aria-describedby="est-desc-hint"
                   value={descricao}
@@ -437,7 +447,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                   placeholder="Conte o que o local oferece, o tipo de atendimento e como é o ambiente..."
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600"
                 />
-                <p id="est-desc-hint" className="mt-1 text-xs text-slate-500">Os recursos de acessibilidade são informados na Etapa 3.</p>
+                <p id="est-desc-hint" className="mt-1 text-xs text-slate-500">Mínimo de {registrationTextSchema.descricao.min} caracteres. {descricao.trim().length} caracteres preenchidos. Os recursos de acessibilidade são informados na Etapa 3.</p>
               </div>
             </div>
             <RegistrationGuidelines accepted={guidelinesAccepted} onChange={setGuidelinesAccepted} />
@@ -470,12 +480,16 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 <input
                   id="est-end"
                   type="text"
+                  minLength={registrationTextSchema.endereco.min}
+                  maxLength={registrationTextSchema.endereco.max}
+                  aria-describedby="est-end-hint"
                   required
                   value={endereco}
                   onChange={(e) => changeLocation(() => setEndereco(e.target.value))}
                   placeholder="Ex.: Rua Major Vieira, 120"
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
                 />
+                <p id="est-end-hint" className="mt-1 text-xs text-slate-500">Mínimo de {registrationTextSchema.endereco.min} caracteres, sem contar espaços nas pontas.</p>
               </div>
 
               <div>
@@ -499,11 +513,15 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 <input
                   id="est-cidade"
                   type="text"
+                  minLength={registrationTextSchema.cidade.min}
+                  maxLength={registrationTextSchema.cidade.max}
+                  aria-describedby="est-cidade-hint"
                   required
                   value={cidade}
                   onChange={(e) => changeLocation(() => setCidade(e.target.value))}
                   className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-600"
                 />
+                <p id="est-cidade-hint" className="mt-1 text-xs text-slate-500">Mínimo de {registrationTextSchema.cidade.min} caracteres, sem contar espaços nas pontas.</p>
               </div>
 
               <div>

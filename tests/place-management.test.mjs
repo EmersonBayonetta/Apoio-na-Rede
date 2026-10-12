@@ -6,7 +6,7 @@ import { validatePlaceEdit } from '../api/_lib/placeManagementValidation.js';
 const env = {SUPABASE_URL:'https://test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',SUPABASE_SECRET_KEY:'sb_secret_test',APP_SITE_URL:'https://apoio-na-rede.vercel.app'};
 const id = '00000000-0000-4000-8000-000000000001';
 const timestamp = '2026-10-12T12:00:00+00:00';
-const details = {nome:'Local de teste',categoria:'educacao',descricao:'Descrição',endereco:'Rua Teste, 10',bairro:'Centro',cidade:'Cataguases',estado:'MG',cep:'36770-000',latitude:-21.4,longitude:-42.7,fotos:[],telefone:'',whatsapp:'',horario_funcionamento:''};
+const details = {nome:'Local de teste',categoria:'educacao',descricao: 'Descrição adequada para o cadastro.',endereco:'Rua Teste, 10',bairro:'Centro',cidade:'Cataguases',estado:'MG',cep:'36770-000',latitude:-21.4,longitude:-42.7,fotos:[],telefone:'',whatsapp:'',horario_funcionamento:''};
 const saved = {...details,id,status:'verificado',atualizado_em:timestamp};
 const json = (data,status = 200,headers = {}) => new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json',...headers}});
 const photo = `data:image/jpeg;base64,${Buffer.from([255,216,255,0,255,217]).toString('base64')}`;

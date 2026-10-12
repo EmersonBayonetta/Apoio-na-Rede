@@ -32,6 +32,8 @@ Validação: `npm test`, `npm run build`, `npm run lint`; o teste `tests/browser
 
 ## Configuração existente e limites
 
+O schema declarativo de locais em `shared/registrationValidation.js` é compartilhado pelo frontend, API de cadastro e API de edição. Ele exige nome e cidade com pelo menos 3 caracteres, endereço com 5 e descrição com 20, desconsiderando espaços nas pontas. Campos obrigatórios vazios e textos acima de 5.000 caracteres são recusados; UF, coordenadas e links de fotos continuam sendo validados. Os formulários mostram os mínimos e a contagem da descrição. Essas regras são de locais; cadastros de profissionais e trechos conservam seus validadores específicos.
+
 Na Vercel, mantenha a URL Supabase, chave pública e chave secreta de servidor da integração existente. As chaves secretas nunca entram no build do navegador. A migração `database/registration_email_review.sql` já foi aplicada ao projeto existente.
 
 No Supabase, Authentication → URL Configuration precisa permitir `https://apoio-na-rede.vercel.app/revisao**` (ou o curinga existente `https://apoio-na-rede.vercel.app/**`). Site URL deve ser `https://apoio-na-rede.vercel.app`. O template Magic Link deve manter `{{ .ConfirmationURL }}` para fornecer o link.

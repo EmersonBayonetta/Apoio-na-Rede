@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { MAP_CATEGORIES } from '../../data/mapCategories';
 import { readLocalPhoto } from '../../utils/localPhoto';
 import { imageFallback } from '../../utils/imageFallback';
-import { validPhotoUrl } from '../../utils/registrationValidation';
+import { registrationTextSchema, validPhotoUrl } from '../../utils/registrationValidation';
 import { locateAddress } from '../../services/addressService';
 import { ManagementError, PlaceManagementService, type ManagedPlace, type PlaceEdit } from '../../services/placeManagementService';
 
@@ -67,13 +67,13 @@ export function PlaceEditForm({place,onSaved,onCancel,onSessionExpired}: {place:
     <fieldset disabled={busy} className="space-y-6 disabled:opacity-60">
       <legend className="sr-only">Dados do local</legend>
       <div className="grid gap-4 sm:grid-cols-2">
-        {textFields.map(([key,label,required]) => <label key={key} className="grid gap-2 text-sm font-semibold">{label}{required ? ' *' : ''}<input id={`edit-${key}`} value={details[key]} required={required} maxLength={key === 'estado' ? 2 : key === 'cep' ? 9 : 5000} type={key === 'telefone' || key === 'whatsapp' ? 'tel' : 'text'} onChange={event => {
+        {textFields.map(([key,label,required]) => <label key={key} className="grid gap-2 text-sm font-semibold">{label}{required ? ' *' : ''}<input id={`edit-${key}`} value={details[key]} required={required} minLength={key === 'nome' || key === 'cidade' || key === 'endereco' ? registrationTextSchema[key].min : undefined} maxLength={key === 'estado' ? 2 : key === 'cep' ? 9 : 5000} type={key === 'telefone' || key === 'whatsapp' ? 'tel' : 'text'} onChange={event => {
           update(key,event.target.value);
           if (['endereco','bairro','cidade','estado','cep'].includes(key)) setLocationConfirmed(false);
-        }} className={fieldClass} /></label>)}
+        }} className={fieldClass} />{(key === 'nome' || key === 'cidade' || key === 'endereco') && <span className="text-xs font-normal text-slate-600">Mínimo de {registrationTextSchema[key].min} caracteres, sem contar espaços nas pontas.</span>}</label>)}
         <label className="grid gap-2 text-sm font-semibold">Categoria *<select value={details.categoria} onChange={event => update('categoria',event.target.value as PlaceEdit['categoria'])} className={fieldClass}>{Object.entries(MAP_CATEGORIES).map(([value,category]) => <option key={value} value={value}>{category.label}</option>)}</select></label>
       </div>
-      <label className="grid gap-2 text-sm font-semibold">Descrição *<textarea required maxLength={5000} rows={4} value={details.descricao} onChange={event => update('descricao',event.target.value)} className={fieldClass} /></label>
+      <label className="grid gap-2 text-sm font-semibold">Descrição *<textarea required minLength={registrationTextSchema.descricao.min} maxLength={registrationTextSchema.descricao.max} aria-describedby="edit-description-help" rows={4} value={details.descricao} onChange={event => update('descricao',event.target.value)} className={fieldClass} /><span id="edit-description-help" className="text-xs font-normal text-slate-600">Mínimo de {registrationTextSchema.descricao.min} caracteres. {details.descricao.trim().length} caracteres preenchidos.</span></label>
       <section className="space-y-3 rounded-xl border p-4" aria-labelledby="edit-map-heading">
         <h3 id="edit-map-heading" className="font-bold">Ponto no mapa</h3>
         <p className="text-sm text-slate-600">Ao mudar o endereço, localize novamente ou confirme as coordenadas corretas.</p>

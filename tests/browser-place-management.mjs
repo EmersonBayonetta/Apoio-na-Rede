@@ -17,7 +17,7 @@ const wait=async expression => {for(let i=0;i<100;i++){try{if(await evaluate(exp
 const click=async label => {await evaluate(`(()=>{const element=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()===${JSON.stringify(label)});if(!element)throw Error('Missing button');element.click()})()`);await pause(100);};
 const fill=async (selector,value) => {await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});const proto=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event(e.tagName==='SELECT'?'change':'input',{bubbles:true}))})()`);await pause(80);};
 const check=async (name,expression) => {assert.equal(await evaluate(expression),true,name);console.log('PASS',name);};
-const sample = {id:'est-management-test',nome:'Local Teste',categoria:'educacao',descricao:'Local de teste',endereco:'Rua Teste, 10',cidade:'Cataguases',estado:'MG',latitude:-21.4,longitude:-42.7,fotos:[],status:'verificado',nota_media:4,total_avaliacoes:3,criado_em:'2026-01-01T00:00:00Z'};
+const sample = {id:'est-management-test',nome:'Local Teste',categoria:'educacao',descricao:'Local de teste para edição de cadastro',endereco:'Rua Teste, 10',cidade:'Cataguases',estado:'MG',latitude:-21.4,longitude:-42.7,fotos:[],status:'verificado',nota_media:4,total_avaliacoes:3,criado_em:'2026-01-01T00:00:00Z'};
 try {
   await send('Page.enable');await send('Runtime.enable');await send('Network.enable');await send('Network.setBlockedURLs',{urls:['https://*']});
   await send('Emulation.setDeviceMetricsOverride',{width:320,height:800,mobile:true,deviceScaleFactor:1});

@@ -4,7 +4,7 @@ import { normalizeSearchText } from '../src/utils/normalizeSearchText.ts';
 import { validateRegistration, validCoordinates, validPhotoUrl } from '../src/utils/registrationValidation.ts';
 import { browserStorage, readStoredArray } from '../src/lib/browserStorage.ts';
 
-const registration = { nome: 'Café', descricao: 'Descrição', endereco: 'Rua, 12', cidade: 'Cataguases', estado: 'MG', latitude: -21.3924, longitude: -42.6896, fotos: [] };
+const registration = { nome: 'Café', descricao: 'Descrição adequada para o cadastro.', endereco: 'Rua, 12', cidade: 'Cataguases', estado: 'MG', latitude: -21.3924, longitude: -42.6896, fotos: [] };
 test('search treats accents, case and repeated spaces equally', () => {
   assert.equal(normalizeSearchText('  CAFÉ   São João '), normalizeSearchText('cafe sao joao'));
 });
