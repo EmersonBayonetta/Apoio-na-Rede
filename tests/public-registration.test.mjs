@@ -4,6 +4,23 @@ import { createRegistrationHandler } from '../api/register-place.js';
 const env={SUPABASE_URL:'https://test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',SUPABASE_SECRET_KEY:'sb_secret_test',APP_SITE_URL:'https://apoio-na-rede.vercel.app'};
 const details={nome:'Local',descricao:'Descrição',categoria:'educacao',endereco:'Rua Teste',cidade:'Cataguases',estado:'MG',latitude:-21.39,longitude:-42.69,fotos:[],status:'verificado',dono_id:'attacker'};
 const body={details,criteria:[{tipo_deficiencia:'mobilidade',criterio:'Entrada',presente:true}],owner_email:'attacker@example.invalid'};
+test('local image registration stores an HTTP URL before submission and cleans up on rejection', async () => {
+ const photo=`data:image/jpeg;base64,${Buffer.from([255,216,255,0,255,217]).toString('base64')}`;
+ for(const rejected of [false,true]) {
+  const calls=[];
+  const handler=createRegistrationHandler({env,fetchImpl:async(url,options)=>{
+   calls.push({url:String(url),options});
+   if(String(url).includes('/bucket/'))return result({id:'place-photos',public:true});
+   if(String(url).includes('submit_public_registration'))return rejected?new Response(JSON.stringify({message:'Limite'}),{status:400}):result({id:'saved',owner_email:'owner@example.invalid'});
+   return result({});
+  }});
+  const response=await run(handler,{method:'POST',headers:{},body:{...body,details:{...details,fotos:[photo]}}});
+  assert.equal(response.code,rejected?429:201);
+  const submission=JSON.parse(calls.find(call=>call.url.includes('submit_public_registration')).options.body);
+  assert.match(submission.details.fotos[0],/^https:\/\/test.supabase.co\/storage\/v1\/object\/public\/place-photos\//);
+  assert.equal(calls.some(call=>call.options.method==='DELETE'),rejected);
+ }
+});
 const result=data=>new Response(JSON.stringify(data),{headers:{'Content-Type':'application/json'}});
 const run=async(handler,request={method:'POST',headers:{origin:env.APP_SITE_URL,'x-forwarded-for':'127.0.0.1'},body})=>{
  const res={code:0,headers:{},setHeader(k,v){this.headers[k]=v;},status(code){this.code=code;return this;},json(value){this.body=value;return this;}};

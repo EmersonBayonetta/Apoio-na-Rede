@@ -1,4 +1,5 @@
 import { imageFallback } from '../utils/imageFallback';
+import { readLocalPhoto } from '../utils/localPhoto';
 import { RegistrationGuidelines } from '../components/accessibility/RegistrationGuidelines';
 import React, { useState } from 'react';
 import { MAP_CATEGORIES } from '../data/mapCategories';
@@ -78,6 +79,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
   // Step 4: Fotos
   const [fotos, setFotos] = useState<string[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const [readingPhoto, setReadingPhoto] = useState(false);
   const [formMessage, setFormMessage] = useState('');
 
   const updateAnswer = (id: ResourceId, value: string) => {
@@ -154,6 +156,20 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
     setNewPhotoUrl('');
   };
 
+  const handleLocalPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || readingPhoto || isSubmitting) return;
+    setReadingPhoto(true);
+    setFormMessage('Preparando imagem…');
+    try {
+      const photo = await readLocalPhoto(file);
+      setFotos(previous => previous.length < MAX_PHOTOS ? [...previous, photo] : previous);
+      setFormMessage('');
+    } catch (error) { setFormMessage((error as Error).message); }
+    finally { setReadingPhoto(false); }
+  };
+
   const handleRemovePhoto = (idx: number) => {
     setFotos((prev) => prev.filter((_, i) => i !== idx));
   };
@@ -164,7 +180,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || readingPhoto) return;
     if (!validateStep(1) || !validateStep(2) || !coords || !categoria) return;
     setIsSubmitting(true);
 
@@ -642,7 +658,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 <button
                   type="button"
                   onClick={handleAddPhoto}
-                  disabled={fotos.length >= MAX_PHOTOS}
+                  disabled={fotos.length >= MAX_PHOTOS || readingPhoto || isSubmitting}
                   className="px-4 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors flex items-center gap-1.5 disabled:opacity-50"
                 >
                   <Plus size={16} />
@@ -650,6 +666,9 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 </button>
               </div>
 
+              <label htmlFor="photo-file" className="block text-xs font-bold text-slate-700 mb-2">Carregar imagem do computador ou celular</label>
+              <input id="photo-file" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => void handleLocalPhoto(event)} disabled={readingPhoto || isSubmitting || fotos.length >= MAX_PHOTOS} aria-describedby="photo-file-help" className="block w-full rounded-xl border border-slate-300 p-3 text-sm mb-2 disabled:opacity-50" />
+              <p id="photo-file-help" className="text-xs text-slate-500 mb-4">JPG, PNG ou WebP, até 10 MB por arquivo. A imagem será reduzida para envio. Até 10 fotos, contando os links.</p>
               {/* Lista de Fotos */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {fotos.map((url, idx) => (
@@ -718,7 +737,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
           ) : (
             <button
               type="button"
-              disabled={isSubmitting}
+              disabled={isSubmitting || readingPhoto}
               onClick={handleSubmit}
               className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg transition-colors flex items-center gap-2"
             >

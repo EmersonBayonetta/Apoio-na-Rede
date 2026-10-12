@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { validateRegistration } from './_lib/registrationValidation.js';
 import { validateDirectory } from './_lib/directoryValidation.js';
+import { decodeRegistrationPhoto, storeRegistrationPhotos } from './_lib/registrationPhotos.js';
 const first=(env,names)=>names.map(name=>env[name]?.trim()).find(Boolean);
 const categories=['alimentacao','saude','lazer_cultura','comercio_loja','servico_publico','banheiro_adaptado','educacao','hospedagem','transporte_mobilidade'];
 
@@ -13,13 +14,13 @@ export function createRegistrationHandler({env=process.env,fetchImpl=fetch}={}) 
   let details,criteria;
   const kind=req.body?.kind??'places';
   try {
-   if(JSON.stringify(req.body).length>50000)throw Error('Cadastro muito grande.');
+   if(JSON.stringify(req.body).length>2900000)throw Error('Cadastro muito grande.');
    const input=req.body?.details;
    if(kind!=='places'){details=validateDirectory(kind,input);criteria=[];}
    else {
    details=Object.fromEntries(['nome','place_id','categoria','endereco','bairro','cidade','estado','cep','latitude','longitude','descricao','fotos','telefone','whatsapp','horario_funcionamento'].map(key=>[key,input?.[key]]).filter(([,value])=>value!==undefined));
-   if(!['nome','descricao','endereco','cidade','estado'].every(key=>typeof details[key]==='string'&&details[key].length<=5000)||!Array.isArray(details.fotos)||details.fotos.length>10||details.fotos.some(value=>typeof value!=='string'||value.length>2000)||!categories.includes(details.categoria))throw Error('Preencha os dados do cadastro corretamente.');
-   validateRegistration(details);
+   if(!['nome','descricao','endereco','cidade','estado'].every(key=>typeof details[key]==='string'&&details[key].length<=5000)||!Array.isArray(details.fotos)||details.fotos.length>10||details.fotos.some(value=>typeof value!=='string'||value.length>(value.startsWith('data:')?280000:2000))||!categories.includes(details.categoria))throw Error('Preencha os dados do cadastro corretamente.');
+   validateRegistration({...details,fotos:details.fotos.filter(value=>!decodeRegistrationPhoto(value))});
    if(!Array.isArray(req.body.criteria)||req.body.criteria.length>50)throw Error('Recursos de acessibilidade inválidos.');
    criteria=req.body.criteria.map(c=>{
     if(!c||typeof c.criterio!=='string'||c.criterio.length>500||!['mobilidade','visual','auditiva','intelectual','invisivel'].includes(c.tipo_deficiencia)||![true,false,null].includes(c.presente))throw Error('Recursos de acessibilidade inválidos.');
@@ -34,13 +35,18 @@ export function createRegistrationHandler({env=process.env,fetchImpl=fetch}={}) 
   const headers={apikey:secret,'Content-Type':'application/json',...(secret.startsWith('eyJ')?{Authorization:`Bearer ${secret}`}:{})};
   const rpc=async(name,body)=>fetchImpl(`${root}/rest/v1/rpc/${name}`,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(8000)});
   let submission;
+  let photoUpload;
   try {
    const address=String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0].trim();
    const source_hash=createHmac('sha256',secret).update(address).digest('hex');
+   if(kind==='places' && details.fotos.some(value=>value.startsWith('data:'))) {
+    photoUpload=await storeRegistrationPhotos(root,secret,details.fotos,fetchImpl);
+    details.fotos=photoUpload.urls;
+   }
    const result=await rpc(kind==='places'?'submit_public_registration':'submit_public_directory',kind==='places'?{details,criteria,source_hash}:{kind,details,source_hash});
-   if(!result.ok){const failure=await result.json().catch(()=>({}));return res.status(String(failure.message).includes('Limite')?429:503).json({error:String(failure.message).includes('Limite')?'Limite de cadastros atingido. Tente novamente mais tarde.':'Não foi possível receber o cadastro. Tente novamente mais tarde.'});}
+   if(!result.ok){await photoUpload?.cleanup().catch(()=>{});const failure=await result.json().catch(()=>({}));return res.status(String(failure.message).includes('Limite')?429:503).json({error:String(failure.message).includes('Limite')?'Limite de cadastros atingido. Tente novamente mais tarde.':'Não foi possível receber o cadastro. Tente novamente mais tarde.'});}
    submission=await result.json();
-  } catch{return res.status(503).json({error:'Não foi possível receber o cadastro. Tente novamente mais tarde.'});}
+  } catch{return res.status(503).json({error:'Não foi possível receber o cadastro e suas fotos. Tente novamente mais tarde.'});}
   let notified=false;
   try {
    const redirect=new URL('/revisao',site);redirect.searchParams.set('cadastro',submission.id);

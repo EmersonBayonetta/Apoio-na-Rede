@@ -38,7 +38,7 @@ const seedStorage = <T extends { id: string }>(key: string, mocks: T[]) => {
   } else if (import.meta.env.DEV) {
     const seeded = new Map(mocks.map((item) => [item.id, item]));
     const stored = readStoredArray<T>(key, mocks);
-    browserStorage.setItem(key, JSON.stringify(stored.map((item) => seeded.get(item.id) ?? item)));
+    browserStorage.setItem(key, JSON.stringify(stored.map((item) => 'atualizado_em' in item && item.atualizado_em ? item : seeded.get(item.id) ?? item)));
   }
 };
 
@@ -140,8 +140,8 @@ export const StorageService = {
     data: Omit<Establishment, 'id' | 'nota_media' | 'total_avaliacoes' | 'status' | 'criado_em'>,
     criteriaList: Omit<AccessibilityCriteria, 'id' | 'establishment_id'>[]
   ): Promise<Establishment> => {
-    validateRegistration(data);
     const client = getSupabase();
+    validateRegistration({ ...data, fotos: client ? data.fotos : data.fotos.filter(photo => !(photo.length <= 280000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo))) });
     if (client) {
       await requireUser();
       const { data: id, error } = await client.rpc('register_establishment', { details: JSON.parse(JSON.stringify(data)), criteria: JSON.parse(JSON.stringify(criteriaList)) });
