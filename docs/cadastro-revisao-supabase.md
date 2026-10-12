@@ -8,7 +8,17 @@ A função `/api/register-place` solicita um link de acesso do Supabase Auth par
 
 ## Gerenciar e editar locais
 
-O link **Gerenciar locais** no rodapé e **Gerenciar locais cadastrados** no cadastro abre `/gestao`. Informe um e-mail administrativo já cadastrado e abra o link de acesso enviado pelo Supabase. A autenticação usa `shouldCreateUser: false`; receber um link não concede autorização administrativa. O endpoint `/api/manage-places` verifica o usuário e `is_site_admin` em cada leitura e gravação, além das políticas RLS existentes. Não é necessária uma migração nova.
+### Equipe de aprovação
+
+`database/registration_review_team.sql` permite autorizar integrantes por e-mail na tabela privada `private.administrator_invitations`. Os endereços pessoais são configurados no banco, não no repositório. A permissão passa a valer para uma identidade do Supabase após a confirmação daquele e-mail. O titular original permanece o único responsável por administrar as autorizações de equipe.
+
+O endpoint `/api/administrator-login` consulta uma função exclusiva do servidor antes de solicitar o link: contas novas só são criadas para convites habilitados. Usuários não autorizados recebem uma resposta neutra, sem envio nem criação de conta. Os integrantes confirmados podem gerenciar locais e revisar cadastros de locais, profissionais e trechos por `/revisao`.
+
+Os cadastros novos retornam ao servidor os destinatários autorizados em `review_recipients`, mantendo `owner_email` para compatibilidade com versões anteriores. A API solicita o link de revisão para cada destinatário. `notified` só fica verdadeiro se todos os pedidos forem aceitos; uma falha parcial mantém o cadastro pendente e comunica que o envio não foi concluído. E-mails e permissões enviados pelo visitante são ignorados.
+
+Para uma equipe com vários destinatários, configure SMTP próprio no Supabase: o serviço padrão tem limites baixos e restrições de destinatários. Aceitação da solicitação não comprova entrega na caixa de entrada. Os testes de permissões estão em `tests/registration-review-team-security.sql` e usam rollback.
+
+O link **Gerenciar locais** no rodapé e **Gerenciar locais cadastrados** no cadastro abre `/gestao`. Informe um e-mail administrativo autorizado e abra o link de acesso enviado pelo Supabase. A API verifica a autorização antes de permitir a criação de uma conta convidada; receber um link não concede acesso a outros e-mails. O endpoint `/api/manage-places` verifica o usuário e `is_site_admin` em cada leitura e gravação, além das políticas RLS existentes.
 
 Na lista, busque pelo nome, filtre por status e clique em **Editar**. O formulário carrega os dados existentes e permite corrigir nome, categoria, descrição, endereço, coordenadas, telefone, WhatsApp, horário e fotos. Ao alterar o endereço, confirme o ponto no mapa antes de salvar. As fotos podem ser adicionadas por link ou arquivo JPG, PNG ou WebP de até 10 MB; os arquivos são reduzidos para JPEG antes do envio. A primeira foto é a capa, com até dez fotos no total.
 

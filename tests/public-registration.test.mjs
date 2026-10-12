@@ -4,6 +4,21 @@ import { createRegistrationHandler } from '../api/register-place.js';
 const env={SUPABASE_URL:'https://test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',SUPABASE_SECRET_KEY:'sb_secret_test',APP_SITE_URL:'https://apoio-na-rede.vercel.app'};
 const details={nome:'Local',descricao:'Descrição',categoria:'educacao',endereco:'Rua Teste',cidade:'Cataguases',estado:'MG',latitude:-21.39,longitude:-42.69,fotos:[],status:'verificado',dono_id:'attacker'};
 const body={details,criteria:[{tipo_deficiencia:'mobilidade',criterio:'Entrada',presente:true}],owner_email:'attacker@example.invalid'};
+test('review links go only to database-selected reviewers and require complete acceptance to mark notification',async()=>{
+ for(const partial of [false,true]){
+  const calls=[];const handler=createRegistrationHandler({env,fetchImpl:async(url,options)=>{
+   const payload=JSON.parse(options.body);calls.push({url,payload});
+   if(url.includes('submit_public_registration'))return result({id:'saved',owner_email:'owner@example.invalid',review_recipients:[{email:'owner@example.invalid',create_user:false},{email:'reviewer@example.invalid',create_user:true}]});
+   return partial && payload.email==='reviewer@example.invalid'?new Response('{}',{status:429}):result({});
+  }});
+  const response=await run(handler,{method:'POST',headers:{},body:{...body,review_recipients:[{email:'attacker@example.invalid',create_user:true}]}});
+  assert.equal(response.code,201);assert.equal(response.body.notified,!partial);
+  const emails=calls.filter(call=>call.url.includes('/auth/')).map(call=>call.payload);
+  assert.deepEqual(emails,[{email:'owner@example.invalid',create_user:false},{email:'reviewer@example.invalid',create_user:true}]);
+  assert.equal(calls.some(call=>call.url.includes('mark_registration_notified')),!partial);
+  assert.equal(JSON.stringify(response.body).includes('reviewer@example.invalid'),false);
+ }
+});
 test('local image registration stores an HTTP URL before submission and cleans up on rejection', async () => {
  const photo=`data:image/jpeg;base64,${Buffer.from([255,216,255,0,255,217]).toString('base64')}`;
  for(const rejected of [false,true]) {

@@ -26,10 +26,10 @@ export function RegistrationReviewView() {
       const client=getSupabase();
       if(!client||!id||!/^[0-9a-f-]{36}$/i.test(id)){if(active)setMessage('Link de revisão inválido.');return;}
       const {data:{user}}=await client.auth.getUser();
-      if(!user){if(active){setRegistration(null);setMessage('Abra o link de acesso enviado pelo Supabase ao e-mail do responsável pelo site.');}return;}
+      if(!user){if(active){setRegistration(null);setMessage('Abra o link de acesso enviado pelo Supabase ao e-mail de um responsável autorizado.');}return;}
       const {data,error}=await client.rpc(directory?'directory_for_review':'registration_for_review',{registration_id:id});
       if(!active)return;
-      if(error||!data){setRegistration(null);setMessage('Este cadastro só pode ser revisado pelo titular autorizado, ou não está disponível.');return;}
+      if(error||!data){setRegistration(null);setMessage('Este cadastro só pode ser revisado por um responsável autorizado, ou não está disponível.');return;}
       setRegistration(data as Registration);setMessage('');
     };
     void load().catch(()=>{if(active)setMessage('Não foi possível carregar o cadastro. Tente novamente mais tarde.');});

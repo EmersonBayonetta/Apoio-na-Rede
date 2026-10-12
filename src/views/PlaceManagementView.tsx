@@ -72,10 +72,12 @@ export function PlaceManagementView() {
     if (busy) return;
     setBusy(true);setMessage('Solicitando link de acesso…');
     try {
-      const {error} = await getSupabase()!.auth.signInWithOtp({email:email.trim(),options:{shouldCreateUser:false,emailRedirectTo:new URL('/gestao',window.location.origin).href}});
-      if (error) throw error;
-      setMessage('Se este e-mail estiver cadastrado, você receberá um link de acesso. Abra o link para entrar. Somente administradores autorizados podem gerenciar locais.');
-    } catch {setMessage('Não foi possível solicitar o link. Confira o e-mail e tente novamente mais tarde.');}
+      const response = await fetch('/api/administrator-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim()})});
+      if (!response.headers.get('content-type')?.includes('application/json')) throw Error('Solicite o acesso pelo site publicado.');
+      const result = await response.json();
+      if (!response.ok) throw Error(result.error || 'Não foi possível solicitar o link.');
+      setMessage(result.message);
+    } catch (error) {setMessage((error as Error).message);}
     finally {setBusy(false);}
   };
   const logout = async () => {

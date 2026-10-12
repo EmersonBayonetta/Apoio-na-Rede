@@ -51,8 +51,10 @@ export function createRegistrationHandler({env=process.env,fetchImpl=fetch}={}) 
   try {
    const redirect=new URL('/revisao',site);redirect.searchParams.set('cadastro',submission.id);
    if(kind!=='places')redirect.searchParams.set('tipo',kind);
-   const email=await fetchImpl(`${root}/auth/v1/otp?redirect_to=${encodeURIComponent(redirect.href)}`,{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({email:submission.owner_email,create_user:false}),signal:AbortSignal.timeout(8000)});
-   if(email.ok){notified=true;await rpc(kind==='places'?'mark_registration_notified':'mark_directory_notified',{registration_id:submission.id});}
+   const recipients=Array.isArray(submission.review_recipients)?submission.review_recipients:[{email:submission.owner_email,create_user:false}];
+   const deliveries=await Promise.allSettled(recipients.map(recipient=>fetchImpl(`${root}/auth/v1/otp?redirect_to=${encodeURIComponent(redirect.href)}`,{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({email:recipient.email,create_user:recipient.create_user===true}),signal:AbortSignal.timeout(8000)})));
+   notified=deliveries.length>0 && deliveries.every(result=>result.status==='fulfilled' && result.value.ok);
+   if(notified)await rpc(kind==='places'?'mark_registration_notified':'mark_directory_notified',{registration_id:submission.id});
   } catch { /* O cadastro permanece pendente quando o envio está indisponível. */ }
   return res.status(201).json({id:submission.id,status:'pendente',notified,message:notified?'Cadastro recebido. Um link de revisão foi solicitado ao responsável pelo site.':'Cadastro recebido e mantido pendente. Não foi possível enviar o aviso ao responsável agora; o envio de e-mail pode estar limitado.'});
  };
