@@ -95,3 +95,4 @@ Use `npm run build:demo` antes desses testes isolados. `tests/browser-contributi
 ## Organização
 
 Componentes em `src/components/` (`accessibility`, `establishments`, `explore`, `layout`, `maps`), telas em `src/views/`, regras puras em `src/utils/`, serviços em `src/services/`. Veja a [estrutura do projeto](docs/estrutura-projeto.md), o [design system](docs/design-system.md) e os detalhes da [consulta de acessibilidade](docs/acessibilidade-locais.md). As especificações das features estão em `.specs/features/`.
+
