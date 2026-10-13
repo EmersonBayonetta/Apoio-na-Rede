@@ -32,18 +32,8 @@ export function createRegistrationHandler({env=process.env,fetchImpl=fetch}={}) 
   const secret=first(env,['SUPABASE_SECRET_KEY','SUPABASE_SERVICE_ROLE_KEY']);
   const publicKey=first(env,['SUPABASE_PUBLISHABLE_KEY','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY','VITE_SUPABASE_PUBLISHABLE_KEY','SUPABASE_ANON_KEY']);
   if(!root||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(root)||!secret||!publicKey)return res.status(503).json({error:'Cadastro temporariamente indisponível. Tente novamente mais tarde.'});
-  const authorization=typeof req.headers.authorization==='string' ? req.headers.authorization : '';
-  const token=/^Bearer\s+(.+)$/i.exec(authorization)?.[1];
-  if(!token)return res.status(401).json({error:'Entre ou crie uma conta para cadastrar.'});
-  try {
-   const identity=await fetchImpl(`${root}/auth/v1/user`,{headers:{apikey:publicKey,Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(8000)});
-   const user=identity.ok ? await identity.json().catch(()=>null) : null;
-   if(!user?.id)return res.status(401).json({error:'Sua sessão expirou. Entre novamente para cadastrar.'});
-  } catch { return res.status(401).json({error:'Não foi possível confirmar sua sessão. Entre novamente para cadastrar.'}); }
-  const serviceHeaders={apikey:secret,'Content-Type':'application/json',...(secret.startsWith('eyJ')?{Authorization:`Bearer ${secret}`}:{})};
-  const userHeaders={apikey:publicKey,'Content-Type':'application/json',Authorization:`Bearer ${token}`};
-  const rpc=async(name,body)=>fetchImpl(`${root}/rest/v1/rpc/${name}`,{method:'POST',headers:serviceHeaders,body:JSON.stringify(body),signal:AbortSignal.timeout(8000)});
-  const authenticatedRpc=async(name,body)=>fetchImpl(`${root}/rest/v1/rpc/${name}`,{method:'POST',headers:userHeaders,body:JSON.stringify(body),signal:AbortSignal.timeout(8000)});
+  const headers={apikey:secret,'Content-Type':'application/json',...(secret.startsWith('eyJ')?{Authorization:`Bearer ${secret}`}:{})};
+  const rpc=async(name,body)=>fetchImpl(`${root}/rest/v1/rpc/${name}`,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(8000)});
   let submission;
   let photoUpload;
   try {
@@ -53,9 +43,7 @@ export function createRegistrationHandler({env=process.env,fetchImpl=fetch}={}) 
     photoUpload=await storeRegistrationPhotos(root,secret,details.fotos,fetchImpl);
     details.fotos=photoUpload.urls;
    }
-   const result=kind==='places'
-    ? await authenticatedRpc('submit_authenticated_registration',{details,criteria})
-    : await rpc('submit_public_directory',{kind,details,source_hash});
+   const result=await rpc(kind==='places'?'submit_public_registration':'submit_public_directory',kind==='places'?{details,criteria,source_hash}:{kind,details,source_hash});
    if(!result.ok){await photoUpload?.cleanup().catch(()=>{});const failure=await result.json().catch(()=>({}));return res.status(String(failure.message).includes('Limite')?429:503).json({error:String(failure.message).includes('Limite')?'Limite de cadastros atingido. Tente novamente mais tarde.':'Não foi possível receber o cadastro. Tente novamente mais tarde.'});}
    submission=await result.json();
   } catch{return res.status(503).json({error:'Não foi possível receber o cadastro e suas fotos. Tente novamente mais tarde.'});}

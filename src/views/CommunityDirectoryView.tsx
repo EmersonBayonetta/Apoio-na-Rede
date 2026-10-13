@@ -5,7 +5,6 @@ import { StorageService } from '../services/storageService';
 import { getSupabase } from '../lib/supabase';
 import { submitPublicDirectory } from '../services/publicRegistrationService';
 import { filterProfessionals, filterRoutes, validateProfessional, validateRoute, whatsappUrl, isOnlineOnly } from '../utils/communityDirectory';
-import { useAuth } from '../context/AuthContext';
 
 const needs: { id: DisabilityType; label: string }[] = [
   { id: 'mobilidade', label: 'Mobilidade' }, { id: 'visual', label: 'Visual' },
@@ -18,7 +17,6 @@ const field = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 te
 const primary = 'inline-flex items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 py-2.5 font-semibold text-white hover:bg-blue-800';
 
 export function CommunityDirectoryView({ section }: { section: 'routes' | 'professionals' }) {
-  const { user, openAuthentication } = useAuth();
   const [routes, setRoutes] = useState<AccessibleRoute[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [query, setQuery] = useState('');
@@ -63,7 +61,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
     setBusy(true);
     try {
       const result = await submitPublicDirectory('routes',route);
-      setShowForm(false); setError('');
+      if(result.saved)setRoutes(previous => [result.saved as AccessibleRoute,...previous]); setShowForm(false); setError('');
       setNotice(result.message);
     } catch (failure) { setError((failure as Error).message); }
     finally { setBusy(false); }
@@ -86,7 +84,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
     setBusy(true);
     try {
       const result = await submitPublicDirectory('professionals',professional);
-      setShowForm(false); setError('');
+      if(result.saved)setProfessionals(previous => [result.saved as Professional,...previous]); setShowForm(false); setError('');
       setNotice(result.message);
     } catch (failure) { setError((failure as Error).message); }
     finally { setBusy(false); }
@@ -94,16 +92,11 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
 
   const directions = (route: AccessibleRoute) => `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(`${route.ponto_origem}, ${route.cidade}`)}&destination=${encodeURIComponent(`${route.ponto_destino}, ${route.cidade}`)}&travelmode=walking`;
 
-  const startContribution = () => {
-    if (!user) { openAuthentication('login'); return; }
-    setShowForm(value => !value); setNotice(''); setError('');
-  };
-
   return <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
     <div className="mb-7 rounded-3xl bg-gradient-to-br from-blue-950 to-teal-800 p-7 text-white sm:p-10">
       <h1 className="text-3xl font-bold sm:text-4xl">{section === 'routes' ? 'Trechos e rotas acessíveis' : 'Profissionais preparados para atender'}</h1>
       <p className="mt-3 max-w-2xl text-blue-100">{section === 'routes' ? 'Consulte informações sobre rampas, piso tátil e travessias. Os trajetos precisam ser conferidos presencialmente.' : 'Encontre profissionais por especialidade e necessidades atendidas. As informações são colaborativas e devem ser confirmadas com o consultório.'}</p>
-      <button className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 font-semibold text-blue-950" onClick={startContribution}><Plus size={18} />{user ? section === 'routes' ? 'Compartilhar um trecho' : 'Cadastrar profissional' : 'Entrar para contribuir'}</button>
+      <button className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 font-semibold text-blue-950" onClick={() => { setShowForm(v => !v); setNotice(''); setError(''); }}><Plus size={18} />{section === 'routes' ? 'Compartilhar um trecho' : 'Cadastrar profissional'}</button>
     </div>
     {notice && <p role="status" className="mb-4 rounded-xl bg-emerald-50 p-4 text-emerald-900">{notice}</p>}
     {loading && <p role="status">Carregando catálogo…</p>}
@@ -152,7 +145,7 @@ export function CommunityDirectoryView({ section }: { section: 'routes' | 'profe
       <div className="directory-actions mt-5 flex flex-wrap gap-3 border-t pt-4">{person.demonstracao ? <p className="text-sm text-slate-600">Contato ilustrativo · {person.email}</p> : <>{!isOnlineOnly(person) && person.endereco?.trim() && <a className={primary} target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${person.endereco}, ${person.cidade}, ${person.estado}`)}`}><MapPinned size={18} aria-hidden="true"/>Como chegar<span className="sr-only">(abre em nova aba)</span></a>}{person.telefone && <a className="directory-contact rounded-xl border px-4 py-2.5 font-semibold" href={`tel:${person.telefone.replace(/[^+\d]/g, '')}`}>Ligar · {person.telefone}</a>}{whatsappUrl(person.whatsapp) && <a className="rounded-xl border border-emerald-700 px-4 py-2.5 font-semibold text-emerald-900" target="_blank" rel="noreferrer" href={whatsappUrl(person.whatsapp) ?? undefined}>WhatsApp</a>}</>}</div>
     </article>)}</div>}
     {!loading && !error && ((section === 'routes' && !filteredRoutes.length) || (section === 'professionals' && !filteredProfessionals.length)) && <div className={`${panel} empty-state py-12 text-center`}>{(section === 'routes' ? !routes.length : !professionals.length) && !query.trim() && !need
-      ? <><p className="text-lg font-semibold">{section === 'routes' ? 'Ainda não há trechos compartilhados.' : 'Ainda não há profissionais cadastrados.'}</p><p className="mt-2 text-slate-600">{section === 'routes' ? 'Conte como é um caminho que você conhece: rampas, piso tátil, travessias e obstáculos.' : 'Indique um profissional que atende bem pessoas com deficiência.'}</p><button type="button" className={`${primary} mt-5`} onClick={() => { startContribution(); if (user) window.scrollTo({ top: 0, behavior: 'smooth' }); }}><Plus size={18} aria-hidden="true" />{user ? section === 'routes' ? 'Compartilhar um trecho' : 'Cadastrar profissional' : 'Entrar para contribuir'}</button></>
+      ? <><p className="text-lg font-semibold">{section === 'routes' ? 'Ainda não há trechos compartilhados.' : 'Ainda não há profissionais cadastrados.'}</p><p className="mt-2 text-slate-600">{section === 'routes' ? 'Conte como é um caminho que você conhece: rampas, piso tátil, travessias e obstáculos.' : 'Indique um profissional que atende bem pessoas com deficiência.'}</p><button type="button" className={`${primary} mt-5`} onClick={() => { setShowForm(true); setNotice(''); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}><Plus size={18} aria-hidden="true" />{section === 'routes' ? 'Compartilhar um trecho' : 'Cadastrar profissional'}</button></>
       : <><p className="text-lg font-semibold">Nenhum resultado para essa busca.</p><p className="mt-2 text-slate-600">Tente outro termo ou compartilhe uma informação para ampliar o catálogo.</p></>}</div>}
   </section>;
 }

@@ -11,8 +11,6 @@ export function publicSupabaseEnv(env: Record<string,string | undefined>) {
     } catch { throw new Error('Chave pública Supabase inválida: não use service_role ou chaves secretas.'); }
   }
   if ((url && !key) || (key && !url)) throw new Error('Configure a URL e a chave pública do Supabase juntas.');
-  const hostedSupabaseUrl = /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/;
-  const localSupabaseUrl = /^http:\/\/(?:127\.0\.0\.1|localhost):54321\/?$/;
-  if (url && !hostedSupabaseUrl.test(url) && !localSupabaseUrl.test(url)) throw new Error('URL Supabase inválida.');
+  if (url && !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url)) throw new Error('URL Supabase inválida.');
   return {url,key};
 }

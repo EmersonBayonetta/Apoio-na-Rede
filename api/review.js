@@ -15,9 +15,7 @@ export function createReviewHandler({env=process.env,fetchImpl=fetch}={}){
   const first=names=>names.map(name=>env[name]?.trim()).find(Boolean);
   const root=first(['SUPABASE_URL','NEXT_PUBLIC_SUPABASE_URL','VITE_SUPABASE_URL'])?.replace(/\/$/,'');
   const secret=first(['SUPABASE_SECRET_KEY','SUPABASE_SERVICE_ROLE_KEY']);
-  const hostedSupabase=/^https:\/\/[a-z0-9-]+\.supabase\.co$/;
-  const localSupabase=/^http:\/\/(?:127\.0\.0\.1|localhost):54321$/;
-  if(!root||(!hostedSupabase.test(root)&&!localSupabase.test(root))||!secret)return res.status(503).json({error:'Avaliações temporariamente indisponíveis.'});
+  if(!root||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(root)||!secret)return res.status(503).json({error:'Avaliações temporariamente indisponíveis.'});
   const visitor_hash=createHmac('sha256',secret).update(body.visitorId.toLowerCase()).digest('hex');
   const details={...(external?{external_place_id:body.external_place_id}:{establishment_id:body.establishment_id}),nota:body.nota,comentario:body.comentario,tipo_deficiencia_avaliada:body.tipo_deficiencia_avaliada};
   try{
