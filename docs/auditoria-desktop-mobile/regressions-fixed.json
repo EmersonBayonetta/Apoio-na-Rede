@@ -1,30 +1,13 @@
 {
-  "date": "2026-10-05",
+  "date": "2026-10-12",
   "environment": "Chrome emulado; APIs externas bloqueadas",
   "passed": [
-    "Educação disponível",
-    "Nome obrigatório e foco",
-    "Descrição obrigatória",
-    "Cidade obrigatória",
-    "UF válida obrigatória",
-    "Localização exige confirmação",
-    "Progresso ARIA consistente",
-    "Fotos cabem em 320 px",
-    "URL inválida rejeitada",
-    "Imagem quebrada recebe fallback",
-    "Coordenadas escolhidas persistidas",
-    "Busca sem acento encontra registro",
-    "Detalhes têm URL específica",
-    "Sem nota fictícia",
-    "Recarregar preserva detalhes",
-    "Compartilhamento identifica destino",
-    "Avaliação ainda funciona",
-    "Painel Extra cabe no desktop baixo",
-    "Alto contraste usa fundo preto",
-    "Escape fecha painel e restaura foco",
-    "Preferência sem voz oculta leitura",
-    "Voz pode ser reativada",
-    "Voltar retorna ao Explorar",
-    "Falha de armazenamento não derruba aplicação"
+    "boas-vindas cabe em 320 px",
+    "visitante vê somente navegação pública",
+    "exploração pública permanece sem rolagem horizontal",
+    "rota de cadastro não expõe formulário ao visitante",
+    "painel Extra cabe no desktop baixo",
+    "alto contraste é aplicado",
+    "Escape fecha o painel e devolve o foco"
   ]
 }

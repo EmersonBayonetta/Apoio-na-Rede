@@ -11,11 +11,16 @@ import { PlacesService } from './services/placesService';
 import { ContributionService, confirmedCriteria, localKey } from './services/contributionService';
 import { RegistrationReviewView } from './views/RegistrationReviewView';
 import { PlaceManagementView } from './views/PlaceManagementView';
+import { AdminPanelView } from './views/AdminPanelView';
 import { browserStorage } from './lib/browserStorage';
 import { CommunityDirectoryView } from './views/CommunityDirectoryView';
 import { tabFromUrl, urlForTab, type AppTab } from './utils/appTabs';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { WelcomeView } from './views/WelcomeView';
+import { MyPlacesView } from './views/MyPlacesView';
 
 export const MainAppContent: React.FC = () => {
+  const { user, ready, showWelcomeChoices, openAuthentication, continueAsGuest } = useAuth();
   const [currentTab, setCurrentTab] = useState<AppTab>(() => tabFromUrl(window.location.search));
   const [selectedEstablishment, setSelectedEstablishment] = useState<Establishment | null>(null);
   const [temporaryStorage, setTemporaryStorage] = useState(browserStorage.isTemporary);
@@ -76,6 +81,8 @@ export const MainAppContent: React.FC = () => {
 
   const handleBackToExplorer = () => selectTab('explorer');
 
+  if (showWelcomeChoices && ready && !user) return <WelcomeView onCreateAccount={() => openAuthentication('signup')} onLogin={() => openAuthentication('login')} onContinue={continueAsGuest} />;
+
   return (
     <div className="min-h-screen flex flex-col text-slate-900">
       {/* Barra de Navegação Principal */}
@@ -110,8 +117,9 @@ export const MainAppContent: React.FC = () => {
               <ExplorerView onSelectEstablishment={handleSelectEstablishment} />
             )}
             {currentTab === 'register' && (
-              <div className="max-w-4xl mx-auto p-4"><p className="text-right text-sm"><a href="/gestao" className="inline-block py-3 font-semibold text-blue-700 underline">Gerenciar locais cadastrados</a></p><MerchantRegisterWizard onSuccess={() => selectTab('explorer')} /></div>
+              <div className="max-w-4xl mx-auto p-4">{ready && user ? <MerchantRegisterWizard onSuccess={() => selectTab('explorer')} /> : <section className="mx-auto my-12 max-w-lg rounded-3xl border bg-white p-6 text-center shadow-sm"><h1 className="text-2xl font-bold">Entre para cadastrar um local</h1><p className="mt-3 text-slate-600">O cadastro precisa ficar vinculado a uma conta para proteger o responsável e permitir a revisão.</p><button type="button" onClick={() => openAuthentication('login')} className="mt-6 rounded-xl bg-blue-700 px-5 py-3 font-bold text-white">Fazer login ou criar conta</button></section>}</div>
             )}
+            {currentTab === 'my_places' && <MyPlacesView />}
             {currentTab === 'routes' && <section className="max-w-4xl mx-auto p-6 sm:p-8"><h1 className="text-2xl font-bold">Rotas acessíveis</h1><p className="mt-3 text-slate-600">Esta seção está temporariamente inativa.</p><button type="button" onClick={handleBackToExplorer} className="mt-5 rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white">Voltar ao Explorar</button></section>}
             {currentTab === 'professionals' && <CommunityDirectoryView section="professionals" />}
           </>
@@ -128,7 +136,12 @@ export const MainAppContent: React.FC = () => {
             <img
               src="/brand/apoio-na-rede-logo-white.png"
               alt="Apoio na rede"
-              className="h-14 w-auto object-contain mb-3"
+              className="footer-logo footer-logo-dark h-14 w-auto object-contain mb-3"
+            />
+            <img
+              src="/brand/apoio-na-rede-logo-black.png"
+              alt="Apoio na rede"
+              className="footer-logo footer-logo-light h-14 w-auto object-contain mb-3"
             />
             <p className="text-sm text-slate-400 leading-relaxed max-w-md">
               Informações colaborativas sobre acessibilidade em Cataguases. As condições podem mudar: confirme com o local antes de sair.
@@ -146,7 +159,6 @@ export const MainAppContent: React.FC = () => {
 
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} Apoio na rede</p>
-          <a href="/gestao" className="py-2 underline hover:text-white">Gerenciar locais</a>
           <p>Dados de locais e endereços: Google Maps, ViaCEP e <a className="underline hover:text-white" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>.</p>
         </div>
       </footer>
@@ -155,9 +167,10 @@ export const MainAppContent: React.FC = () => {
 };
 
 export default function App() {
+  const path = window.location.pathname.replace(/\/$/, '');
   return (
-    <AccessibilityProvider>
-      {window.location.pathname.replace(/\/$/, '') === '/gestao' ? <PlaceManagementView /> : window.location.pathname.replace(/\/$/, '') === '/revisao' ? <RegistrationReviewView /> : <MainAppContent />}
-    </AccessibilityProvider>
+    <AuthProvider><AccessibilityProvider>
+      {path === '/admin' ? <AdminPanelView /> : path === '/gestao' ? <PlaceManagementView /> : path === '/revisao' ? <RegistrationReviewView /> : <MainAppContent />}
+    </AccessibilityProvider></AuthProvider>
   );
 }
