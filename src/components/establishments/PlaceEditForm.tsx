@@ -15,7 +15,16 @@ const textFields = [
 ] as const;
 const statusLabels = {pendente:'Pendente de revisão',verificado:'Publicado',rejeitado:'Recusado'};
 
-export function PlaceEditForm({place,onSaved,onCancel,onSessionExpired}: {place:ManagedPlace;onSaved:(place:ManagedPlace) => void;onCancel:() => void;onSessionExpired:() => void}) {
+type PlaceEditFormProps = {
+  place: ManagedPlace;
+  onSaved: (place: ManagedPlace) => void;
+  onCancel: () => void;
+  onSessionExpired: () => void;
+  onSubmit?: (place: ManagedPlace, details: PlaceEdit) => Promise<ManagedPlace>;
+  submitLabel?: string;
+  intro?: string;
+};
+export function PlaceEditForm({place,onSaved,onCancel,onSessionExpired,onSubmit,submitLabel = 'Salvar alterações',intro}: PlaceEditFormProps) {
   const [details,setDetails] = useState<PlaceEdit>(() => ({
     nome:place.nome,categoria:place.categoria,descricao:place.descricao ?? '',endereco:place.endereco,
     bairro:place.bairro ?? '',cidade:place.cidade,estado:place.estado,cep:place.cep ?? '',
@@ -53,9 +62,10 @@ export function PlaceEditForm({place,onSaved,onCancel,onSessionExpired}: {place:
     if (busy) return;
     if (!locationConfirmed) { setMessage('Confirme as coordenadas após alterar o endereço ou o ponto no mapa.');document.getElementById('edit-latitude')?.focus();return; }
     if (photoUrl.trim()) { setMessage('Clique em Adicionar link para incluir a foto, ou limpe o campo antes de salvar.');document.getElementById('edit-photo-url')?.focus();return; }
-    setBusy(true);setMessage('Salvando alterações…');
+    setBusy(true);setMessage(onSubmit ? 'Enviando para análise…' : 'Salvando alterações…');
     try {
-      const saved = await PlaceManagementService.save(place,{...details,estado:details.estado.toUpperCase(),latitude:Number(latitude.replace(',','.')),longitude:Number(longitude.replace(',','.'))});
+      const nextDetails = {...details,estado:details.estado.toUpperCase(),latitude:Number(latitude.replace(',','.')),longitude:Number(longitude.replace(',','.'))};
+      const saved = onSubmit ? await onSubmit(place,nextDetails) : await PlaceManagementService.save(place,nextDetails);
       onSaved(saved);
     } catch (error) {
       if (error instanceof ManagementError && [401,403].includes(error.status)) { onSessionExpired();return; }
@@ -63,7 +73,7 @@ export function PlaceEditForm({place,onSaved,onCancel,onSessionExpired}: {place:
     } finally { setBusy(false); }
   };
   return <form onSubmit={event => void save(event)} className="space-y-6 rounded-2xl border bg-white p-4 sm:p-6">
-    <div><h2 className="text-xl font-bold">Editar {place.nome}</h2><p className="mt-2 text-sm text-slate-600">{statusLabels[place.status]}. {place.status === 'verificado' ? 'As alterações ficarão visíveis no site após salvar.' : 'Salvar mantém o status atual do cadastro.'}</p></div>
+    <div><h2 className="text-xl font-bold">Editar {place.nome}</h2><p className="mt-2 text-sm text-slate-600">{intro ?? `${statusLabels[place.status]}. ${place.status === 'verificado' ? 'As alterações ficarão visíveis no site após salvar.' : 'Salvar mantém o status atual do cadastro.'}`}</p></div>
     <fieldset disabled={busy} className="space-y-6 disabled:opacity-60">
       <legend className="sr-only">Dados do local</legend>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -100,7 +110,7 @@ export function PlaceEditForm({place,onSaved,onCancel,onSessionExpired}: {place:
       </section>
     </fieldset>
     {message && <p role="status" className="rounded-xl border bg-blue-50 p-4 text-sm text-blue-950">{message}</p>}
-    <div className="flex flex-wrap gap-3"><button type="submit" disabled={busy || conflict} className="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white disabled:opacity-50">{busy ? 'Aguarde…' : 'Salvar alterações'}</button><button type="button" disabled={busy} onClick={onCancel} className="rounded-xl border px-5 py-3 font-semibold">Voltar à lista</button></div>
+    <div className="flex flex-wrap gap-3"><button type="submit" disabled={busy || conflict} className="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white disabled:opacity-50">{busy ? 'Aguarde…' : submitLabel}</button><button type="button" disabled={busy} onClick={onCancel} className="rounded-xl border px-5 py-3 font-semibold">Voltar à lista</button></div>
     {conflict && <p className="text-sm">Volte à lista e abra o local novamente para carregar a versão atual.</p>}
   </form>;
 }
