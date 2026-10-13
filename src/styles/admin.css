@@ -1,0 +1,62 @@
+/* The administration area shares the site's theme and accessibility tokens. */
+.admin-shell { background: var(--ds-background); color: var(--ds-text); }
+.admin-header-label { display: flex; align-items: center; gap: 8px; color: var(--ds-muted); font-size: .8125rem; padding-left: 20px; border-left: 1px solid var(--ds-border); }
+.admin-header-actions { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.admin-header-link, .admin-back { color: var(--ds-accent); }
+.admin-header-link { display: flex; align-items: center; gap: 8px; font-size: .8125rem; }
+.admin-icon-button { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 1px solid var(--ds-border); border-radius: 50%; color: var(--ds-text); }
+.admin-main { max-width: 1180px; padding-top: 48px; }
+.admin-intro { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 16px; }
+.admin-kicker { display: flex; align-items: center; gap: 8px; color: var(--ds-accent); font-size: .6875rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; margin-bottom: 12px; }
+.admin-intro h1 { font-size: clamp(1.875rem, 4vw, 2.75rem); letter-spacing: -.045em; line-height: 1.2; font-weight: 500; }
+.admin-intro h1 span { color: var(--ds-accent); font-weight: 800; }
+.admin-description { margin-top: 16px; max-width: 540px; font-size: .875rem; line-height: 1.8; color: var(--ds-muted); }
+.admin-account { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--ds-border); border-radius: 18px; background: var(--ds-surface); min-width: 0; }
+.admin-account-icon, .admin-login-icon { color: var(--ds-accent); background: color-mix(in srgb, var(--ds-accent) 12%, var(--ds-surface)); display: grid; place-items: center; border-radius: 14px; flex-shrink: 0; }
+.admin-account-icon { width: 44px; height: 44px; }
+.admin-account-email { font-size: .75rem; overflow-wrap: anywhere; min-width: 0; }
+.admin-account-email small { display: block; margin-bottom: 4px; color: var(--ds-muted); }
+.admin-login { width: min(100%, 460px); margin: 32px auto 48px; padding: 32px; border-color: var(--ds-border); box-shadow: 0 18px 55px #0002; }
+.admin-login-icon { width: 60px; height: 60px; }
+.admin-login h2 { font-size: 1.375rem; letter-spacing: -.03em; }
+.admin-login input { width: 100%; }
+.admin-login-submit { width: 100%; display: flex; justify-content: space-between; align-items: center; min-height: 50px; }
+.admin-tabs { border-bottom: 1px solid var(--ds-border); padding-bottom: 16px; }
+.admin-tabs button { display: flex; align-items: center; gap: 10px; color: var(--ds-muted); border-color: transparent; min-height: 48px; }
+.admin-tabs button[aria-pressed="true"] { color: var(--ds-accent); background: color-mix(in srgb, var(--ds-accent) 10%, var(--ds-surface)); border-color: color-mix(in srgb, var(--ds-accent) 45%, var(--ds-border)); }
+.admin-filters { padding: 22px; background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius); }
+.admin-shell :is(input, select, textarea) { min-width: 0; border-color: var(--ds-border); }
+.admin-shell :is(input, select, textarea):focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 3px; }
+.admin-field { min-height: 46px; }
+.admin-secondary { display: inline-flex; justify-content: center; align-items: center; gap: 10px; min-height: 46px; padding: 10px 16px; border: 1px solid var(--ds-border); border-radius: 12px; color: var(--ds-text); font-weight: 600; font-size: .8125rem; flex-shrink: 0; }
+.admin-shell button:disabled { opacity: .5; cursor: not-allowed; }
+.admin-shell :is(.admin-secondary, .admin-icon-button):hover:not(:disabled) { border-color: var(--ds-accent); color: var(--ds-accent); }
+.admin-record { padding: 22px; border-color: var(--ds-border); border-radius: 18px; }
+.admin-record h3, .admin-record h2 { font-size: 1.0625rem; margin-top: 8px; }
+.admin-record-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: var(--ds-muted); font-size: .75rem; }
+.admin-status { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 10px; font-size: .6875rem; font-weight: 700; background: var(--ds-raised); color: var(--ds-text); }
+.admin-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.admin-status-pendente { color: #f6d293; background: #342a1a; }
+.admin-status-verificado { color: #a3ecc6; background: #17352b; }
+.admin-status-rejeitado { color: #ffb7c7; background: #3c2028; }
+.admin-pending-count { color: var(--ds-accent); font-weight: 800; }
+.admin-detail { padding: 28px; border-color: var(--ds-border); overflow-wrap: anywhere; }
+.admin-empty { display: grid; justify-items: center; gap: 12px; padding: 48px 20px; text-align: center; border: 1px dashed var(--ds-border); border-radius: var(--ds-radius); color: var(--ds-muted); }
+.admin-empty svg { color: var(--ds-accent); }
+.admin-empty h3 { color: var(--ds-text); font-weight: 700; }
+.admin-empty p { font-size: .875rem; }
+body:is(.theme-high-contrast-dark, .theme-yellow-black) .admin-shell { --ds-background: #000; --ds-surface: #000; --ds-raised: #000; --ds-text: inherit; --ds-muted: inherit; --ds-accent: currentColor; --ds-border: currentColor; }
+body:is(.theme-high-contrast-dark, .theme-yellow-black) .admin-shell :is(.admin-status, .admin-account-icon, .admin-login-icon, .admin-tabs button) { background: #000; color: inherit; border: 1px solid currentColor; }
+@media (max-width: 767px) {
+  .admin-header-label { display: none; }
+  .admin-header-actions { gap: 10px; }
+  .admin-header-link { font-size: .75rem; max-width: 125px; }
+  .admin-main { padding-top: 28px; }
+  .admin-intro { flex-direction: column; align-items: stretch; gap: 20px; }
+  .admin-account { align-self: flex-start; max-width: 100%; }
+  .admin-account .admin-icon-button { margin-left: auto; flex-shrink: 0; }
+  .admin-tabs { gap: 8px; }
+  .admin-tabs button { flex: 1 1 170px; justify-content: center; font-size: .8125rem; }
+  .admin-login { padding: 24px; }
+  .admin-filters, .admin-record, .admin-detail { padding: 18px; }
+}

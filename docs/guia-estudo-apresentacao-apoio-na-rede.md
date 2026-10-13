@@ -86,7 +86,7 @@ Como operação do piloto, recomenda-se definir um canal de correção, respons�
 
 O cadastro público de locais e profissionais pode ser enviado sem login do colaborador. No modo online, ele fica pendente e depende da revisão do titular autorizado para publicação.
 
-A área **Gerenciar locais**, em `/gestao`, exige autenticação e autorização administrativa. Ela permite abrir um registro existente e alterar seus dados e fotos. A edição pública por qualquer visitante não está disponível.
+O **Painel administrador**, em `/admin`, exige e-mail, senha e autorização administrativa. Ele lista cadastros de locais, profissionais e trechos, permite aprovar ou recusar pendentes e editar dados e fotos de locais. `/gestao` continua compatível. A edição pública por qualquer visitante não está disponível.
 
 ### As avaliações são confiáveis?
 
@@ -111,12 +111,12 @@ Esses resultados precisam ser medidos em um piloto com participantes reais. Na a
 | Cadastro público de locais | Implementado, com revisão no modo online | Explicar que envio não é publicação automática |
 | Cadastro e busca de profissionais | Interface implementada | Informações cadastradas não garantem credenciamento ou disponibilidade atual |
 | Fotos de locais | Cadastro e edição aceitam links e arquivos | Mostrar o envio, a escolha de capa e a persistência |
-| Gestão de locais | Implementada em `/gestao` | Demonstrar com uma conta administrativa autorizada |
+| Gestão de locais | Implementada no painel `/admin` | Demonstrar com uma conta administrativa autorizada |
 | Avaliações sem conta | Implementadas | Explicar a limitação por navegador |
 | Trajeto a pé até um destino | Integração implementada | Apresentar como orientação de deslocamento sem auditoria de acessibilidade |
 | Seção de rotas e trechos | Temporariamente inativa na navegação atual | Explicar como parte da proposta e da estrutura existente, sem demonstrar como recurso ativo |
 | Relatos de acessibilidade com fotos | Serviço de envio, armazenamento e consulta de aprovados existentes | A interface atual exibe relatos aprovados; não há formulário de envio conectado na página de detalhe inspecionada |
-| Moderação | Regras e serviços existentes; revisão de cadastros por link | Não apresentar `/gestao` como um painel completo de moderação de todos os tipos de conteúdo |
+| Moderação de cadastros | Fila em `/admin`, com filtros, aprovação e recusa | O painel de cadastros não é uma fila de moderação de avaliações ou relatos |
 | Controles de acessibilidade da interface | Implementados, alguns dependentes do navegador e de serviços externos | Demonstrar e registrar limitações observadas |
 
 **Atenção:** o detalhamento do local não deve ser apresentado como uma galeria completa de fotos de ambientes. Os fluxos atuais de cadastro, capa, edição, revisão e evidências de relatos têm finalidades distintas.
@@ -229,15 +229,15 @@ Isso exige políticas e permissões corretas no backend. Esconder um botão não
 2. O frontend envia o cadastro para `/api/register-place`.
 3. A API valida os campos, limita o conteúdo aceito e envia a operação ao Supabase.
 4. O registro online é criado como pendente.
-5. O sistema solicita um link de acesso para o titular responsável pela revisão.
-6. O titular autenticado abre `/revisao` e aprova ou recusa, informando o motivo quando necessário.
+5. O registro aparece na fila de cadastros do painel administrador.
+6. Um administrador autorizado entra em `/admin` com e-mail e senha e aprova ou recusa, informando o motivo quando necessário.
 
-Se o envio do e-mail falhar, o cadastro pode continuar salvo como pendente. O sistema não deve afirmar que um aviso foi entregue quando houve falha.
+O fluxo atual não envia links de aprovação por e-mail e não depende de SMTP para login ou revisão. O responsável consulta os novos registros no painel e pode atualizar a lista.
 
 ### Como adiciono uma foto que ficou faltando?
 
 1. Acesse **Gerenciar locais** pelo rodapé ou pelo cadastro.
-2. Entre com o e-mail administrativo já autorizado.
+2. Entre com o e-mail administrativo autorizado e sua senha.
 3. Busque o local e clique em **Editar**.
 4. Adicione uma imagem por link ou selecione um arquivo do computador ou celular.
 5. Escolha a capa, se desejar, e clique em **Salvar alterações**.
@@ -419,9 +419,9 @@ Antes de apresentar, confira se o site online contém a mesma versão que foi te
 
 ### O que precisa estar configurado para a gestão funcionar?
 
-As variáveis públicas e de servidor do Supabase, as permissões administrativas existentes e a URL de retorno de `/gestao` permitida no Supabase Auth. O envio de imagens também precisa da chave de servidor e do armazenamento disponível.
+As variáveis públicas e de servidor do Supabase, as permissões administrativas e as contas provisionadas para login por senha. A fila usa as RPCs de `database/admin_registration_panel.sql`. O envio de imagens também precisa da chave de servidor e do armazenamento disponível.
 
-O envio de links por e-mail depende da configuração e dos limites do serviço de autenticação. Não é necessário criar um novo banco para cada publicação.
+O login do painel não solicita links por e-mail. Não é necessário criar um novo banco para cada publicação. Veja [configuração e uso do painel](painel-administrador.md).
 
 ### Como a qualidade foi verificada?
 

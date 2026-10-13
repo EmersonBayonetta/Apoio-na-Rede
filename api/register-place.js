@@ -30,8 +30,7 @@ export function createRegistrationHandler({env=process.env,fetchImpl=fetch}={}) 
   } catch(error){return res.status(400).json({error:error.message||'Cadastro inválido.'});}
   const root=first(env,['SUPABASE_URL','NEXT_PUBLIC_SUPABASE_URL','VITE_SUPABASE_URL'])?.replace(/\/$/,'');
   const secret=first(env,['SUPABASE_SECRET_KEY','SUPABASE_SERVICE_ROLE_KEY']);
-  const publicKey=first(env,['SUPABASE_PUBLISHABLE_KEY','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY','VITE_SUPABASE_PUBLISHABLE_KEY','SUPABASE_ANON_KEY']);
-  if(!root||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(root)||!secret||!publicKey)return res.status(503).json({error:'Cadastro temporariamente indisponível. Tente novamente mais tarde.'});
+  if(!root||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(root)||!secret)return res.status(503).json({error:'Cadastro temporariamente indisponível. Tente novamente mais tarde.'});
   const headers={apikey:secret,'Content-Type':'application/json',...(secret.startsWith('eyJ')?{Authorization:`Bearer ${secret}`}:{})};
   const rpc=async(name,body)=>fetchImpl(`${root}/rest/v1/rpc/${name}`,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(8000)});
   let submission;
@@ -47,16 +46,7 @@ export function createRegistrationHandler({env=process.env,fetchImpl=fetch}={}) 
    if(!result.ok){await photoUpload?.cleanup().catch(()=>{});const failure=await result.json().catch(()=>({}));return res.status(String(failure.message).includes('Limite')?429:503).json({error:String(failure.message).includes('Limite')?'Limite de cadastros atingido. Tente novamente mais tarde.':'Não foi possível receber o cadastro. Tente novamente mais tarde.'});}
    submission=await result.json();
   } catch{return res.status(503).json({error:'Não foi possível receber o cadastro e suas fotos. Tente novamente mais tarde.'});}
-  let notified=false;
-  try {
-   const redirect=new URL('/revisao',site);redirect.searchParams.set('cadastro',submission.id);
-   if(kind!=='places')redirect.searchParams.set('tipo',kind);
-   const recipients=Array.isArray(submission.review_recipients)?submission.review_recipients:[{email:submission.owner_email,create_user:false}];
-   const deliveries=await Promise.allSettled(recipients.map(recipient=>fetchImpl(`${root}/auth/v1/otp?redirect_to=${encodeURIComponent(redirect.href)}`,{method:'POST',headers:{apikey:publicKey,'Content-Type':'application/json'},body:JSON.stringify({email:recipient.email,create_user:recipient.create_user===true}),signal:AbortSignal.timeout(8000)})));
-   notified=deliveries.length>0 && deliveries.every(result=>result.status==='fulfilled' && result.value.ok);
-   if(notified)await rpc(kind==='places'?'mark_registration_notified':'mark_directory_notified',{registration_id:submission.id});
-  } catch { /* O cadastro permanece pendente quando o envio está indisponível. */ }
-  return res.status(201).json({id:submission.id,status:'pendente',notified,message:notified?'Cadastro recebido. Um link de revisão foi solicitado ao responsável pelo site.':'Cadastro recebido e mantido pendente. Não foi possível enviar o aviso ao responsável agora; o envio de e-mail pode estar limitado.'});
+  return res.status(201).json({id:submission.id,status:'pendente',notified:false,message:'Cadastro recebido e enviado ao painel administrador para revisão.'});
  };
 }
 export default createRegistrationHandler();

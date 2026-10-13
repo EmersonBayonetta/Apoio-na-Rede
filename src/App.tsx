@@ -110,7 +110,7 @@ export const MainAppContent: React.FC = () => {
               <ExplorerView onSelectEstablishment={handleSelectEstablishment} />
             )}
             {currentTab === 'register' && (
-              <div className="max-w-4xl mx-auto p-4"><p className="text-right text-sm"><a href="/gestao" className="inline-block py-3 font-semibold text-blue-700 underline">Gerenciar locais cadastrados</a></p><MerchantRegisterWizard onSuccess={() => selectTab('explorer')} /></div>
+              <div className="max-w-4xl mx-auto p-4"><p className="text-right text-sm"><a href="/admin" className="inline-block py-3 font-semibold text-blue-700 underline">Gerenciar locais cadastrados</a></p><MerchantRegisterWizard onSuccess={() => selectTab('explorer')} /></div>
             )}
             {currentTab === 'routes' && <section className="max-w-4xl mx-auto p-6 sm:p-8"><h1 className="text-2xl font-bold">Rotas acessíveis</h1><p className="mt-3 text-slate-600">Esta seção está temporariamente inativa.</p><button type="button" onClick={handleBackToExplorer} className="mt-5 rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white">Voltar ao Explorar</button></section>}
             {currentTab === 'professionals' && <CommunityDirectoryView section="professionals" />}
@@ -146,7 +146,7 @@ export const MainAppContent: React.FC = () => {
 
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} Apoio na rede</p>
-          <a href="/gestao" className="py-2 underline hover:text-white">Gerenciar locais</a>
+          <a href="/admin" className="py-2 underline hover:text-white">Painel administrador</a>
           <p>Dados de locais e endereços: Google Maps, ViaCEP e <a className="underline hover:text-white" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>.</p>
         </div>
       </footer>
@@ -157,7 +157,7 @@ export const MainAppContent: React.FC = () => {
 export default function App() {
   return (
     <AccessibilityProvider>
-      {window.location.pathname.replace(/\/$/, '') === '/gestao' ? <PlaceManagementView /> : window.location.pathname.replace(/\/$/, '') === '/revisao' ? <RegistrationReviewView /> : <MainAppContent />}
+      {['/admin','/gestao'].includes(window.location.pathname.replace(/\/$/, '')) ? <PlaceManagementView /> : window.location.pathname.replace(/\/$/, '') === '/revisao' ? <RegistrationReviewView /> : <MainAppContent />}
     </AccessibilityProvider>
   );
 }

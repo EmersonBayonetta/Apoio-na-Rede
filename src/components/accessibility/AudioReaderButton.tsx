@@ -19,7 +19,7 @@ export const AudioReaderButton: React.FC<AudioReaderButtonProps> = ({
   if (!settings.voiceReadingEnabled) return null;
 
   // Verifica se o texto atualmente sendo lido corresponde a este componente
-  const isCurrentText = isSpeaking && activeSpeechText.startsWith(textToRead.trim().slice(0, 30));
+  const isCurrentText = isSpeaking && activeSpeechText === textToRead.replace(/<[^>]*>/g, '').trim();
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();

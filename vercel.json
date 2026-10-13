@@ -29,7 +29,7 @@
       ]
     },
     {
-      "source": "/gestao",
+      "source": "/(admin|gestao)",
       "headers": [
         {
           "key": "X-Robots-Tag",

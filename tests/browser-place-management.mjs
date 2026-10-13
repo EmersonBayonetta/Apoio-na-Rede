@@ -25,7 +25,7 @@ try {
   await wait(`!!document.querySelector('h1')&&!document.body.innerText.includes('Carregando locais…')`);
   const records=[sample,{...sample,id:'est-pending-test',nome:'Pendente Teste',status:'pendente'},...Array.from({length:20},(_,i)=>({...sample,id:`est-extra-${i}`,nome:`Outro ${i}`}))];
   await evaluate(`localStorage.setItem('acessacidade_establishments',${JSON.stringify(JSON.stringify(records))})`);
-  await navigate('Page.reload');await wait(`document.body.innerText.includes('22 locais encontrados')&&!document.body.innerText.includes('Carregando locais…')`);
+  await navigate('Page.reload');await wait(`!![...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Gerenciar locais')`);await click('Gerenciar locais');await wait(`document.body.innerText.includes('22 locais encontrados')&&!document.body.innerText.includes('Carregando locais…')`);
   await check('pagination limits the list to 20 places',`document.querySelectorAll('section[aria-label="Locais cadastrados"] li').length===20`);
   await click('Próxima');await wait(`document.body.innerText.includes('Página 2 de 2')`);
   await check('last page contains remaining records',`document.querySelectorAll('section[aria-label="Locais cadastrados"] li').length===2`);
@@ -38,7 +38,7 @@ try {
   await fill('#edit-telefone','(32) 99999-1111');await click('Salvar alterações');
   await wait(`document.body.innerText.includes('Alterações salvas e atualizadas no site.')`);
   await check('downloaded image and contact persist without changing status or ratings',`(()=>{const place=JSON.parse(localStorage.getItem('acessacidade_establishments')).find(p=>p.id==='est-management-test');return place.fotos.length===1&&place.fotos[0].startsWith('data:image/jpeg;base64,')&&place.telefone==='(32) 99999-1111'&&place.status==='verificado'&&place.nota_media===4&&place.total_avaliacoes===3})()`);
-  await navigate('Page.reload');await wait(`document.body.innerText.includes('22 locais encontrados')&&!document.body.innerText.includes('Carregando locais…')`);
+  await navigate('Page.reload');await wait(`!![...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Gerenciar locais')`);await click('Gerenciar locais');await wait(`document.body.innerText.includes('22 locais encontrados')&&!document.body.innerText.includes('Carregando locais…')`);
   await fill('input[type="search"]','Local Teste');await click('Buscar');await wait(`document.body.innerText.includes('1 local encontrado')`);await click('Editar');
   await wait(`!!document.querySelector('#edit-photo-url')`);
   await check('persisted photo reloads in the editor',`document.querySelectorAll('form img').length===1`);

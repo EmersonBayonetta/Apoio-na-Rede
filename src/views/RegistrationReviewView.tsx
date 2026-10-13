@@ -26,7 +26,7 @@ export function RegistrationReviewView() {
       const client=getSupabase();
       if(!client||!id||!/^[0-9a-f-]{36}$/i.test(id)){if(active)setMessage('Link de revisão inválido.');return;}
       const {data:{user}}=await client.auth.getUser();
-      if(!user){if(active){setRegistration(null);setMessage('Abra o link de acesso enviado pelo Supabase ao e-mail de um responsável autorizado.');}return;}
+      if(!user){if(active){setRegistration(null);setMessage('Entre no painel administrador com seu e-mail e senha para revisar os cadastros.');}return;}
       const {data,error}=await client.rpc(directory?'directory_for_review':'registration_for_review',{registration_id:id});
       if(!active)return;
       if(error||!data){setRegistration(null);setMessage('Este cadastro só pode ser revisado por um responsável autorizado, ou não está disponível.');return;}
@@ -70,6 +70,6 @@ export function RegistrationReviewView() {
         <div className="flex flex-wrap gap-3"><button disabled={busy} onClick={()=>void decide(true)} className="min-h-11 rounded-xl bg-blue-700 px-4 font-bold text-white">Aprovar e publicar</button><button disabled={busy} onClick={()=>void decide(false)} className="min-h-11 rounded-xl border px-4 font-bold">Recusar cadastro</button></div>
       </>:<p>Este cadastro já foi revisado: {registration.status==='verificado'?'aprovado':'recusado'}.</p>}
     </article>}
-    <a href="/" className="mt-6 inline-flex min-h-11 items-center underline">Voltar ao site</a>
+    <a href="/admin" className="mt-6 inline-flex min-h-11 items-center underline">Abrir painel administrador</a>
   </main>;
 }

@@ -24,6 +24,7 @@ interface AccessibilityContextType {
   isSpeaking: boolean;
   activeSpeechText: string;
   speechError: string;
+  dismissSpeechError: () => void;
 }
 
 const DEFAULT_SETTINGS: AccessibilitySettings = {
@@ -58,6 +59,8 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [activeSpeechText, setActiveSpeechText] = useState('');
   const [speechError, setSpeechError] = useState('');
+  const speechStartTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearSpeechStartTimer = () => {if (speechStartTimer.current !== null) clearTimeout(speechStartTimer.current);speechStartTimer.current = null;};
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Persistir e aplicar classes globais no DOM
@@ -143,50 +146,74 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'pt-BR';
-    utterance.rate = 1.0;
-    const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(item => item.lang.toLowerCase().replace('_', '-') === 'pt-br')
-      ?? voices.find(item => item.lang.toLowerCase().startsWith('pt'));
-    if (voice) utterance.voice = voice;
-    utteranceRef.current = utterance;
+    // Keep each native speech request short, without losing any page text.
+    const chunks: string[] = [];
+    let remaining = cleanText.replace(/\s+/g, ' ');
+    while (remaining.length > 220) {
+      const candidate = remaining.slice(0, 221);
+      const sentence = [...candidate.matchAll(/[.!?;:]\s/g)].at(-1)?.index;
+      const boundary = sentence !== undefined && sentence >= 60 ? sentence + 1 : candidate.lastIndexOf(' ');
+      const end = boundary > 0 ? boundary : 220;
+      chunks.push(remaining.slice(0, end));
+      remaining = remaining.slice(end).trimStart();
+    }
+    if (remaining) chunks.push(remaining);
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices();
+    const portuguese = voices.filter(item => item.lang.toLowerCase().replace('_', '-').startsWith('pt'));
+    const voice = portuguese.find(item => item.localService && item.lang.toLowerCase().replace('_', '-') === 'pt-br')
+      ?? portuguese.find(item => item.lang.toLowerCase().replace('_', '-') === 'pt-br')
+      ?? portuguese[0];
     setIsSpeaking(true);
     setActiveSpeechText(cleanText);
 
-    utterance.onstart = () => {
-      if (utteranceRef.current !== utterance) return;
-      setIsSpeaking(true);
-      setActiveSpeechText(cleanText);
-    };
-
-    utterance.onend = () => {
-      if (utteranceRef.current !== utterance) return;
-      utteranceRef.current = null;
-      setIsSpeaking(false);
-      setActiveSpeechText('');
-    };
-
-    utterance.onerror = (event) => {
-      if (utteranceRef.current !== utterance) return;
-      utteranceRef.current = null;
-      setIsSpeaking(false);
-      setActiveSpeechText('');
-      if (event.error !== 'canceled' && event.error !== 'interrupted') {
-        setSpeechError('Não foi possível reproduzir a leitura. Verifique a voz em português nas configurações do dispositivo e tente novamente.');
+    const readChunk = (index: number) => {
+      const utterance = new SpeechSynthesisUtterance(chunks[index]);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 1;
+      if (voice) utterance.voice = voice;
+      utteranceRef.current = utterance;
+      clearSpeechStartTimer();
+      speechStartTimer.current = setTimeout(() => {
+        if (utteranceRef.current !== utterance || synth.speaking) return;
+        stopSpeaking();
+        setSpeechError('A leitura não iniciou. Verifique se há uma voz em português disponível no celular e toque em Ouvir novamente.');
+      }, 8000);
+      utterance.onstart = () => {if (utteranceRef.current === utterance) clearSpeechStartTimer();};
+      utterance.onend = () => {
+        if (utteranceRef.current !== utterance) return;
+        clearSpeechStartTimer();
+        if (index + 1 < chunks.length) readChunk(index + 1);
+        else {
+          utteranceRef.current = null;
+          setIsSpeaking(false);
+          setActiveSpeechText('');
+        }
+      };
+      utterance.onerror = (event) => {
+        if (utteranceRef.current !== utterance) return;
+        clearSpeechStartTimer();
+        utteranceRef.current = null;
+        setIsSpeaking(false);
+        setActiveSpeechText('');
+        if (event.error !== 'canceled' && event.error !== 'interrupted') {
+          setSpeechError('Não foi possível reproduzir a leitura. Verifique a voz em português nas configurações do dispositivo e tente novamente.');
+        }
+      };
+      try {
+        // The first speak stays inside the user's tap, including on iOS.
+        if (synth.paused) synth.resume();
+        synth.speak(utterance);
+      } catch {
+        stopSpeaking();
+        setSpeechError('Não foi possível iniciar a leitura neste navegador. Tente novamente.');
       }
     };
-
-    try {
-      window.speechSynthesis.speak(utterance);
-      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-    } catch {
-      stopSpeaking();
-      setSpeechError('Não foi possível iniciar a leitura neste navegador. Tente novamente.');
-    }
+    readChunk(0);
   };
 
   const stopSpeaking = () => {
+    clearSpeechStartTimer();
     utteranceRef.current = null;
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -198,6 +225,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (!settings.voiceReadingEnabled) stopSpeaking();
     return () => {
+      clearSpeechStartTimer();
       utteranceRef.current = null;
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     };
@@ -222,6 +250,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
         isSpeaking,
         activeSpeechText,
         speechError,
+        dismissSpeechError: () => setSpeechError(''),
       }}
     >
       {children}

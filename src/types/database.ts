@@ -488,6 +488,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_registration_list: { Args: {requested_kind?:string;requested_status?:string;search_text?:string;page_number?:number}; Returns: Json }
+      admin_registration_detail: { Args: {requested_kind:string;record_id:string}; Returns: Json }
+      admin_decide_registration: { Args: {requested_kind:string;record_id:string;approve:boolean;reason?:string}; Returns: undefined }
       directory_for_review: { Args: { registration_id: string }; Returns: Json }
       decide_directory: { Args: { registration_id: string; approve: boolean; reason?: string }; Returns: undefined }
       registration_for_review: { Args: { registration_id: string }; Returns: Json }

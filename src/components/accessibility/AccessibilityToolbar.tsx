@@ -39,6 +39,7 @@ export const AccessibilityToolbar: React.FC = () => {
     isSpeaking,
     speakText,
     speechError,
+    dismissSpeechError,
   } = useAccessibility();
 
   const resetAll = () => {
@@ -58,9 +59,9 @@ export const AccessibilityToolbar: React.FC = () => {
       {/* Botão Flutuante de Acessibilidade */}
       <div className="accessibility-launcher fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
         {speechError && (
-          <p role="alert" className="max-w-xs rounded-xl bg-white text-slate-900 border border-slate-300 p-3 text-sm shadow-md">
-            {speechError}
-          </p>
+          <div role="alert" className="flex max-w-xs items-start gap-2 rounded-xl bg-white text-slate-900 border border-slate-300 p-3 text-sm shadow-md">
+            <p>{speechError}</p><button type="button" onClick={dismissSpeechError} aria-label="Fechar aviso da leitura" className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-slate-300"><X size={18} aria-hidden="true" /></button>
+          </div>
         )}
         {isSpeaking && (
           <div className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded-xl shadow-md text-sm font-semibold">
