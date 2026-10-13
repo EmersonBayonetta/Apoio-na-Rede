@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import { publicSupabaseEnv } from './scripts/public-supabase-env.ts'
+import { createReviewHandler } from './api/review.js'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -8,6 +9,27 @@ export default defineConfig(({mode}) => {
   const env = loadEnv(mode,process.cwd(),'');
   const database = env.VITE_DATA_MODE === 'demo' ? {url:'',key:''} : publicSupabaseEnv(env);
   if (env.VERCEL_ENV === 'production' && (!database.url || !database.key)) throw new Error('Configure as variáveis públicas Supabase na Vercel antes de publicar.');
+  const localReviewApi = {
+    name: 'local-review-api',
+    configureServer(server: { middlewares: { use: (path: string, handler: (request: { method?: string; body?: unknown; on: (event: string, listener: (chunk: Buffer) => void) => void }, response: { statusCode: number; end: (body?: string) => void; setHeader: (name: string, value: string) => void }, next: () => void) => void) => void } }) {
+      const review = createReviewHandler({ env });
+      server.middlewares.use('/api/review', (request, response, next) => {
+        const apiResponse = {
+          status(code: number) { response.statusCode = code; return apiResponse; },
+          json(payload: unknown) { response.setHeader('Content-Type', 'application/json'); response.end(JSON.stringify(payload)); },
+          setHeader(name: string, value: string) { response.setHeader(name, value); },
+        };
+        if (request.method !== 'POST') { void review(request as never, apiResponse); return; }
+        const chunks: Buffer[] = [];
+        request.on('data', chunk => chunks.push(chunk));
+        request.on('end', () => {
+          try { request.body = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+          catch { response.statusCode = 400; response.setHeader('Content-Type', 'application/json'); response.end(JSON.stringify({ error: 'JSON inválido.' })); return; }
+          void review(request as never, apiResponse).catch(next);
+        });
+      });
+    },
+  };
   return {
   define: {
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(database.url),
@@ -26,6 +48,7 @@ export default defineConfig(({mode}) => {
   plugins: [
     react(),
     tailwindcss(),
+    localReviewApi,
   ],
   };
 })
