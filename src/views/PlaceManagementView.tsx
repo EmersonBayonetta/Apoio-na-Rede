@@ -3,7 +3,6 @@ import { getSupabase } from '../lib/supabase';
 import { browserStorage } from '../lib/browserStorage';
 import { PlaceManagementService, ManagementError, type ManagedPlace } from '../services/placeManagementService';
 import { PlaceEditForm } from '../components/establishments/PlaceEditForm';
-import { ChangeRequestReviewPanel } from '../components/establishments/ChangeRequestReviewPanel';
 import { AccessibilityToolbar } from '../components/accessibility/AccessibilityToolbar';
 import type { EstablishmentStatus } from '../types';
 
@@ -118,7 +117,7 @@ export function PlaceManagementView() {
       {!loading && mode === 'error' && <button type="button" onClick={() => {setMessage('');setRevision(value => value+1);}} className="rounded-xl border px-4 py-3">Tentar novamente</button>}
       {mode === 'ready' && selected ? <PlaceEditForm key={`${selected.id}-${selected.atualizado_em}`} place={selected} onCancel={() => {setSelected(null);setMessage('');}} onSessionExpired={() => {setSelected(null);setPlaces([]);setRevision(value => value+1);setMessage('Seu acesso precisa ser conferido novamente.');}} onSaved={saved => {
         setSelected(null);setMessage(saved.status === 'verificado' ? 'Alterações salvas e atualizadas no site.' : 'Alterações salvas. O status do cadastro foi mantido.');setRevision(value => value+1);
-      }} /> : mode === 'ready' && <>{!demo && <ChangeRequestReviewPanel />}<section aria-label="Locais cadastrados" className="space-y-4">
+      }} /> : mode === 'ready' && <section aria-label="Locais cadastrados" className="space-y-4">
         <form onSubmit={event => {event.preventDefault();setPage(0);setQuery(search.trim());setMessage('');}} className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="grid flex-1 gap-2 text-sm font-semibold">Buscar pelo nome<input type="search" value={search} maxLength={100} onChange={event => setSearch(event.target.value)} placeholder="Nome do local" className="min-w-0 rounded-xl border bg-white p-3" /></label>
           <label className="grid gap-2 text-sm font-semibold">Status<select value={status} onChange={event => {setStatus(event.target.value as EstablishmentStatus | '');setPage(0);setMessage('');}} className="rounded-xl border bg-white p-3"><option value="">Todos</option>{Object.entries(statusLabels).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
@@ -128,7 +127,7 @@ export function PlaceManagementView() {
         {!loading && !places.length && <p className="rounded-xl border p-4">Nenhum local encontrado. Confira a busca e o filtro de status.</p>}
         <ul className="space-y-3">{places.map(place => <li key={place.id} className="flex flex-col justify-between gap-3 rounded-xl border bg-white p-4 sm:flex-row sm:items-center"><div className="min-w-0"><h2 className="break-words font-bold">{place.nome}</h2><p className="mt-1 break-words text-sm text-slate-600">{place.endereco} · {place.cidade} / {place.estado}</p><p className="mt-1 text-xs">{statusLabels[place.status]} · {(place.fotos ?? []).length} fotos</p></div><button type="button" disabled={busy || loading} aria-label={`Editar ${place.nome}`} onClick={() => void openPlace(place.id)} className="shrink-0 rounded-xl border px-5 py-3 font-semibold disabled:opacity-50">Editar</button></li>)}</ul>
         {total > 20 && <nav aria-label="Páginas de locais" className="flex flex-wrap items-center gap-3"><button disabled={page===0 || loading} onClick={() => setPage(value => value-1)} className="rounded-xl border px-4 py-3 disabled:opacity-50">Anterior</button><span className="text-sm">Página {page+1} de {Math.ceil(total/20)}</span><button disabled={(page+1)*20>=total || loading} onClick={() => setPage(value => value+1)} className="rounded-xl border px-4 py-3 disabled:opacity-50">Próxima</button></nav>}
-      </section></>}
+      </section>}
       <a href="/" className="inline-block py-3 text-sm underline">Voltar ao site</a>
     </main>
     <AccessibilityToolbar />

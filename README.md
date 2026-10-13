@@ -63,14 +63,12 @@ Em um banco novo, execute nesta ordem:
 12. `database/directory_email_review.sql`
 13. `database/registration_shared_limits.sql`
 14. `database/registration_review_location.sql`
-15. `database/authenticated_registration.sql`
-16. `database/establishment_change_requests.sql`
 
 O RPC `get_place_accessibility` recebe `{ "requested_place_id": "IDENTIFICADOR_DO_GOOGLE" }`, respeita RLS e retorna apenas campos públicos. Os cadastros do responsável são gravados junto com os critérios em uma transação. Nenhum dado de demonstração é inserido no banco remoto. A carga opcional pesquisada está em `database/public_catalog_cataguases.sql` e depende do titular já autorizado.
 
 ### Cadastro, revisão e catálogo público
 
-O cadastro de locais, trechos e profissionais é público e fica pendente até aprovação do titular autorizado. Depois de entrar, o responsável encontra **Meus locais**: ele pode solicitar correções, mas elas só substituem os dados publicados após decisão de um administrador. A lista privada de autorização é conferida em cada leitura e decisão. O envio padrão do Supabase tem limites; cadastro salvo não garante entrega do aviso. Veja [configuração e limites](docs/cadastro-revisao-supabase.md).
+O cadastro de locais, trechos e profissionais é público e fica pendente até aprovação do titular autorizado. O servidor solicita um link de autenticação do Supabase para abrir a revisão de um cadastro, sem painel de gestão e sem Resend. A lista privada de autorização é conferida em cada leitura e decisão. O envio padrão do Supabase tem limites; cadastro salvo não garante entrega do aviso. Veja [configuração e limites](docs/cadastro-revisao-supabase.md).
 
 O catálogo online contém dados reais pesquisados: nove locais, três profissionais e cinco ligações entre endereços públicos. As fontes aparecem nos registros e estão documentadas no [catálogo real de Cataguases](docs/catalogo-real-cataguases.md). Recursos não confirmados ficam sem informação; publicação não certifica acessibilidade. Não são importadas avaliações externas. As avaliações do site mantêm notas, comentários, filtros, envio e denúncia, com resumo e distribuição de estrelas. A galeria de fotos da página do local foi removida.
 

@@ -338,8 +338,3 @@ body:is(.theme-high-contrast-dark, .theme-yellow-black) :is(.place-card-maps, .p
   footer.bg-blue-950 > div:first-child { gap: 16px; }
   footer.bg-blue-950 > div:last-child { margin-top: 16px; padding-top: 16px; gap: 12px; }
 }
-
-/* Footer logo: white text on dark themes, black text on the light theme. */
-.footer-logo-light { display: none; }
-html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .footer-logo-dark { display: none; }
-html[data-theme="light"] body:not(.theme-high-contrast-dark):not(.theme-yellow-black) .footer-logo-light { display: block; }

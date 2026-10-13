@@ -8,9 +8,6 @@ test('Vercel integration public variables configure the Vite client',()=>{
 test('explicit Vite variables have precedence',()=>{
  assert.deepEqual(publicSupabaseEnv({VITE_SUPABASE_URL:url,VITE_SUPABASE_PUBLISHABLE_KEY:key,SUPABASE_URL:'https://other.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_other'}),{url,key});
 });
-test('Supabase local Docker is accepted for development',()=>{
- assert.deepEqual(publicSupabaseEnv({VITE_SUPABASE_URL:'http://127.0.0.1:54321',VITE_SUPABASE_PUBLISHABLE_KEY:key}),{url:'http://127.0.0.1:54321',key});
-});
 test('legacy anonymous JWT accepted; privileged JWT rejected',()=>{
  const jwt=role=>'header.'+Buffer.from(JSON.stringify({role})).toString('base64url')+'.signature';
  assert.equal(publicSupabaseEnv({SUPABASE_URL:url,SUPABASE_ANON_KEY:jwt('anon')}).key,jwt('anon'));

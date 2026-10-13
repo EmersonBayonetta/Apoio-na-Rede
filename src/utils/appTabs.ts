@@ -1,6 +1,6 @@
-export type AppTab = 'explorer' | 'register' | 'routes' | 'professionals' | 'my_places';
+export type AppTab = 'explorer' | 'register' | 'routes' | 'professionals';
 
-const TAB_PARAMS: Record<Exclude<AppTab, 'explorer'>, string> = { routes: 'rotas', professionals: 'profissionais', register: 'cadastro', my_places: 'meus-locais' };
+const TAB_PARAMS: Record<Exclude<AppTab, 'explorer'>, string> = { routes: 'rotas', professionals: 'profissionais', register: 'cadastro' };
 
 export function tabFromUrl(search: string): AppTab {
   const value = new URLSearchParams(search).get('aba');

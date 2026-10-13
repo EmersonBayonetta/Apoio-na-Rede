@@ -292,7 +292,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
         aria-label={`Etapa ${currentStep} de 4: ${steps[currentStep - 1].title}`}
         className="mb-8"
       >
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-3">
+        <div className="grid grid-cols-4 gap-2 mb-3">
           {steps.map((step) => {
             const Icon = step.icon;
             const isCompleted = currentStep > step.number;
@@ -301,7 +301,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
             return (
               <div
                 key={step.number}
-                className={`flex min-w-0 flex-row items-center gap-2 p-3 rounded-2xl border text-left transition-all ${
+                className={`flex flex-col sm:flex-row items-center gap-2 p-3 rounded-2xl border text-center sm:text-left transition-all ${
                   isCurrent
                     ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-xs ring-2 ring-blue-400'
                     : isCompleted
@@ -320,11 +320,11 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 >
                   {isCompleted ? <CheckCircle2 size={16} /> : <Icon size={16} />}
                 </div>
-                <div className="min-w-0">
+                <div className="hidden sm:block">
                   <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">
                     Etapa {step.number}
                   </div>
-                  <div className="break-words text-xs font-bold leading-tight">{step.title}</div>
+                  <div className="text-xs font-bold truncate">{step.title}</div>
                 </div>
               </div>
             );
