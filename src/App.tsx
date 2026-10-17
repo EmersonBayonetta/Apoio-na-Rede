@@ -149,7 +149,6 @@ export const MainAppContent: React.FC = () => {
 
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} Apoio na rede</p>
-          <a href="/admin" className="py-2 underline hover:text-white">Painel administrador</a>
           <p>Dados de locais e endereços: Google Maps, ViaCEP e <a className="underline hover:text-white" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>.</p>
         </div>
       </footer>
