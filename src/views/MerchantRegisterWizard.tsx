@@ -596,7 +596,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
               const resources = ACCESSIBILITY_RESOURCES.filter(resource => resource.tipo === type);
               if (!resources.length) return null;
               return (
-                <fieldset key={type} className="space-y-3">
+                <fieldset key={type} className="min-w-0 space-y-3">
                   <legend className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-2">
                     <Icon size={16} className="text-blue-700" aria-hidden="true" />
                     {info.label}
@@ -615,11 +615,11 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                             : 'border-slate-200 bg-slate-50'
                         }`}
                       >
-                        <div className="flex items-start gap-3">
-                          <select id={`crit-${idx}`} value={answer.presente === true ? 'sim' : answer.presente === false ? 'nao' : 'desconhecido'} onChange={event => updateAnswer(resource.id, event.target.value)} className="max-w-[135px] rounded-lg border border-slate-300 bg-white p-2 text-xs">
+                        <div className="flex flex-col items-start gap-3 sm:flex-row">
+                          <select id={`crit-${idx}`} value={answer.presente === true ? 'sim' : answer.presente === false ? 'nao' : 'desconhecido'} onChange={event => updateAnswer(resource.id, event.target.value)} className="max-w-full shrink-0 rounded-lg border border-slate-300 bg-white p-2 text-xs">
                             <option value="desconhecido">Não verificado</option><option value="sim">Sim</option><option value="nao">Não</option>
                           </select>
-                          <div className="flex-1">
+                          <div className="w-full min-w-0 flex-1 [overflow-wrap:anywhere]">
                             <label htmlFor={`crit-${idx}`} className="cursor-pointer block">
                               <span className="font-bold text-sm text-slate-900 block">{resource.label}</span>
                               <span className="text-xs text-slate-600 block mt-0.5">{resource.legacy}</span>
