@@ -4,6 +4,13 @@ import './styles/index.css'
 import './styles/design-system.css'
 import App from './App.tsx'
 
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+      .catch(error => console.error('Não foi possível ativar o modo offline.', error));
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

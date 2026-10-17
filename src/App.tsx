@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AccessibilityProvider } from './context/AccessibilityContext';
 import { Navbar } from './components/layout/Navbar';
+import { OfflineNotice, PwaControls } from './components/layout/PwaControls';
 import { AccessibilityToolbar } from './components/accessibility/AccessibilityToolbar';
 import { ExplorerView } from './views/ExplorerView';
 import { EstablishmentDetailView } from './views/EstablishmentDetailView';
@@ -89,6 +90,7 @@ export const MainAppContent: React.FC = () => {
 
       {/* Área de Conteúdo Principal */}
       <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+        <OfflineNotice />
         {temporaryStorage && <p role="status" className="m-4 rounded-xl border p-4">O navegador não conseguiu salvar os dados. Você pode continuar, mas as alterações desta sessão serão perdidas ao fechar ou recarregar a página.</p>}
         {navigationMessage && <p role="status" className="m-4 rounded-xl border p-4">{navigationMessage}</p>}
         {selectedEstablishment ? (
@@ -133,6 +135,7 @@ export const MainAppContent: React.FC = () => {
             <p className="text-sm text-slate-400 leading-relaxed max-w-md">
               Informações colaborativas sobre acessibilidade em Cataguases. As condições podem mudar: confirme com o local antes de sair.
             </p>
+            <PwaControls />
           </div>
           <a
             href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm"

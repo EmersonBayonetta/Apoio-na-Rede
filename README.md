@@ -92,7 +92,15 @@ Use `npm run build:demo` antes desses testes isolados. `tests/browser-contributi
 
 `tests/browser-public-catalog.mjs` cobre o catálogo atual: layout em 320/390/1440 px, falha e recuperação do Google, detalhes de locais externos, cálculo a pé, falha do serviço de rotas e alternativa no Google Maps. Ele substitui os antigos testes `discovery`, `exterior`, `hybrid-catalog` e `street-catalog`, que esperavam mapas e panoramas embutidos removidos da interface. Endereços, categorias e cobertura por atividade continuam com testes próprios. Execute os testes que compartilham o mesmo Chrome em sequência e conclua todos antes de trocar o build de demonstração pelo normal.
 
-## Organização
+## Instalação no celular (PWA)
+
+O build de produção gera `sw.js` com os arquivos da interface para abertura offline após a primeira visita. Publique com HTTPS (localhost também funciona para testes). No rodapé, “Instalar app” abre a instalação quando o navegador a oferece; nos demais casos, há instruções para Android e iPhone/iPad. O manifesto inclui ícones de 192 e 512 px e ícone Apple de 180 px.
+
+Buscas, mapas, autenticação e envios exigem conexão. O service worker armazena somente arquivos da interface, sem respostas de API. Cada build recebe um cache versionado; atualizações entram quando as janelas da versão anterior são fechadas. No desenvolvimento com `npm run dev`, o service worker não é registrado.
+
+Validação: `npm run build:demo`, preview na porta 4180 e Chromium com perfil temporário e CDP 9230; execute `node tests/browser-pwa.mjs`. O teste verifica critérios de instalação, dimensões dos ícones, telas de 320 a 1440 px, formulários, ação de instalar e abertura offline por URL interna. A instalação final em Android/iOS deve ser conferida em aparelhos físicos.
+
+## Organização do código
 
 Componentes em `src/components/` (`accessibility`, `establishments`, `explore`, `layout`, `maps`), telas em `src/views/`, regras puras em `src/utils/`, serviços em `src/services/`. Veja a [estrutura do projeto](docs/estrutura-projeto.md), o [design system](docs/design-system.md) e os detalhes da [consulta de acessibilidade](docs/acessibilidade-locais.md). As especificações das features estão em `.specs/features/`.
 
