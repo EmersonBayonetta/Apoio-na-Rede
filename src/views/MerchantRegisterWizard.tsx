@@ -301,7 +301,7 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
             return (
               <div
                 key={step.number}
-                className={`flex flex-col sm:flex-row items-center gap-2 p-3 rounded-2xl border text-center sm:text-left transition-all ${
+                className={`min-w-0 flex flex-col sm:flex-row items-center gap-2 p-3 rounded-2xl border text-center sm:text-left transition-all ${
                   isCurrent
                     ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-xs ring-2 ring-blue-400'
                     : isCompleted
@@ -320,11 +320,11 @@ export const MerchantRegisterWizard: React.FC<MerchantRegisterWizardProps> = ({ 
                 >
                   {isCompleted ? <CheckCircle2 size={16} /> : <Icon size={16} />}
                 </div>
-                <div className="hidden sm:block">
+                <div className="hidden min-w-0 sm:block">
                   <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">
                     Etapa {step.number}
                   </div>
-                  <div className="text-xs font-bold truncate">{step.title}</div>
+                  <div className="text-xs font-bold whitespace-normal [overflow-wrap:anywhere]">{step.title}</div>
                 </div>
               </div>
             );
